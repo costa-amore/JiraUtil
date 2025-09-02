@@ -6,7 +6,7 @@ from jira_dates_eu import run as run_jira_dates_eu
 
 
 def build_parser() -> argparse.ArgumentParser:
-	parser = argparse.ArgumentParser(prog="py-runner", description="Utilities runner")
+	parser = argparse.ArgumentParser(prog="JiraCsv", description="Jira CSV utilities")
 	subparsers = parser.add_subparsers(dest="command", required=True)
 
 	# clean-jira subcommand
@@ -39,3 +39,5 @@ def main() -> None:
 
 if __name__ == "__main__":
 	main()
+
+
