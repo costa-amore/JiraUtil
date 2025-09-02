@@ -21,7 +21,13 @@ pip install -r requirements.txt
 4. Run the Jira CSV tool using the runner:
 
 ```powershell
-./run.ps1 .\JiraCsv.py clean-jira .\path\to\jira.csv -o .\jira-cleaned.csv
+# Remove newline characters from CSV fields
+./run.ps1 .\JiraCsv.py remove-newline .\path\to\jira.csv -o .\jira-no-newlines.csv
+
+# Extract parent keys to text file
+./run.ps1 .\JiraCsv.py extract-parent-key .\path\to\jira.csv
+
+# Convert dates for European Excel
 ./run.ps1 .\JiraCsv.py fix-dates-eu .\path\to\jira.csv -o .\jira-eu-dates.csv
 ```
 
@@ -34,7 +40,8 @@ py -3 -m venv .venv
 . .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-python .\JiraCsv.py clean-jira .\path\to\jira.csv -o .\jira-cleaned.csv
+python .\JiraCsv.py remove-newline .\path\to\jira.csv -o .\jira-no-newlines.csv
+python .\JiraCsv.py extract-parent-key .\path\to\jira.csv
 python .\JiraCsv.py fix-dates-eu .\path\to\jira.csv -o .\jira-eu-dates.csv
 ```
 
