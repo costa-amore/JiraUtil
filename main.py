@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from jira_cleaner import run as run_jira_cleaner
+from jira_dates_eu import run as run_jira_dates_eu
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -12,6 +13,11 @@ def build_parser() -> argparse.ArgumentParser:
 	clean = subparsers.add_parser("clean-jira", help="Clean Jira CSV and extract parents")
 	clean.add_argument("input", help="Path to the input Jira CSV file")
 	clean.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-cleaned.csv next to input")
+
+	# fix-dates-eu subcommand
+	fixdates = subparsers.add_parser("fix-dates-eu", help="Convert Created/Updated dates for European Excel")
+	fixdates.add_argument("input", help="Path to the input Jira CSV file")
+	fixdates.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-eu-dates.csv next to input")
 	return parser
 
 
@@ -22,6 +28,10 @@ def main() -> None:
 	if args.command == "clean-jira":
 		input_path = Path(args.input)
 		run_jira_cleaner(input_path, args.output)
+		return
+	if args.command == "fix-dates-eu":
+		input_path = Path(args.input)
+		run_jira_dates_eu(input_path, args.output)
 		return
 
 	parser.error("Unknown command")
