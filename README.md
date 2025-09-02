@@ -31,8 +31,8 @@ pip install -r requirements.txt
 # Remove newline characters from CSV fields
 ./run.ps1 .\JiraCsv.py remove-newline .\path\to\jira.csv -o .\jira-no-newlines.csv
 
-# Extract parent keys to text file
-./run.ps1 .\JiraCsv.py extract-parent-key .\path\to\jira.csv
+# Extract field values to comma-separated text file
+./run.ps1 .\JiraCsv.py extract-to-comma-separated-list "Parent key" .\path\to\jira.csv
 
 # Convert dates for European Excel
 ./run.ps1 .\JiraCsv.py fix-dates-eu .\path\to\jira.csv -o .\jira-eu-dates.csv
@@ -48,7 +48,7 @@ py -3 -m venv .venv
 pip install -r requirements.txt
 
 python .\JiraCsv.py remove-newline .\path\to\jira.csv -o .\jira-no-newlines.csv
-python .\JiraCsv.py extract-parent-key .\path\to\jira.csv
+python .\JiraCsv.py extract-to-comma-separated-list "Parent key" .\path\to\jira.csv
 python .\JiraCsv.py fix-dates-eu .\path\to\jira.csv -o .\jira-eu-dates.csv
 ```
 
@@ -61,11 +61,11 @@ Jira_csv_helper/
 │   ├── JiraCsv.py               # Main CLI entry point
 │   ├── jira_cleaner.py          # Newline removal functionality
 │   ├── jira_dates_eu.py         # European date formatting
-│   └── jira_parent_extractor.py # Parent key extraction
+│   └── jira_field_extractor.py # Field value extraction
 ├── tests/                        # Test code
 │   ├── __init__.py
 │   ├── run_tests.py             # Test runner
-│   └── test_jira_parent_extractor.py
+│   └── test_jira_field_extractor.py
 ├── JiraCsv.py                   # Root entry point
 ├── run_tests.py                 # Convenience test runner
 ├── run.ps1                      # PowerShell runner script
@@ -85,6 +85,6 @@ pip install pytest
 python run_tests.py
 
 # Or run tests directly with pytest
-python -m pytest tests/test_jira_parent_extractor.py -v
+python -m pytest tests/test_jira_field_extractor.py -v
 ```
 

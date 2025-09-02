@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 from jira_cleaner import run_remove_newlines
-from jira_parent_extractor import run_extract_parent_keys
+from jira_field_extractor import run_extract_field_values
 from jira_dates_eu import run as run_jira_dates_eu
 
 
@@ -15,9 +15,10 @@ def build_parser() -> argparse.ArgumentParser:
 	remove_newline.add_argument("input", help="Path to the input Jira CSV file")
 	remove_newline.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-no-newlines.csv next to input")
 
-	# extract-parent-key subcommand
-	extract_parent = subparsers.add_parser("extract-parent-key", help="Extract parent keys from CSV and write to text file")
-	extract_parent.add_argument("input", help="Path to the input Jira CSV file")
+	# extract-to-comma-separated-list subcommand
+	extract_field = subparsers.add_parser("extract-to-comma-separated-list", help="Extract field values from CSV and write to comma-separated text file")
+	extract_field.add_argument("field_name", help="Name of the field to extract (e.g., 'Parent key', 'Assignee', 'Status')")
+	extract_field.add_argument("input", help="Path to the input Jira CSV file")
 
 	# fix-dates-eu subcommand
 	fixdates = subparsers.add_parser("fix-dates-eu", help="Convert Created/Updated dates for European Excel")
@@ -34,9 +35,9 @@ def main() -> None:
 		input_path = Path(args.input)
 		run_remove_newlines(input_path, args.output)
 		return
-	if args.command == "extract-parent-key":
+	if args.command == "extract-to-comma-separated-list":
 		input_path = Path(args.input)
-		run_extract_parent_keys(input_path, None)
+		run_extract_field_values(input_path, args.field_name, None)
 		return
 	if args.command == "fix-dates-eu":
 		input_path = Path(args.input)
