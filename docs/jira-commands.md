@@ -86,6 +86,101 @@ Rule-testing process completed:
   Issues skipped: 37
 ```
 
+## AssertExpectations
+
+Assert that issues with a specified label are in their expected status based on summary patterns.
+
+### Pattern Matching
+
+The tool looks for issues with summaries matching this pattern (case-insensitive):
+```
+"I was in <status1> - expected to be in <status2>"
+```
+
+When found, it asserts that the current status matches `<status2>`.
+
+### Usage
+
+#### Basic Usage (default "rule-testing" label)
+```powershell
+./run.ps1 .\JiraUtil.py AssertExpectations
+# Short-hand: ./run.ps1 .\ju.py ae
+```
+
+#### Custom Label
+```powershell
+./run.ps1 .\JiraUtil.py AssertExpectations my-custom-label
+# Short-hand: ./run.ps1 .\ju.py ae my-custom-label
+```
+
+#### With Credentials
+```powershell
+./run.ps1 .\JiraUtil.py AssertExpectations --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
+# Short-hand: ./run.ps1 .\ju.py ae --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
+```
+
+### Examples
+
+```powershell
+# Assert "rule-testing" issues (default)
+./run.ps1 .\JiraUtil.py AssertExpectations
+# Short-hand: ./run.ps1 .\ju.py ae
+
+# Assert "bug-fix" issues
+./run.ps1 .\JiraUtil.py AssertExpectations bug-fix
+# Short-hand: ./run.ps1 .\ju.py ae bug-fix
+
+# Assert with custom credentials
+./run.ps1 .\JiraUtil.py AssertExpectations --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
+# Short-hand: ./run.ps1 .\ju.py ae --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
+```
+
+### Configuration
+
+The tool automatically loads credentials from:
+1. `.venv\jira_config.env` (recommended)
+2. Environment variables: `JIRA_URL`, `JIRA_USERNAME`, `JIRA_PASSWORD`
+3. Interactive prompts (fallback)
+
+### How It Works
+
+1. **Connects** to your Jira instance
+2. **Searches** for issues with the specified label
+3. **Analyzes** each issue's summary for the pattern
+4. **Asserts** that the current status matches the expected status (status2)
+5. **Reports** results (processed, passed, failed, not evaluated)
+
+### Output Example
+
+```
+Starting assertion process for issues with label 'rule-testing'...
+Connecting to Jira at: https://company.atlassian.net
+Asserting TAPS-211: I was in SIT/LAB VALIDATED - expected to be in CLOSED
+  Current status: SIT/LAB Validated
+  Expected status: CLOSED
+  ❌ FAIL - Current status 'SIT/LAB Validated' does not match expected status 'CLOSED'
+
+Asserting TAPS-210: I was in CLOSED - expected to be in CLOSED
+  Current status: Closed
+  Expected status: CLOSED
+  ✅ PASS - Current status matches expected status
+
+Assertion process completed:
+  Issues processed: 42
+  Assertions passed: 5
+  Assertions failed: 10
+  Not evaluated: 27
+  Failures:
+    - TAPS-211: Expected 'CLOSED' but is 'SIT/LAB Validated'
+    - TAPS-197: Expected 'CLOSED' but is 'Ready to Validate'
+  Not evaluated: TAPS-209, TAPS-208, TAPS-206, TAPS-205, TAPS-203, TAPS-202, TAPS-201, TAPS-199, TAPS-198, TAPS-196, TAPS-195, TAPS-193, TAPS-192, TAPS-190, TAPS-189, TAPS-187, TAPS-186, TAPS-185, TAPS-183, TAPS-182, TAPS-180, TAPS-179, TAPS-178, TAPS-176, TAPS-175, TAPS-174, TAPS-171
+
+============================================================
+❌ ASSERTION FAILURES DETECTED! ❌
+⚠️  10 out of 15 evaluated issues are NOT in their expected status
+============================================================
+```
+
 ### Debugging
 
 Use the debug script for development:

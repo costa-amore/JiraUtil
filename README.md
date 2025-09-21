@@ -1,6 +1,6 @@
 # JIRA utility
 
-A Python utility for processing Jira CSV exports and manipulating Jira issues directly.
+A Python utility for supporting Jira admins.
 
 ## 🚀 Quick Start
 
@@ -19,6 +19,7 @@ A Python utility for processing Jira CSV exports and manipulating Jira issues di
 ### Jira Automations Support
 
 - **ResetTestFixture** (`ju.py rt`): Update issue status based on summary patterns
+- **AssertExpectations** (`ju.py ae`): Assert that issues are in their expected status based on summary patterns
 
 ## 📚 Documentation
 

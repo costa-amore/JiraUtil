@@ -102,13 +102,14 @@ Edit `debug_all_commands.py` to test specific commands:
 # Uncomment the command you want to debug:
 debug_command(["JiraUtil.py", "CsvExport", "remove-newline", "test.csv"])
 debug_command(["JiraUtil.py", "ResetTestFixture", "rule-testing"])
+debug_command(["JiraUtil.py", "AssertExpectations", "rule-testing"])
 debug_command(["JiraUtil.py", "CsvExport", "extract-to-comma-separated-list", "Parent key", "test.csv"])
 debug_command(["JiraUtil.py", "CsvExport", "fix-dates-eu", "test.csv"])
 ```
 
 ### Available Commands to Debug
 - **CSV**: `remove-newline`, `extract-to-comma-separated-list`, `fix-dates-eu`
-- **Jira**: `ResetTestFixture`
+- **Jira**: `ResetTestFixture`, `AssertExpectations`
 - **Help**: `--help`
 
 ## Troubleshooting
