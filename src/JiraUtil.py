@@ -11,23 +11,27 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="JiraUtil", description="Jira utilities")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # remove-newline subcommand
-    remove_newline = subparsers.add_parser("remove-newline", help="Remove newline characters from CSV fields")
+    # CsvExport subcommand group (alias: ce)
+    csv_export = subparsers.add_parser("CsvExport", aliases=["ce"], help="CSV export file processing commands")
+    csv_subparsers = csv_export.add_subparsers(dest="csv_command", required=True)
+
+    # remove-newline subcommand under CsvExport (alias: rn)
+    remove_newline = csv_subparsers.add_parser("remove-newline", aliases=["rn"], help="Remove newline characters from CSV fields")
     remove_newline.add_argument("input", help="Path to the input Jira CSV file")
     remove_newline.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-no-newlines.csv next to input")
 
-    # extract-to-comma-separated-list subcommand
-    extract_field = subparsers.add_parser("extract-to-comma-separated-list", help="Extract field values from CSV and write to comma-separated text file")
+    # extract-to-comma-separated-list subcommand under CsvExport (alias: ecl)
+    extract_field = csv_subparsers.add_parser("extract-to-comma-separated-list", aliases=["ecl"], help="Extract field values from CSV and write to comma-separated text file")
     extract_field.add_argument("field_name", help="Name of the field to extract (e.g., 'Parent key', 'Assignee', 'Status')")
     extract_field.add_argument("input", help="Path to the input Jira CSV file")
 
-    # fix-dates-eu subcommand
-    fixdates = subparsers.add_parser("fix-dates-eu", help="Convert Created/Updated dates for European Excel")
+    # fix-dates-eu subcommand under CsvExport (alias: fd)
+    fixdates = csv_subparsers.add_parser("fix-dates-eu", aliases=["fd"], help="Convert Created/Updated dates for European Excel")
     fixdates.add_argument("input", help="Path to the input Jira CSV file")
     fixdates.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-eu-dates.csv next to input")
     
-    # ResetTestFixture subcommand
-    reset_test_fixture = subparsers.add_parser("ResetTestFixture", help="Process issues with specified label and update status based on summary pattern")
+    # ResetTestFixture subcommand (alias: rt)
+    reset_test_fixture = subparsers.add_parser("ResetTestFixture", aliases=["rt"], help="Process issues with specified label and update status based on summary pattern")
     reset_test_fixture.add_argument("label", nargs='?', default="rule-testing", help="Jira label to search for (default: 'rule-testing')")
     reset_test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
     reset_test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
@@ -40,20 +44,24 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "remove-newline":
-        input_path = Path(args.input)
-        run_remove_newlines(input_path, args.output)
-        return
-    if args.command == "extract-to-comma-separated-list":
-        input_path = Path(args.input)
-        run_extract_field_values(input_path, args.field_name, None)
-        return
-    if args.command == "fix-dates-eu":
-        input_path = Path(args.input)
-        run_jira_dates_eu(input_path, args.output)
-        return
+    # Handle CsvExport commands (including aliases: ce)
+    if args.command in ["CsvExport", "ce"]:
+        if args.csv_command in ["remove-newline", "rn"]:
+            input_path = Path(args.input)
+            run_remove_newlines(input_path, args.output)
+            return
+        if args.csv_command in ["extract-to-comma-separated-list", "ecl"]:
+            input_path = Path(args.input)
+            run_extract_field_values(input_path, args.field_name, None)
+            return
+        if args.csv_command in ["fix-dates-eu", "fd"]:
+            input_path = Path(args.input)
+            run_jira_dates_eu(input_path, args.output)
+            return
+        parser.error("Unknown CsvExport command")
     
-    if args.command == "ResetTestFixture":
+    # Handle ResetTestFixture commands (including alias: rt)
+    if args.command in ["ResetTestFixture", "rt"]:
         # Get Jira credentials from arguments or environment
         jira_url = args.jira_url
         username = args.username

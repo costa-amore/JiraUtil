@@ -6,19 +6,19 @@ A Python utility for processing Jira CSV exports and manipulating Jira issues di
 
 1. **Setup**: Run `./rebuild-venv.ps1` to create the environment and install dependencies
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
-3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` to see all available commands
+3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` or `./run.ps1 .\ju.py --help` to see all available commands
 
 ## 📋 Available Commands
 
 ### CSV Export File Support
 
-- **Remove newlines**: Clean CSV fields from newline characters
-- **Extract fields**: Extract specific field values to comma-separated lists
-- **Fix dates**: Convert dates for European Excel format
+- **CsvExport remove-newline** (`ju.py ce rn`): Clean CSV fields from newline characters
+- **CsvExport extract-to-comma-separated-list** (`ju.py ce ecl`): Extract specific field values to comma-separated lists
+- **CsvExport fix-dates-eu** (`ju.py ce fd`): Convert dates for European Excel format
 
 ### Jira Automations Support
 
-- **Reset TestFixture**: Update issue status based on summary patterns
+- **ResetTestFixture** (`ju.py rt`): Update issue status based on summary patterns
 
 ## 📚 Documentation
 

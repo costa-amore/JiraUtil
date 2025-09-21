@@ -80,8 +80,8 @@ JiraUtil.py (root)
 
 ## Adding New Features
 
-1. **New CSV command**: Add to `src/JiraUtil.py` argument parser
-2. **New Jira command**: Add to `src/JiraUtil.py` JiraTest section
+1. **New CSV command**: Add to `src/JiraUtil.py` CsvExport subparser
+2. **New Jira command**: Add to `src/JiraUtil.py` ResetTestFixture section
 3. **New functionality**: Create new module in `src/`
 4. **Tests**: Add test files to `tests/`
 5. **Documentation**: Update relevant files in `docs/`
