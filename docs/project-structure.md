@@ -18,7 +18,7 @@ Jira_csv_helper/
 ├── docs/                         # Documentation
 │   ├── setup.md
 │   ├── csv_export-commands.md
-│   ├── jira_automations-commands.md
+│   ├── jira-commands.md
 │   ├── project-structure.md
 │   └── testing.md
 ├── .venv/                        # Virtual environment
@@ -88,4 +88,4 @@ JiraUtil.py (root)
 
 ---
 
-[← Jira Automations Commands](jira_automations-commands.md) | [Testing →](testing.md)
+[← Jira Commands](jira-commands.md) | [Testing →](testing.md)

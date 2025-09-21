@@ -103,4 +103,4 @@ python .\JiraUtil.py CsvExport fix-dates-eu .\jira-export.csv
 
 ---
 
-[← Setup Guide](setup.md) | [Jira Automations Commands →](jira_automations-commands.md)
+[← Setup Guide](setup.md) | [Jira Commands →](jira-commands.md)

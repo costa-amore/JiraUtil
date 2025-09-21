@@ -24,7 +24,7 @@ A Python utility for processing Jira CSV exports and manipulating Jira issues di
 
 - **[Setup Guide](docs/setup.md)** - Detailed installation and configuration
 - **[CSV Export Commands](docs/csv_export-commands.md)** - CSV processing functionality
-- **[Jira Automations Commands](docs/jira_automations-commands.md)** - Jira integration features
+- **[Jira Commands](docs/jira-commands.md)** - Jira integration features
 - **[Project Structure](docs/project-structure.md)** - Code organization
 - **[Testing](docs/testing.md)** - Running tests and development
 
