@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Optional, Tuple
 from jira_manager import JiraInstanceManager
 
+# Shared pattern for both ResetTestFixture and AssertExpectations
+SUMMARY_PATTERN = r"I was in (.+?) - expected to be in (.+)"
+
 def parse_summary_pattern(summary: str, current_status: str) -> Optional[Tuple[bool, str]]:
     """
     Parse issue summary to extract status names for rule-testing pattern.
@@ -23,8 +26,7 @@ def parse_summary_pattern(summary: str, current_status: str) -> Optional[Tuple[b
     Returns:
         Tuple of (should_update, target_status) if pattern matches, None otherwise
     """
-    pattern = r"I was in (.+?) - expected to be in (.+)"
-    match = re.search(pattern, summary, re.IGNORECASE)
+    match = re.search(SUMMARY_PATTERN, summary, re.IGNORECASE)
     
     if match:
         status1 = match.group(1).strip()
@@ -143,8 +145,7 @@ def parse_expectation_pattern(summary: str) -> Optional[Tuple[str, str]]:
     Returns:
         Tuple of (status1, status2) if pattern matches, None otherwise
     """
-    pattern = r"I was in (.+?) - expected to be in (.+)"
-    match = re.search(pattern, summary, re.IGNORECASE)
+    match = re.search(SUMMARY_PATTERN, summary, re.IGNORECASE)
     
     if match:
         status1 = match.group(1).strip()
