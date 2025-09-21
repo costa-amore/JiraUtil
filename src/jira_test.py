@@ -11,8 +11,8 @@ from jira import JIRA
 from jira.exceptions import JIRAError
 
 
-class JiraTestManager:
-    """Manages Jira rule-testing functionality."""
+class JiraInstanceManager:
+    """Manages Jira instance operations and rule-testing functionality."""
     
     def __init__(self, jira_url: str, username: str, password: str):
         """
@@ -217,7 +217,7 @@ def run_rule_testing(jira_url: str, username: str, password: str, label: str) ->
         password: Jira password or API token
         label: Jira label to search for
     """
-    manager = JiraTestManager(jira_url, username, password)
+    manager = JiraInstanceManager(jira_url, username, password)
     
     print(f"Starting process for issues with label '{label}'...")
     print(f"Connecting to Jira at: {jira_url}")
