@@ -1,5 +1,7 @@
 # CSV Commands
 
+[🏠 Home](../README.md)
+
 Commands for processing Jira CSV exports.
 
 ## remove-newline
@@ -33,14 +35,14 @@ Creates a new CSV file with cleaned data (default: `<input-stem>-no-newlines.csv
 
 Extract field values from CSV and write to comma-separated text file.
 
-### Usage
+### Extract Usage
 
 ```powershell
 ./run.ps1 .\JiraUtil.py CsvExport extract-to-comma-separated-list <field_name> <input.csv>
 # Short-hand: ./run.ps1 .\ju.py ce ecl <field_name> <input.csv>
 ```
 
-### Examples
+### Extract Examples
 
 ```powershell
 # Extract Parent key values
@@ -56,7 +58,7 @@ Extract field values from CSV and write to comma-separated text file.
 # Short-hand: ./run.ps1 .\ju.py ce ecl "Status" .\jira-export.csv
 ```
 
-### Output
+### Extract Output
 
 Creates a text file with comma-separated values (default: `<field_name>.txt`)
 
@@ -64,14 +66,14 @@ Creates a text file with comma-separated values (default: `<field_name>.txt`)
 
 Convert Created/Updated dates for European Excel format.
 
-### Usage
+### Fix Dates Usage
 
 ```powershell
 ./run.ps1 .\JiraUtil.py CsvExport fix-dates-eu <input.csv> [--output <output.csv>]
 # Short-hand: ./run.ps1 .\ju.py ce fd <input.csv> [--output <output.csv>]
 ```
 
-### Examples
+### Fix Dates Examples
 
 ```powershell
 # Fix dates, create output file automatically
@@ -83,7 +85,7 @@ Convert Created/Updated dates for European Excel format.
 # Short-hand: ./run.ps1 .\ju.py ce fd .\jira-export.csv -o .\jira-eu-dates.csv
 ```
 
-### Output
+### Fix Dates Output
 
 Creates a new CSV file with European date format (default: `<input-stem>-eu-dates.csv`)
 

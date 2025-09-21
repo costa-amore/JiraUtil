@@ -37,7 +37,7 @@ A Python utility for supporting Jira admins.
 
 ## 📁 Project Structure
 
-```
+```text
 Jira_csv_helper/
 ├── src/                    # Source code
 ├── tests/                  # Test files

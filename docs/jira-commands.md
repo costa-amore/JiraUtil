@@ -1,5 +1,7 @@
 # Jira Commands
 
+[🏠 Home](../README.md)
+
 Commands for interacting directly with Jira instances.
 
 ## ResetTestFixture
@@ -9,7 +11,8 @@ Process issues with a specified label and update their status based on summary p
 ### Pattern Matching
 
 The tool looks for issues with summaries matching this pattern (case-insensitive):
-```
+
+```text
 "I was in <status1> - expected to be in <status2>"
 ```
 
@@ -18,16 +21,19 @@ When found, it updates the issue status to `<status1>`.
 ### Usage
 
 #### Basic Usage (default "rule-testing" label)
+
 ```powershell
 ./run.ps1 .\JiraUtil.py ResetTestFixture
 ```
 
 #### Custom Label
+
 ```powershell
 ./run.ps1 .\JiraUtil.py ResetTestFixture my-custom-label
 ```
 
 #### With Credentials
+
 ```powershell
 ./run.ps1 .\JiraUtil.py ResetTestFixture --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
 ```
@@ -51,6 +57,7 @@ When found, it updates the issue status to `<status1>`.
 ### Configuration
 
 The tool automatically loads credentials from:
+
 1. `.venv\jira_config.env` (recommended)
 2. Environment variables: `JIRA_URL`, `JIRA_USERNAME`, `JIRA_PASSWORD`
 3. Interactive prompts (fallback)
@@ -66,13 +73,14 @@ The tool automatically loads credentials from:
 ### Status Transition Matching
 
 The tool searches for transitions that contain the target status name in quotes:
+
 - `Jump to "IMPLEMENT"`
 - `Jump back to "CLOSED"`
 - `To "READY for SIT/LAB"`
 
 ### Output Example
 
-```
+```text
 Starting process for issues with label 'rule-testing'...
 Connecting to Jira at: https://company.atlassian.net
 Processing TAPS-211: I was in SIT/LAB VALIDATED - expected to be in CLOSED
@@ -90,36 +98,40 @@ Rule-testing process completed:
 
 Assert that issues with a specified label are in their expected status based on summary patterns.
 
-### Pattern Matching
+### Assertion Pattern Matching
 
 The tool looks for issues with summaries matching this pattern (case-insensitive):
-```
+
+```text
 "I was in <status1> - expected to be in <status2>"
 ```
 
 When found, it asserts that the current status matches `<status2>`.
 
-### Usage
+### AssertExpectations Usage
 
-#### Basic Usage (default "rule-testing" label)
+#### AssertExpectations Basic Usage (default "rule-testing" label)
+
 ```powershell
 ./run.ps1 .\JiraUtil.py AssertExpectations
 # Short-hand: ./run.ps1 .\ju.py ae
 ```
 
-#### Custom Label
+#### AssertExpectations Custom Label
+
 ```powershell
 ./run.ps1 .\JiraUtil.py AssertExpectations my-custom-label
 # Short-hand: ./run.ps1 .\ju.py ae my-custom-label
 ```
 
-#### With Credentials
+#### AssertExpectations With Credentials
+
 ```powershell
 ./run.ps1 .\JiraUtil.py AssertExpectations --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
 # Short-hand: ./run.ps1 .\ju.py ae --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
 ```
 
-### Examples
+### AssertExpectations Examples
 
 ```powershell
 # Assert "rule-testing" issues (default)
@@ -135,14 +147,15 @@ When found, it asserts that the current status matches `<status2>`.
 # Short-hand: ./run.ps1 .\ju.py ae --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
 ```
 
-### Configuration
+### AssertExpectations Configuration
 
 The tool automatically loads credentials from:
+
 1. `.venv\jira_config.env` (recommended)
 2. Environment variables: `JIRA_URL`, `JIRA_USERNAME`, `JIRA_PASSWORD`
 3. Interactive prompts (fallback)
 
-### How It Works
+### AssertExpectations How It Works
 
 1. **Connects** to your Jira instance
 2. **Searches** for issues with the specified label
@@ -150,9 +163,9 @@ The tool automatically loads credentials from:
 4. **Asserts** that the current status matches the expected status (status2)
 5. **Reports** results (processed, passed, failed, not evaluated)
 
-### Output Example
+### AssertExpectations Output Example
 
-```
+```text
 Starting assertion process for issues with label 'rule-testing'...
 Connecting to Jira at: https://company.atlassian.net
 Asserting TAPS-211: I was in SIT/LAB VALIDATED - expected to be in CLOSED
@@ -181,9 +194,10 @@ Assertion process completed:
 ============================================================
 ```
 
-### Debugging
+### AssertExpectations Debugging
 
 Use the debug script for development:
+
 ```powershell
 python debug_all_commands.py
 ```

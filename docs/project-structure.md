@@ -1,8 +1,10 @@
 # Project Structure
 
+[🏠 Home](../README.md)
+
 ## Directory Layout
 
-```
+```text
 Jira_csv_helper/
 ├── src/                          # Source code
 │   ├── __init__.py
@@ -10,7 +12,7 @@ Jira_csv_helper/
 │   ├── jira_cleaner.py          # Newline removal functionality
 │   ├── jira_dates_eu.py         # European date formatting
 │   ├── jira_field_extractor.py  # Field value extraction
-│   └── jira_reset_testfixture.py # Jira integration functionality
+│   └── jira_testfixture.py      # Jira integration functionality
 ├── tests/                        # Test files
 │   ├── __init__.py
 │   ├── run_tests.py             # Test runner
@@ -35,38 +37,43 @@ Jira_csv_helper/
 ## Key Files
 
 ### Entry Points
+
 - **`JiraUtil.py`** - Root entry point that imports from `src/`
 - **`src/JiraUtil.py`** - Main CLI implementation with argument parsing
 
 ### Core Modules
+
 - **`jira_cleaner.py`** - CSV newline removal
 - **`jira_dates_eu.py`** - European date formatting
 - **`jira_field_extractor.py`** - Field value extraction
-- **`jira_reset_testfixture.py`** - Jira API integration and issue processing
+- **`jira_testfixture.py`** - Jira API integration and issue processing
 
 ### Configuration
+
 - **`jira_config_example.env`** - Template for Jira credentials
 - **`.venv/jira_config.env`** - Actual credentials (created by setup)
 - **`requirements.txt`** - Python package dependencies
 
 ### Scripts
+
 - **`rebuild-venv.ps1`** - One-command environment setup/rebuild
 - **`run.ps1`** - PowerShell wrapper for running Python scripts
 - **`debug_all_commands.py`** - Debug script for all commands
 
 ### Testing
+
 - **`tests/run_tests.py`** - Test runner that discovers and runs all tests
 - **`tests/test_jira_field_extractor.py`** - Unit tests for field extraction
 
 ## Module Dependencies
 
-```
+```text
 JiraUtil.py (root)
 ├── src/JiraUtil.py
     ├── jira_cleaner.py
     ├── jira_dates_eu.py
     ├── jira_field_extractor.py
-    └── jira_reset_testfixture.py
+    └── jira_testfixture.py
         └── jira (external library)
 ```
 
