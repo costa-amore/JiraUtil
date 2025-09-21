@@ -1,215 +1,108 @@
 """
-Jira Test module for rule-testing functionality.
-Connects to Jira instance and manages rule-testing items based on summary patterns.
+Jira rule-testing functionality.
+
+This module provides specific rule-testing functionality that uses the
+generic Jira management capabilities from jira_manager.py.
 """
 
-import re
 import os
+import re
 from pathlib import Path
-from typing import List, Optional, Tuple
-from jira import JIRA
-from jira.exceptions import JIRAError
+from typing import Optional, Tuple
+from jira_manager import JiraInstanceManager
 
-
-class JiraInstanceManager:
-    """Manages Jira instance operations and rule-testing functionality."""
-    
-    def __init__(self, jira_url: str, username: str, password: str):
-        """
-        Initialize Jira connection.
-        
-        Args:
-            jira_url: Jira instance URL
-            username: Jira username
-            password: Jira password or API token
-        """
-        self.jira_url = jira_url
-        self.username = username
-        self.password = password
-        self.jira = None
-        
-    def connect(self) -> bool:
-        """
-        Connect to Jira instance.
-        
-        Returns:
-            True if connection successful, False otherwise
-        """
-        try:
-            print(f"DEBUG: Attempting to connect to {self.jira_url} with user {self.username}")
-            self.jira = JIRA(
-                server=self.jira_url,
-                basic_auth=(self.username, self.password)
-            )
-            print("DEBUG: Successfully connected to Jira")
-            return True
-        except JIRAError as e:
-            print(f"Failed to connect to Jira: {e}")
-            return False
-    
-    def get_issues_by_label(self, label: str) -> List[dict]:
-        """
-        Get all issues with specified label.
-        
-        Args:
-            label: Jira label to search for
-            
-        Returns:
-            List of issue dictionaries with key, summary, and status
-        """
-        if not self.jira:
-            print("Not connected to Jira. Call connect() first.")
-            return []
-        
-        try:
-            # Search for issues with specified label
-            jql = f'labels = "{label}"'
-            issues = self.jira.search_issues(jql, expand='changelog', fields='*all')
-            
-            result = []
-            for issue in issues:
-                result.append({
-                    'key': issue.key,
-                    'summary': issue.fields.summary,
-                    'status': issue.fields.status.name,
-                    'issue_obj': issue
-                })
-            
-            return result
-        except JIRAError as e:
-            print(f"Failed to search for rule-testing issues: {e}")
-            return []
-    
-    def parse_summary_pattern(self, summary: str) -> Optional[Tuple[str, str]]:
-        """
-        Parse summary to extract status1 and status2 from pattern:
-        "I was in <status1> - expected to be in <status2>"
-        
-        Args:
-            summary: Issue summary text
-            
-        Returns:
-            Tuple of (status1, status2) if pattern matches, None otherwise
-        """
-        pattern = r"I was in (.+?) - expected to be in (.+)"
-        match = re.search(pattern, summary, re.IGNORECASE)
-        
-        if match:
-            status1 = match.group(1).strip()
-            status2 = match.group(2).strip()
-            return (status1, status2)
-        
-        return None
-    
-    def update_issue_status(self, issue_key: str, new_status: str) -> bool:
-        """
-        Update issue status.
-        
-        Args:
-            issue_key: Jira issue key
-            new_status: New status name
-            
-        Returns:
-            True if update successful, False otherwise
-        """
-        if not self.jira:
-            print("Not connected to Jira. Call connect() first.")
-            return False
-        
-        try:
-            # Get available transitions for the issue
-            issue = self.jira.issue(issue_key)
-            transitions = self.jira.transitions(issue)
-            
-            # Find transition that contains the target status name
-            target_transition = None
-            new_status_lower = new_status.lower()
-            
-            print(f"  Available transitions: {[t['name'] for t in transitions]}")
-            
-            # Search for transition that contains the status name enclosed in quotes
-            quoted_status_pattern = f"\"{new_status_lower}\""
-            for transition in transitions:
-                if quoted_status_pattern in transition['name'].lower():
-                    target_transition = transition
-                    print(f"  Found transition: '{transition['name']}' contains '{quoted_status_pattern}'")
-                    break
-            
-            if not target_transition:
-                print(f"  No transition found containing status '{new_status}' for issue {issue_key}")
-                return False
-            
-            # Perform the transition
-            self.jira.transition_issue(issue, target_transition['id'])
-            print(f"  Successfully updated {issue_key} to status '{new_status}' via transition '{target_transition['name']}'")
-            return True
-            
-        except JIRAError as e:
-            print(f"  Failed to update issue {issue_key}: {e}")
-            return False
-    
-    def process_issues_by_label(self, label: str) -> dict:
-        """
-        Process all issues with specified label and update their status based on summary pattern.
-        
-        Args:
-            label: Jira label to search for
-            
-        Returns:
-            Dictionary with processing results
-        """
-        if not self.jira:
-            if not self.connect():
-                return {'success': False, 'error': 'Failed to connect to Jira'}
-        
-        issues = self.get_issues_by_label(label)
-        if not issues:
-            return {'success': True, 'processed': 0, 'updated': 0, 'skipped': 0}
-        
-        results = {
-            'success': True,
-            'processed': len(issues),
-            'updated': 0,
-            'skipped': 0,
-            'errors': []
-        }
-        
-        for issue in issues:
-            key = issue['key']
-            summary = issue['summary']
-            current_status = issue['status']
-            
-            print(f"Processing {key}: {summary}")
-            print(f"  Current status: {current_status}")
-            
-            # Parse summary pattern
-            parsed = self.parse_summary_pattern(summary)
-            if not parsed:
-                print(f"  Skipping - summary doesn't match expected pattern")
-                results['skipped'] += 1
-                continue
-            
-            status1, status2 = parsed
-            print(f"  Parsed: was in '{status1}', expected to be in '{status2}'")
-            
-            # Check if current status already matches target status
-            if current_status.upper() == status1.upper():
-                print(f"  Skipping - current status '{current_status}' already matches target status '{status1}'")
-                results['skipped'] += 1
-                continue
-            
-            # Update status to status1
-            if self.update_issue_status(key, status1):
-                results['updated'] += 1
-            else:
-                results['errors'].append(f"Failed to update {key}")
-        
-        return results
-
-
-def run_rule_testing(jira_url: str, username: str, password: str, label: str) -> None:
+def parse_summary_pattern(summary: str, current_status: str) -> Optional[Tuple[bool, str]]:
     """
-    Run rule-testing process.
+    Parse issue summary to extract status names for rule-testing pattern.
+    Expected pattern: "I was in <status1> - expected to be in <status2>"
+    
+    Args:
+        summary: Issue summary text
+        current_status: Current issue status
+        
+    Returns:
+        Tuple of (should_update, target_status) if pattern matches, None otherwise
+    """
+    pattern = r"I was in (.+?) - expected to be in (.+)"
+    match = re.search(pattern, summary, re.IGNORECASE)
+    
+    if match:
+        status1 = match.group(1).strip()
+        status2 = match.group(2).strip()
+        
+        # Check if current status already matches target status
+        if current_status.upper() == status1.upper():
+            print(f"  Skipping - current status '{current_status}' already matches target status '{status1}'")
+            return (False, status1)
+        
+        return (True, status1)
+    
+    return None
+
+
+def process_issues_by_label(manager: JiraInstanceManager, label: str) -> dict:
+    """
+    Process all issues with specified label and update their status based on summary pattern.
+    This is specific to the ResetTestFixture operation.
+    
+    Args:
+        manager: JiraInstanceManager instance
+        label: Jira label to search for
+        
+    Returns:
+        Dictionary with processing results
+    """
+    if not manager.jira:
+        if not manager.connect():
+            return {'success': False, 'error': 'Failed to connect to Jira'}
+    
+    issues = manager.get_issues_by_label(label)
+    if not issues:
+        return {'success': True, 'processed': 0, 'updated': 0, 'skipped': 0}
+    
+    results = {
+        'success': True,
+        'processed': len(issues),
+        'updated': 0,
+        'skipped': 0,
+        'errors': []
+    }
+    
+    for issue in issues:
+        key = issue['key']
+        summary = issue['summary']
+        current_status = issue['status']
+        
+        print(f"Processing {key}: {summary}")
+        print(f"  Current status: {current_status}")
+        
+        # Parse summary pattern
+        parse_result = parse_summary_pattern(summary, current_status)
+        if not parse_result:
+            print(f"  Skipping - summary doesn't match expected pattern")
+            results['skipped'] += 1
+            continue
+        
+        should_update, target_status = parse_result
+        if not should_update:
+            print(f"  Skipping - no update needed")
+            results['skipped'] += 1
+            continue
+        
+        print(f"  Target status: {target_status}")
+        
+        # Update status using the manager
+        if manager.update_issue_status(key, target_status):
+            results['updated'] += 1
+        else:
+            results['errors'].append(f"Failed to update {key}")
+    
+    return results
+
+
+def run_TestFixture_Reset(jira_url: str, username: str, password: str, label: str) -> None:
+    """
+    Run TestFixture reset process.
     
     Args:
         jira_url: Jira instance URL
@@ -222,7 +115,8 @@ def run_rule_testing(jira_url: str, username: str, password: str, label: str) ->
     print(f"Starting process for issues with label '{label}'...")
     print(f"Connecting to Jira at: {jira_url}")
     
-    results = manager.process_issues_by_label(label)
+    # Use the ResetTestFixture specific process function
+    results = process_issues_by_label(manager, label)
     
     if results['success']:
         print(f"\nRule-testing process completed:")
@@ -292,4 +186,3 @@ def get_jira_credentials() -> Tuple[str, str, str]:
         password = getpass.getpass("Enter Jira password/API token: ")
     
     return jira_url, username, password
-

@@ -4,7 +4,7 @@ from pathlib import Path
 from jira_cleaner import run_remove_newlines
 from jira_field_extractor import run_extract_field_values
 from jira_dates_eu import run as run_jira_dates_eu
-from jira_test import run_rule_testing, get_jira_credentials
+from jira_test import run_TestFixture_Reset, get_jira_credentials
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -74,7 +74,7 @@ def main() -> None:
             username = username or env_username
             password = password or env_password
         
-        run_rule_testing(jira_url, username, password, args.label)
+        run_TestFixture_Reset(jira_url, username, password, args.label)
         return
 
     parser.error("Unknown command")
