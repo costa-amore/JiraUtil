@@ -90,7 +90,7 @@ Rule-testing process completed:
 
 Use the debug script for development:
 ```powershell
-python debug_jira_test.py
+python debug_all_commands.py
 ```
 
 ---

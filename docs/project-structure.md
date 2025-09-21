@@ -24,7 +24,7 @@ Jira_csv_helper/
 ├── .venv/                        # Virtual environment
 │   └── jira_config.env          # Jira credentials (not in git)
 ├── JiraCsv.py                   # Root entry point
-├── debug_jira_test.py           # Debug script for Jira functionality
+├── debug_all_commands.py        # Debug script for all commands
 ├── rebuild-venv.ps1             # Environment setup/rebuild script
 ├── run.ps1                      # PowerShell runner script
 ├── jira_config_example.env      # Example configuration file
@@ -52,7 +52,7 @@ Jira_csv_helper/
 ### Scripts
 - **`rebuild-venv.ps1`** - One-command environment setup/rebuild
 - **`run.ps1`** - PowerShell wrapper for running Python scripts
-- **`debug_jira_test.py`** - Debug script for Jira functionality
+- **`debug_all_commands.py`** - Debug script for all commands
 
 ### Testing
 - **`tests/run_tests.py`** - Test runner that discovers and runs all tests
@@ -75,7 +75,7 @@ JiraCsv.py (root)
 1. **Setup**: `./rebuild-venv.ps1`
 2. **Develop**: Edit files in `src/`
 3. **Test**: `python run_tests.py`
-4. **Debug**: Use `debug_jira_test.py` for Jira functionality
+4. **Debug**: Use `debug_all_commands.py` for debugging any command
 5. **Rebuild**: `./rebuild-venv.ps1` when dependencies change
 
 ## Adding New Features

@@ -26,12 +26,12 @@ def build_parser() -> argparse.ArgumentParser:
 	fixdates.add_argument("input", help="Path to the input Jira CSV file")
 	fixdates.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-eu-dates.csv next to input")
 	
-	# JiraTest subcommand
-	jira_test = subparsers.add_parser("JiraTest", help="Process issues with specified label and update status based on summary pattern")
-	jira_test.add_argument("label", nargs='?', default="rule-testing", help="Jira label to search for (default: 'rule-testing')")
-	jira_test.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
-	jira_test.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
-	jira_test.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
+	# ResetTestFixture subcommand
+	reset_test_fixture = subparsers.add_parser("ResetTestFixture", help="Process issues with specified label and update status based on summary pattern")
+	reset_test_fixture.add_argument("label", nargs='?', default="rule-testing", help="Jira label to search for (default: 'rule-testing')")
+	reset_test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
+	reset_test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
+	reset_test_fixture.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
 	
 	return parser
 
@@ -53,7 +53,7 @@ def main() -> None:
 		run_jira_dates_eu(input_path, args.output)
 		return
 	
-	if args.command == "JiraTest":
+	if args.command == "ResetTestFixture":
 		# Get Jira credentials from arguments or environment
 		jira_url = args.jira_url
 		username = args.username
