@@ -4,7 +4,7 @@ from pathlib import Path
 from jira_cleaner import run_remove_newlines
 from jira_field_extractor import run_extract_field_values
 from jira_dates_eu import run as run_jira_dates_eu
-from jira_reset_testfixture import run_TestFixture_Reset, get_jira_credentials
+from jira_reset_testfixture import run_TestFixture_Reset, run_assert_expectations, get_jira_credentials
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,6 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
     reset_test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
     reset_test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
     reset_test_fixture.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
+    
+    # AssertExpectations subcommand (alias: ae)
+    assert_expectations = subparsers.add_parser("AssertExpectations", aliases=["ae"], help="Assert that issues with specified label are in their expected status based on summary pattern")
+    assert_expectations.add_argument("label", nargs='?', default="rule-testing", help="Jira label to search for (default: 'rule-testing')")
+    assert_expectations.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
+    assert_expectations.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
+    assert_expectations.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
     
     return parser
 
@@ -75,6 +82,23 @@ def main() -> None:
             password = password or env_password
         
         run_TestFixture_Reset(jira_url, username, password, args.label)
+        return
+    
+    # Handle AssertExpectations commands (including alias: ae)
+    if args.command in ["AssertExpectations", "ae"]:
+        # Get Jira credentials from arguments or environment
+        jira_url = args.jira_url
+        username = args.username
+        password = args.password
+        
+        # If not provided via arguments, get from environment or prompt
+        if not jira_url or not username or not password:
+            env_url, env_username, env_password = get_jira_credentials()
+            jira_url = jira_url or env_url
+            username = username or env_username
+            password = password or env_password
+        
+        run_assert_expectations(jira_url, username, password, args.label)
         return
 
     parser.error("Unknown command")

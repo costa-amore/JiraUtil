@@ -56,11 +56,17 @@ if __name__ == "__main__":
     # debug_command(["debug_all_commands.py", "ResetTestFixture", "rule-testing"])
     # debug_command(["debug_all_commands.py", "ResetTestFixture", "my-custom-label"])
     # debug_command(["debug_all_commands.py", "ResetTestFixture", "--jira-url", "https://company.atlassian.net", "--username", "user@company.com", "--password", "token"])
+    # debug_command(["debug_all_commands.py", "AssertExpectations", "rule-testing"])
+    # debug_command(["debug_all_commands.py", "AssertExpectations", "my-custom-label"])
+    # debug_command(["debug_all_commands.py", "AssertExpectations", "--jira-url", "https://company.atlassian.net", "--username", "user@company.com", "--password", "token"])
     
     # Jira Commands (Short-hand) - Note: requires Jira credentials
-    debug_command(["debug_all_commands.py", "rt", "rule-testing"])
+    # debug_command(["debug_all_commands.py", "rt", "rule-testing"])
     # debug_command(["debug_all_commands.py", "rt", "my-custom-label"])
     # debug_command(["debug_all_commands.py", "rt", "--jira-url", "https://company.atlassian.net", "--username", "user@company.com", "--password", "token"])
+    debug_command(["debug_all_commands.py", "ae", "rule-testing"])
+    # debug_command(["debug_all_commands.py", "ae", "my-custom-label"])
+    # debug_command(["debug_all_commands.py", "ae", "--jira-url", "https://company.atlassian.net", "--username", "user@company.com", "--password", "token"])
     
     # Help commands (these always work)
     # debug_command(["debug_all_commands.py", "--help"])
@@ -68,11 +74,13 @@ if __name__ == "__main__":
     # debug_command(["debug_all_commands.py", "ce", "--help"])
     # debug_command(["debug_all_commands.py", "ResetTestFixture", "--help"])
     # debug_command(["debug_all_commands.py", "rt", "--help"])
+    # debug_command(["debug_all_commands.py", "AssertExpectations", "--help"])
+    # debug_command(["debug_all_commands.py", "ae", "--help"])
     
     print("No command selected for debugging.")
     print("Uncomment one of the debug_command() calls above to debug a specific command.")
     print()
     print("Available commands to debug:")
     print("- CSV: remove-newline, extract-to-comma-separated-list, fix-dates-eu")
-    print("- Jira: ResetTestFixture")
+    print("- Jira: ResetTestFixture, AssertExpectations")
     print("- Help: --help")

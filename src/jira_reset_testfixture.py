@@ -132,6 +132,136 @@ def run_TestFixture_Reset(jira_url: str, username: str, password: str, label: st
         print(f"Rule-testing process failed: {results.get('error', 'Unknown error')}")
 
 
+def parse_expectation_pattern(summary: str) -> Optional[Tuple[str, str]]:
+    """
+    Parse issue summary to extract expected status for assertion pattern.
+    Expected pattern: "I was in <status1> - expected to be in <status2>"
+    
+    Args:
+        summary: Issue summary text
+        
+    Returns:
+        Tuple of (status1, status2) if pattern matches, None otherwise
+    """
+    pattern = r"I was in (.+?) - expected to be in (.+)"
+    match = re.search(pattern, summary, re.IGNORECASE)
+    
+    if match:
+        status1 = match.group(1).strip()
+        status2 = match.group(2).strip()
+        return (status1, status2)
+    
+    return None
+
+
+def assert_issues_expectations(manager: JiraInstanceManager, label: str) -> dict:
+    """
+    Assert that all issues with specified label are in their expected status.
+    This is specific to the AssertExpectations operation.
+    
+    Args:
+        manager: JiraInstanceManager instance
+        label: Jira label to search for
+        
+    Returns:
+        Dictionary with assertion results
+    """
+    if not manager.jira:
+        if not manager.connect():
+            return {'success': False, 'error': 'Failed to connect to Jira'}
+    
+    issues = manager.get_issues_by_label(label)
+    if not issues:
+        return {'success': True, 'processed': 0, 'passed': 0, 'failed': 0, 'not_evaluated': 0}
+    
+    results = {
+        'success': True,
+        'processed': len(issues),
+        'passed': 0,
+        'failed': 0,
+        'not_evaluated': 0,
+        'failures': [],
+        'not_evaluated_keys': []
+    }
+    
+    for issue in issues:
+        key = issue['key']
+        summary = issue['summary']
+        current_status = issue['status']
+        
+        print(f"Asserting {key}: {summary}")
+        print(f"  Current status: {current_status}")
+        
+        # Parse expectation pattern
+        expectation = parse_expectation_pattern(summary)
+        if not expectation:
+            print(f"  Skipping - summary doesn't match expected pattern")
+            results['not_evaluated'] += 1
+            results['not_evaluated_keys'].append(key)
+            continue
+        
+        status1, expected_status = expectation
+        print(f"  Expected status: {expected_status}")
+        
+        # Assert that current status matches expected status
+        if current_status.upper() == expected_status.upper():
+            print(f"  ✅ PASS - Current status matches expected status")
+            results['passed'] += 1
+        else:
+            print(f"  ❌ FAIL - Current status '{current_status}' does not match expected status '{expected_status}'")
+            results['failed'] += 1
+            results['failures'].append(f"{key}: Expected '{expected_status}' but is '{current_status}'")
+    
+    return results
+
+
+def run_assert_expectations(jira_url: str, username: str, password: str, label: str) -> None:
+    """
+    Run assertion process for expectations.
+    
+    Args:
+        jira_url: Jira instance URL
+        username: Jira username  
+        password: Jira password or API token
+        label: Jira label to search for
+    """
+    manager = JiraInstanceManager(jira_url, username, password)
+    
+    print(f"Starting assertion process for issues with label '{label}'...")
+    print(f"Connecting to Jira at: {jira_url}")
+    
+    # Use the AssertExpectations specific process function
+    results = assert_issues_expectations(manager, label)
+    
+    if results['success']:
+        print(f"\nAssertion process completed:")
+        print(f"  Issues processed: {results['processed']}")
+        print(f"  Assertions passed: {results['passed']}")
+        print(f"  Assertions failed: {results['failed']}")
+        print(f"  Not evaluated: {results['not_evaluated']}")
+        
+        if results.get('failures'):
+            print(f"  Failures:")
+            for failure in results['failures']:
+                print(f"    - {failure}")
+        
+        if results.get('not_evaluated_keys'):
+            keys_str = ", ".join(results['not_evaluated_keys'])
+            print(f"  Not evaluated: {keys_str}")
+        
+        # Clear success/failure summary
+        print(f"\n" + "="*60)
+        if results['failed'] == 0:
+            print(f"🎉 ALL ASSERTIONS PASSED! 🎉")
+            print(f"✅ All {results['passed']} evaluated issues are in their expected status")
+        else:
+            print(f"❌ ASSERTION FAILURES DETECTED! ❌")
+            print(f"⚠️  {results['failed']} out of {results['passed'] + results['failed']} evaluated issues are NOT in their expected status")
+        print(f"="*60)
+    else:
+        print(f"Assertion process failed: {results.get('error', 'Unknown error')}")
+
+
 def load_env_file(env_file_path: str) -> None:
     """
     Load environment variables from a .env file.
