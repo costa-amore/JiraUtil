@@ -9,17 +9,17 @@ Remove newline characters from CSV fields.
 ### Usage
 
 ```powershell
-./run.ps1 .\JiraCsv.py remove-newline <input.csv> [--output <output.csv>]
+./run.ps1 .\JiraUtil.py remove-newline <input.csv> [--output <output.csv>]
 ```
 
 ### Examples
 
 ```powershell
 # Remove newlines, create output file automatically
-./run.ps1 .\JiraCsv.py remove-newline .\jira-export.csv
+./run.ps1 .\JiraUtil.py remove-newline .\jira-export.csv
 
 # Specify custom output file
-./run.ps1 .\JiraCsv.py remove-newline .\jira-export.csv -o .\jira-clean.csv
+./run.ps1 .\JiraUtil.py remove-newline .\jira-export.csv -o .\jira-clean.csv
 ```
 
 ### Output
@@ -33,20 +33,20 @@ Extract field values from CSV and write to comma-separated text file.
 ### Usage
 
 ```powershell
-./run.ps1 .\JiraCsv.py extract-to-comma-separated-list <field_name> <input.csv>
+./run.ps1 .\JiraUtil.py extract-to-comma-separated-list <field_name> <input.csv>
 ```
 
 ### Examples
 
 ```powershell
 # Extract Parent key values
-./run.ps1 .\JiraCsv.py extract-to-comma-separated-list "Parent key" .\jira-export.csv
+./run.ps1 .\JiraUtil.py extract-to-comma-separated-list "Parent key" .\jira-export.csv
 
 # Extract Assignee values
-./run.ps1 .\JiraCsv.py extract-to-comma-separated-list "Assignee" .\jira-export.csv
+./run.ps1 .\JiraUtil.py extract-to-comma-separated-list "Assignee" .\jira-export.csv
 
 # Extract Status values
-./run.ps1 .\JiraCsv.py extract-to-comma-separated-list "Status" .\jira-export.csv
+./run.ps1 .\JiraUtil.py extract-to-comma-separated-list "Status" .\jira-export.csv
 ```
 
 ### Output
@@ -60,17 +60,17 @@ Convert Created/Updated dates for European Excel format.
 ### Usage
 
 ```powershell
-./run.ps1 .\JiraCsv.py fix-dates-eu <input.csv> [--output <output.csv>]
+./run.ps1 .\JiraUtil.py fix-dates-eu <input.csv> [--output <output.csv>]
 ```
 
 ### Examples
 
 ```powershell
 # Fix dates, create output file automatically
-./run.ps1 .\JiraCsv.py fix-dates-eu .\jira-export.csv
+./run.ps1 .\JiraUtil.py fix-dates-eu .\jira-export.csv
 
 # Specify custom output file
-./run.ps1 .\JiraCsv.py fix-dates-eu .\jira-export.csv -o .\jira-eu-dates.csv
+./run.ps1 .\JiraUtil.py fix-dates-eu .\jira-export.csv -o .\jira-eu-dates.csv
 ```
 
 ### Output
@@ -86,9 +86,9 @@ You can also run commands directly with Python:
 .\.venv\Scripts\Activate.ps1
 
 # Run commands directly
-python .\JiraCsv.py remove-newline .\jira-export.csv
-python .\JiraCsv.py extract-to-comma-separated-list "Parent key" .\jira-export.csv
-python .\JiraCsv.py fix-dates-eu .\jira-export.csv
+python .\JiraUtil.py remove-newline .\jira-export.csv
+python .\JiraUtil.py extract-to-comma-separated-list "Parent key" .\jira-export.csv
+python .\JiraUtil.py fix-dates-eu .\jira-export.csv
 ```
 
 ---

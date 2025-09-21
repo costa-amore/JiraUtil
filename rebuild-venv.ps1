@@ -39,7 +39,7 @@ if (-not (Test-Path .venv)) {
     }
     
     Write-Host "🎉 Initial setup completed!" -ForegroundColor Green
-    Write-Host "💡 You can now run: ./run.ps1 .\JiraCsv.py --help" -ForegroundColor Cyan
+    Write-Host "💡 You can now run: ./run.ps1 .\JiraUtil.py --help" -ForegroundColor Cyan
     exit 0
 }
 
@@ -81,4 +81,4 @@ if (Test-Path .\jira_config_backup.env) {
 }
 
 Write-Host "🎉 Virtual environment rebuilt successfully!" -ForegroundColor Green
-Write-Host "💡 You can now run: ./run.ps1 .\JiraCsv.py --help" -ForegroundColor Cyan
+Write-Host "💡 You can now run: ./run.ps1 .\JiraUtil.py --help" -ForegroundColor Cyan

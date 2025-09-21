@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Debug script for all JiraCsv commands.
+Debug script for all JiraUtil commands.
 This makes it easier to debug any command functionality.
 """
 
@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 # Import the main function
-from JiraCsv import main
+from JiraUtil import main
 
 def debug_command(command_args):
     """Debug a specific command with the given arguments."""
@@ -30,29 +30,29 @@ def debug_command(command_args):
         traceback.print_exc()
 
 if __name__ == "__main__":
-    print("JiraCsv Debug Script")
+    print("JiraUtil Debug Script")
     print("=" * 50)
     print()
     
     # Uncomment the command you want to debug:
     
     # CSV Commands
-    # debug_command(["JiraCsv.py", "remove-newline", "test.csv"])
-    # debug_command(["JiraCsv.py", "remove-newline", "test.csv", "--output", "test-clean.csv"])
-    # debug_command(["JiraCsv.py", "extract-to-comma-separated-list", "Parent key", "test.csv"])
-    # debug_command(["JiraCsv.py", "extract-to-comma-separated-list", "Assignee", "test.csv"])
-    # debug_command(["JiraCsv.py", "fix-dates-eu", "test.csv"])
-    # debug_command(["JiraCsv.py", "fix-dates-eu", "test.csv", "--output", "test-eu-dates.csv"])
+    # debug_command(["JiraUtil.py", "remove-newline", "test.csv"])
+    # debug_command(["JiraUtil.py", "remove-newline", "test.csv", "--output", "test-clean.csv"])
+    # debug_command(["JiraUtil.py", "extract-to-comma-separated-list", "Parent key", "test.csv"])
+    # debug_command(["JiraUtil.py", "extract-to-comma-separated-list", "Assignee", "test.csv"])
+    # debug_command(["JiraUtil.py", "fix-dates-eu", "test.csv"])
+    # debug_command(["JiraUtil.py", "fix-dates-eu", "test.csv", "--output", "test-eu-dates.csv"])
     
     # Jira Commands
-    # debug_command(["JiraCsv.py", "ResetTestFixture"])
-    # debug_command(["JiraCsv.py", "ResetTestFixture", "rule-testing"])
-    # debug_command(["JiraCsv.py", "ResetTestFixture", "my-custom-label"])
-    # debug_command(["JiraCsv.py", "ResetTestFixture", "--jira-url", "https://company.atlassian.net", "--username", "user@company.com", "--password", "token"])
+    # debug_command(["JiraUtil.py", "ResetTestFixture"])
+    # debug_command(["JiraUtil.py", "ResetTestFixture", "rule-testing"])
+    # debug_command(["JiraUtil.py", "ResetTestFixture", "my-custom-label"])
+    # debug_command(["JiraUtil.py", "ResetTestFixture", "--jira-url", "https://company.atlassian.net", "--username", "user@company.com", "--password", "token"])
     
     # Help commands
-    # debug_command(["JiraCsv.py", "--help"])
-    # debug_command(["JiraCsv.py", "ResetTestFixture", "--help"])
+    # debug_command(["JiraUtil.py", "--help"])
+    # debug_command(["JiraUtil.py", "ResetTestFixture", "--help"])
     
     print("No command selected for debugging.")
     print("Uncomment one of the debug_command() calls above to debug a specific command.")

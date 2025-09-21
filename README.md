@@ -6,7 +6,7 @@ A Python utility for processing Jira CSV exports and manipulating Jira issues di
 
 1. **Setup**: Run `./rebuild-venv.ps1` to create the environment and install dependencies
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
-3. **Run**: Use `./run.ps1 .\JiraCsv.py --help` to see all available commands
+3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` to see all available commands
 
 ## 📋 Available Commands
 

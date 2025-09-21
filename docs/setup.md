@@ -44,7 +44,7 @@ JIRA_PASSWORD=your_api_token_here
 Test your setup:
 ```powershell
 # Check if everything works
-./run.ps1 .\JiraCsv.py --help
+./run.ps1 .\JiraUtil.py --help
 ```
 
 ## Troubleshooting

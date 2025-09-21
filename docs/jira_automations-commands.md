@@ -19,33 +19,33 @@ When found, it updates the issue status to `<status1>`.
 
 #### Basic Usage (default "rule-testing" label)
 ```powershell
-./run.ps1 .\JiraCsv.py ResetTestFixture
+./run.ps1 .\JiraUtil.py ResetTestFixture
 ```
 
 #### Custom Label
 ```powershell
-./run.ps1 .\JiraCsv.py ResetTestFixture my-custom-label
+./run.ps1 .\JiraUtil.py ResetTestFixture my-custom-label
 ```
 
 #### With Credentials
 ```powershell
-./run.ps1 .\JiraCsv.py ResetTestFixture --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
+./run.ps1 .\JiraUtil.py ResetTestFixture --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
 ```
 
 ### Examples
 
 ```powershell
 # Process "rule-testing" issues (default)
-./run.ps1 .\JiraCsv.py ResetTestFixture
+./run.ps1 .\JiraUtil.py ResetTestFixture
 
 # Process "bug-fix" issues
-./run.ps1 .\JiraCsv.py ResetTestFixture bug-fix
+./run.ps1 .\JiraUtil.py ResetTestFixture bug-fix
 
 # Process "feature-request" issues
-./run.ps1 .\JiraCsv.py ResetTestFixture feature-request
+./run.ps1 .\JiraUtil.py ResetTestFixture feature-request
 
 # Process with custom credentials
-./run.ps1 .\JiraCsv.py ResetTestFixture --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
+./run.ps1 .\JiraUtil.py ResetTestFixture --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
 ```
 
 ### Configuration

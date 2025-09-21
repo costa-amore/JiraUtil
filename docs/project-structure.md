@@ -6,7 +6,7 @@
 Jira_csv_helper/
 ├── src/                          # Source code
 │   ├── __init__.py
-│   ├── JiraCsv.py               # Main CLI entry point
+│   ├── JiraUtil.py               # Main CLI entry point
 │   ├── jira_cleaner.py          # Newline removal functionality
 │   ├── jira_dates_eu.py         # European date formatting
 │   ├── jira_field_extractor.py  # Field value extraction
@@ -23,7 +23,7 @@ Jira_csv_helper/
 │   └── testing.md
 ├── .venv/                        # Virtual environment
 │   └── jira_config.env          # Jira credentials (not in git)
-├── JiraCsv.py                   # Root entry point
+├── JiraUtil.py                   # Root entry point
 ├── debug_all_commands.py        # Debug script for all commands
 ├── rebuild-venv.ps1             # Environment setup/rebuild script
 ├── run.ps1                      # PowerShell runner script
@@ -35,8 +35,8 @@ Jira_csv_helper/
 ## Key Files
 
 ### Entry Points
-- **`JiraCsv.py`** - Root entry point that imports from `src/`
-- **`src/JiraCsv.py`** - Main CLI implementation with argument parsing
+- **`JiraUtil.py`** - Root entry point that imports from `src/`
+- **`src/JiraUtil.py`** - Main CLI implementation with argument parsing
 
 ### Core Modules
 - **`jira_cleaner.py`** - CSV newline removal
@@ -61,8 +61,8 @@ Jira_csv_helper/
 ## Module Dependencies
 
 ```
-JiraCsv.py (root)
-├── src/JiraCsv.py
+JiraUtil.py (root)
+├── src/JiraUtil.py
     ├── jira_cleaner.py
     ├── jira_dates_eu.py
     ├── jira_field_extractor.py
@@ -80,8 +80,8 @@ JiraCsv.py (root)
 
 ## Adding New Features
 
-1. **New CSV command**: Add to `src/JiraCsv.py` argument parser
-2. **New Jira command**: Add to `src/JiraCsv.py` JiraTest section
+1. **New CSV command**: Add to `src/JiraUtil.py` argument parser
+2. **New Jira command**: Add to `src/JiraUtil.py` JiraTest section
 3. **New functionality**: Create new module in `src/`
 4. **Tests**: Add test files to `tests/`
 5. **Documentation**: Update relevant files in `docs/`
