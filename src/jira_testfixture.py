@@ -1,7 +1,8 @@
 """
-Jira rule-testing functionality.
+Jira test fixture management functionality.
 
-This module provides specific rule-testing functionality that uses the
+This module provides functionality to manage issues used as test fixtures,
+primarily for verifying correct execution of automation rules. It uses the
 generic Jira management capabilities from jira_manager.py.
 """
 
@@ -13,6 +14,9 @@ from jira_manager import JiraInstanceManager
 
 # Shared pattern for both ResetTestFixture and AssertExpectations
 SUMMARY_PATTERN = r"I was in (.+?) - expected to be in (.+)"
+
+# Default label for test fixture issues (used to verify automation rules)
+DEFAULT_TEST_FIXTURE_LABEL = "rule-testing"
 
 def parse_summary_pattern(summary: str, current_status: str) -> Optional[Tuple[bool, str]]:
     """
