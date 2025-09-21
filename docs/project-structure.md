@@ -10,7 +10,7 @@ Jira_csv_helper/
 │   ├── jira_cleaner.py          # Newline removal functionality
 │   ├── jira_dates_eu.py         # European date formatting
 │   ├── jira_field_extractor.py  # Field value extraction
-│   └── jira_test.py             # Jira integration functionality
+│   └── jira_reset_testfixture.py # Jira integration functionality
 ├── tests/                        # Test files
 │   ├── __init__.py
 │   ├── run_tests.py             # Test runner
@@ -42,7 +42,7 @@ Jira_csv_helper/
 - **`jira_cleaner.py`** - CSV newline removal
 - **`jira_dates_eu.py`** - European date formatting
 - **`jira_field_extractor.py`** - Field value extraction
-- **`jira_test.py`** - Jira API integration and issue processing
+- **`jira_reset_testfixture.py`** - Jira API integration and issue processing
 
 ### Configuration
 - **`jira_config_example.env`** - Template for Jira credentials
@@ -66,7 +66,7 @@ JiraUtil.py (root)
     ├── jira_cleaner.py
     ├── jira_dates_eu.py
     ├── jira_field_extractor.py
-    └── jira_test.py
+    └── jira_reset_testfixture.py
         └── jira (external library)
 ```
 
