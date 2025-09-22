@@ -26,59 +26,17 @@ A powerful command-line tool for Jira administrators and power users.
 
 ## ⚙️ Configuration
 
-Edit `jira_config.env` with your Jira credentials:
+See [Configuration Reference](shared/configuration.md) for detailed setup instructions.
 
-```env
-JIRA_URL=https://yourcompany.atlassian.net
-JIRA_USERNAME=your.email@company.com
-JIRA_PASSWORD=your_api_token_here
-```
+**Quick Setup:**
 
-**Security Note**: Use Jira API tokens instead of passwords for better security.
+1. Edit `jira_config.env` with your Jira credentials
+2. Use API tokens instead of passwords for better security
+3. The tool will prompt you if template values are detected
 
 ## 📖 Command Examples
 
-### CSV Processing
-
-```bash
-# Remove newlines from CSV file
-JiraUtil CsvExport remove-newline input.csv
-
-# Extract assignee names to text file
-JiraUtil CsvExport extract-to-comma-separated-list "Assignee" input.csv
-
-# Convert dates for European Excel
-JiraUtil CsvExport fix-dates-eu input.csv
-```
-
-### Jira Test Fixtures
-
-```bash
-# Reset test fixture issues (default label: rule-testing)
-JiraUtil ResetTestFixture
-
-# Reset with custom label
-JiraUtil ResetTestFixture my-test-label
-
-# Assert expectations for test fixtures
-JiraUtil AssertExpectations
-
-# Assert with custom label
-JiraUtil AssertExpectations my-test-label
-```
-
-### Short-hand Commands
-
-```bash
-# CSV commands
-JiraUtil ce rn input.csv
-JiraUtil ce ecl "Assignee" input.csv
-JiraUtil ce fd input.csv
-
-# Jira commands
-JiraUtil rt
-JiraUtil ae
-```
+See [Command Examples Reference](shared/command-examples.md) for comprehensive examples and usage patterns.
 
 ## 🔧 Command Line Options
 
@@ -95,29 +53,7 @@ JiraUtil ae
 
 ## 🎯 Test Fixture Pattern
 
-For Jira test fixture management, issues should have summaries matching this pattern:
-
-```
-I was in <status1> - expected to be in <status2>
-```
-
-**Examples:**
-- `I was in To Do - expected to be in In Progress`
-- `I was in In Progress - expected to be in Done`
-
-### ResetTestFixture Behavior
-
-- Finds issues with the specified label (default: "rule-testing")
-- Parses summary to extract `<status1>`
-- Updates issue status to `<status1>`
-- Skips if already in target status
-
-### AssertExpectations Behavior
-
-- Finds issues with the specified label (default: "rule-testing")
-- Parses summary to extract `<status2>` (expected status)
-- Verifies current status matches expected status
-- Reports pass/fail results
+See [Test Fixture Pattern Reference](shared/test-fixture-pattern.md) for detailed pattern requirements and behavior.
 
 ## 🚨 Troubleshooting
 
@@ -145,16 +81,7 @@ I was in <status1> - expected to be in <status2>
 
 ## 📁 File Structure
 
-```
-JiraUtil/
-├── JiraUtil.exe          # Main executable (Windows)
-├── JiraUtil              # Main executable (macOS/Linux)
-├── run.bat               # Windows launcher
-├── run.sh                # Unix launcher
-├── jira_config.env       # Configuration file
-├── README.md             # This file
-└── docs/                 # Additional documentation
-```
+See [File Structure Reference](shared/file-structure.md) for complete file organization details.
 
 ---
 

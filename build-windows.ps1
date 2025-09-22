@@ -72,11 +72,14 @@ function Build-Executable {
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✅ $PlatformName build completed successfully" -ForegroundColor Green
         
-        # Copy additional files
-        Copy-Item "jira_config_example.env" "$outputDir\jira_config.env" -ErrorAction SilentlyContinue
-        Copy-Item "docs\user-guide.md" "$outputDir\README.md" -ErrorAction SilentlyContinue
-        Copy-Item "docs\command-reference.md" "$outputDir\" -ErrorAction SilentlyContinue
-        Copy-Item "docs\troubleshooting.md" "$outputDir\" -ErrorAction SilentlyContinue
+               # Copy additional files
+               Copy-Item "jira_config_example.env" "$outputDir\jira_config.env" -ErrorAction SilentlyContinue
+               Copy-Item "docs\user-guide.md" "$outputDir\README.md" -ErrorAction SilentlyContinue
+               Copy-Item "docs\command-reference.md" "$outputDir\" -ErrorAction SilentlyContinue
+               Copy-Item "docs\troubleshooting.md" "$outputDir\" -ErrorAction SilentlyContinue
+               
+               # Copy shared documentation folder
+               Copy-Item "docs\shared" "$outputDir\shared" -Recurse -ErrorAction SilentlyContinue
         
         # Create a simple launcher script for the platform
         if ($TargetOS -eq "windows") {

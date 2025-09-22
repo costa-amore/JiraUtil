@@ -135,22 +135,11 @@ JiraUtil ae my-test-label
 
 ## Configuration
 
-The tool looks for credentials in this order:
-1. Command line options (`--jira-url`, `--username`, `--password`)
-2. `jira_config.env` file in the same directory as the executable
-3. Environment variables (`JIRA_URL`, `JIRA_USERNAME`, `JIRA_PASSWORD`)
-4. Interactive prompts
+See [Configuration Reference](shared/configuration.md) for detailed setup instructions.
 
 ## Test Fixture Pattern
 
-For Jira test fixture commands, issue summaries must match:
-
-```
-I was in <status1> - expected to be in <status2>
-```
-
-**ResetTestFixture** uses `<status1>` as the target status.
-**AssertExpectations** uses `<status2>` as the expected status.
+See [Test Fixture Pattern Reference](shared/test-fixture-pattern.md) for pattern requirements and behavior.
 
 ## Exit Codes
 
@@ -159,37 +148,4 @@ I was in <status1> - expected to be in <status2>
 
 ## Examples
 
-### Complete Workflow
-
-```bash
-# 1. Process CSV file
-JiraUtil ce rn raw-data.csv --output clean-data.csv
-
-# 2. Extract assignees
-JiraUtil ce ecl "Assignee" clean-data.csv
-
-# 3. Reset test fixtures
-JiraUtil rt rule-testing
-
-# 4. Verify expectations
-JiraUtil ae rule-testing
-```
-
-### Using Short-hand Commands
-
-```bash
-# CSV processing
-JiraUtil ce rn data.csv
-JiraUtil ce ecl "Status" data.csv
-JiraUtil ce fd data.csv
-
-# Jira operations
-JiraUtil rt
-JiraUtil ae
-```
-
-### With Custom Credentials
-
-```bash
-JiraUtil rt --jira-url https://mycompany.atlassian.net --username me@company.com --password my_token
-```
+See [Command Examples Reference](shared/command-examples.md) for comprehensive examples and usage patterns.

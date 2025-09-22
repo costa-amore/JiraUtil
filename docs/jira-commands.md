@@ -59,11 +59,7 @@ When found, it updates the issue status to `<status1>`.
 
 ### Configuration
 
-The tool automatically loads credentials from:
-
-1. `.venv\jira_config.env` (recommended)
-2. Environment variables: `JIRA_URL`, `JIRA_USERNAME`, `JIRA_PASSWORD`
-3. Interactive prompts (fallback)
+See [Configuration Reference](shared/configuration.md) for detailed setup instructions.
 
 ### How It Works
 
@@ -152,11 +148,7 @@ When found, it asserts that the current status matches `<status2>`.
 
 ### AssertExpectations Configuration
 
-The tool automatically loads credentials from:
-
-1. `.venv\jira_config.env` (recommended)
-2. Environment variables: `JIRA_URL`, `JIRA_USERNAME`, `JIRA_PASSWORD`
-3. Interactive prompts (fallback)
+See [Configuration Reference](shared/configuration.md) for detailed setup instructions.
 
 ### AssertExpectations How It Works
 

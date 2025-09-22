@@ -88,11 +88,14 @@ build_executable() {
     if [ $? -eq 0 ]; then
         echo "✅ $platform_name build completed successfully"
         
-        # Copy additional files
-        cp jira_config_example.env "$output_dir/jira_config.env" 2>/dev/null || true
-        cp docs/user-guide.md "$output_dir/README.md" 2>/dev/null || true
-        cp docs/command-reference.md "$output_dir/" 2>/dev/null || true
-        cp docs/troubleshooting.md "$output_dir/" 2>/dev/null || true
+               # Copy additional files
+               cp jira_config_example.env "$output_dir/jira_config.env" 2>/dev/null || true
+               cp docs/user-guide.md "$output_dir/README.md" 2>/dev/null || true
+               cp docs/command-reference.md "$output_dir/" 2>/dev/null || true
+               cp docs/troubleshooting.md "$output_dir/" 2>/dev/null || true
+               
+               # Copy shared documentation folder
+               cp -r docs/shared "$output_dir/" 2>/dev/null || true
         
         # Create a simple launcher script
         cat > "$output_dir/run.sh" << 'EOF'

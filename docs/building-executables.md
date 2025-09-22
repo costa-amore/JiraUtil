@@ -54,32 +54,12 @@ This guide explains how to build standalone executables for the JiraUtil project
 
 ## Output Structure
 
-After building, you'll find:
+See [File Structure Reference](shared/file-structure.md) for complete file organization details.
 
-```
-build-executables/
-├── Windows/
-│   ├── JiraUtil.exe
-│   ├── run.bat
-│   ├── jira_config_example.env
-│   ├── README.md
-│   └── docs/
-├── macOS/
-│   ├── JiraUtil
-│   ├── run.sh
-│   ├── jira_config_example.env
-│   ├── README.md
-│   └── docs/
-├── Linux/
-│   ├── JiraUtil
-│   ├── run.sh
-│   ├── jira_config_example.env
-│   ├── README.md
-│   └── docs/
-├── JiraUtil-Windows.zip
-├── JiraUtil-macOS.zip
-└── JiraUtil-Linux.zip
-```
+**Build Output:**
+
+- `build-executables/` - Contains platform-specific folders and ZIP files
+- Each platform folder includes executable, launcher scripts, and documentation
 
 ## Distribution
 
@@ -94,13 +74,7 @@ build-executables/
 
 ### Configuration
 
-Users need to edit `jira_config.env`:
-
-```env
-JIRA_URL=https://yourcompany.atlassian.net
-JIRA_USERNAME=your.email@company.com
-JIRA_PASSWORD=your_api_token_here
-```
+See [Configuration Reference](shared/configuration.md) for detailed setup instructions.
 
 ## Advanced Configuration
 
