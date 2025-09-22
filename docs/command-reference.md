@@ -53,6 +53,7 @@ JiraUtil -v
 **Output**: Shows version in format `JiraUtil X.Y.Z`
 
 **Examples**:
+
 ```bash
 # Show version
 JiraUtil --version
@@ -66,18 +67,22 @@ JiraUtil -v
 ### csv-export remove-newlines
 
 **Usage:**
+
 ```bash
 JiraUtil csv-export remove-newlines <input> [--output <file>]
 JiraUtil ce rn <input> [--output <file>]
 ```
 
 **Arguments:**
+
 - `input` - Path to input CSV file
 
 **Options:**
+
 - `--output`, `-o` - Output file path (default: `<input-stem>-no-newlines.csv`)
 
 **Example:**
+
 ```bash
 JiraUtil ce rn data.csv --output clean-data.csv
 ```
@@ -85,16 +90,19 @@ JiraUtil ce rn data.csv --output clean-data.csv
 ### csv-export extract-to-comma-separated-list
 
 **Usage:**
+
 ```bash
 JiraUtil csv-export extract-to-comma-separated-list <field_name> <input>
 JiraUtil ce ecl <field_name> <input>
 ```
 
 **Arguments:**
+
 - `field_name` - Name of field to extract (e.g., "Assignee", "Status")
 - `input` - Path to input CSV file
 
 **Example:**
+
 ```bash
 JiraUtil ce ecl "Assignee" data.csv
 ```
@@ -102,18 +110,22 @@ JiraUtil ce ecl "Assignee" data.csv
 ### csv-export fix-dates-eu
 
 **Usage:**
+
 ```bash
 JiraUtil csv-export fix-dates-eu <input> [--output <file>]
 JiraUtil ce fd <input> [--output <file>]
 ```
 
 **Arguments:**
+
 - `input` - Path to input CSV file
 
 **Options:**
+
 - `--output`, `-o` - Output file path (default: `<input-stem>-eu-dates.csv`)
 
 **Example:**
+
 ```bash
 JiraUtil ce fd data.csv --output eu-data.csv
 ```
@@ -121,20 +133,24 @@ JiraUtil ce fd data.csv --output eu-data.csv
 ### test-fixture reset
 
 **Usage:**
+
 ```bash
 JiraUtil test-fixture reset [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 JiraUtil tf r [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 ```
 
 **Arguments:**
+
 - `label` - Jira label to search for (default: "rule-testing")
 
 **Options:**
+
 - `--jira-url` - Jira instance URL
 - `--username` - Jira username
 - `--password` - Jira password/API token
 
 **Example:**
+
 ```bash
 JiraUtil tf r my-test-label
 ```
@@ -142,20 +158,24 @@ JiraUtil tf r my-test-label
 ### test-fixture assert
 
 **Usage:**
+
 ```bash
 JiraUtil test-fixture assert [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 JiraUtil tf a [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 ```
 
 **Arguments:**
+
 - `label` - Jira label to search for (default: "rule-testing")
 
 **Options:**
+
 - `--jira-url` - Jira instance URL
 - `--username` - Jira username
 - `--password` - Jira password/API token
 
 **Example:**
+
 ```bash
 JiraUtil tf a my-test-label
 ```
@@ -163,6 +183,7 @@ JiraUtil tf a my-test-label
 ### list
 
 **Usage:**
+
 ```bash
 JiraUtil list
 JiraUtil ls
@@ -171,6 +192,7 @@ JiraUtil ls
 **Description:** Show all available commands and their descriptions.
 
 **Example:**
+
 ```bash
 JiraUtil ls
 ```
@@ -178,6 +200,7 @@ JiraUtil ls
 ### status
 
 **Usage:**
+
 ```bash
 JiraUtil status
 JiraUtil st
@@ -186,6 +209,7 @@ JiraUtil st
 **Description:** Show tool status and information including version and configuration.
 
 **Example:**
+
 ```bash
 JiraUtil st
 ```

@@ -27,13 +27,14 @@ I was in <status1> - expected to be in <status2>
 ## Command Behavior
 
 ### ResetTestFixture
+
 - **Purpose**: Update issue status based on summary pattern
 - **Uses**: `<status1>` as the target status
 - **Action**: Changes issue status to `<status1>`
 - **Skip**: If already in target status
 
-
 ### AssertExpectations
+
 - **Purpose**: Verify issues are in expected status
 - **Uses**: `<status2>` as the expected status
 - **Action**: Compares current status with `<status2>`
@@ -61,7 +62,6 @@ I was in <status1> - expected to be in <status2>
 2. Verify status names match your Jira instance exactly
 3. Ensure no extra spaces or characters
 4. Check the issue summary is not empty or malformed
-
 
 ### "Status not found" or transition errors
 

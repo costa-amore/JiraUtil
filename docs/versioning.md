@@ -9,6 +9,7 @@ JiraUtil uses a **smart versioning system** that automatically increments the bu
 ## 📋 Version Format
 
 Versions follow the format: **M.m.bld**
+
 - **M** = Major version (manually set)
 - **m** = Minor version (manually set)  
 - **bld** = Build number (automatically incremented)
@@ -37,6 +38,7 @@ python set-version.py --current
 ### Automatic Version Incrementing
 
 The build system automatically increments the build number when:
+
 - ✅ Any file in `src/` directory changes
 - ✅ Any file in `docs/` directory changes  
 - ✅ `README.md` changes (functional changes, not version updates)
@@ -44,6 +46,7 @@ The build system automatically increments the build number when:
 - ✅ Any configuration files change (`JiraUtil.spec`, etc.)
 
 The build system does NOT increment when:
+
 - ❌ Only version numbers are updated in files
 - ❌ Build output files change
 - ❌ Cache files change
@@ -56,12 +59,14 @@ The build system does NOT increment when:
 The system calculates SHA256 hashes of all tracked files and compares them with stored hashes to detect changes.
 
 **Tracked files:**
+
 - All `.py` files in `src/` and root
 - All `.md` files in `docs/` and root
 - All `.ps1` and `.sh` build scripts
 - Configuration files (`.spec`, `.json`)
 
 **Ignored files:**
+
 - `version.json` (version file itself)
 - `version_info.txt` (generated file)
 - Build output directories
@@ -89,6 +94,7 @@ python version_manager.py increment-if-changed
 ### 3. Version Synchronization
 
 All files are kept in sync with the same version number:
+
 - `version.json` - Master version file
 - `README.md` - Development documentation
 - `version_info.txt` - PyInstaller metadata
@@ -146,16 +152,19 @@ python version_manager.py get
 If the version isn't incrementing when you expect it to:
 
 1. **Check if files are tracked:**
+
    ```bash
    python code_change_detector.py changed
    ```
 
 2. **Check if changes are detected:**
+
    ```bash
    python code_change_detector.py check
    ```
 
 3. **Force version update completion:**
+
    ```bash
    python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
    ```
@@ -165,11 +174,13 @@ If the version isn't incrementing when you expect it to:
 If you manually edited `version.json` and caused issues:
 
 1. **Reset to a known good version:**
+
    ```bash
    python set-version.py 1.0.0
    ```
 
 2. **Mark as complete:**
+
    ```bash
    python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
    ```
@@ -179,11 +190,13 @@ If you manually edited `version.json` and caused issues:
 If files show different versions:
 
 1. **Check current version:**
+
    ```bash
    python version_manager.py get
    ```
 
 2. **Update all files:**
+
    ```bash
    python update-dev-version.py
    ```
@@ -191,18 +204,21 @@ If files show different versions:
 ## 📁 Files Involved
 
 ### Core Versioning Files
+
 - `version.json` - Master version file (DO NOT EDIT MANUALLY)
 - `version_manager.py` - Version management logic
 - `code_change_detector.py` - Change detection system
 - `set-version.py` - Dev-friendly version setting command
 
 ### Build Integration Files
+
 - `build-windows.ps1` - Windows build script
 - `build-unix.sh` - Unix build script
 - `update-dev-version.py` - Updates README.md
 - `create-version-info.py` - Creates PyInstaller version info
 
 ### Generated Files
+
 - `version_info.txt` - PyInstaller version metadata
 - `.code_hash` - File hash storage (auto-generated)
 

@@ -2,7 +2,9 @@
 
 A Python utility for supporting Jira admins.
 
-**Version: 1.0.2**
+## Version
+
+Version: 1.0.2
 
 ## 🚀 Quick Start
 
@@ -16,6 +18,7 @@ A Python utility for supporting Jira admins.
 JiraUtil uses smart versioning that automatically increments build numbers only when code changes are detected.
 
 **Quick Commands:**
+
 ```bash
 python set-version.py 1.0.0          # Set version to 1.0.0
 python set-version.py --current      # Show current version
@@ -46,11 +49,13 @@ python set-version.py --current      # Show current version
 ## 📚 Documentation
 
 ### For Users
+
 - **[User Guide](docs/user-guide.md)** - Complete user guide for executable users
 - **[Command Reference](docs/command-reference.md)** - Quick command reference
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
 ### For Developers
+
 - **[Setup Guide](docs/setup.md)** - Development environment setup
 - **[Project Structure](docs/project-structure.md)** - Code organization
 - **[Testing](docs/testing.md)** - Running tests and development
@@ -96,4 +101,3 @@ Jira_csv_helper/
 ---
 
 *For detailed information, see the [documentation](docs/) folder.*
-# Test change for versioning

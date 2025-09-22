@@ -6,10 +6,10 @@
 JiraUtil <command> [subcommand] [options] [arguments]
 ```
 
-
 ## CSV Processing Examples
 
 ### Remove Newlines
+
 ```bash
 # Basic usage
 JiraUtil CsvExport remove-newline input.csv
@@ -21,8 +21,8 @@ JiraUtil CsvExport remove-newline input.csv --output clean-data.csv
 JiraUtil ce rn input.csv
 ```
 
-
 ### Extract Field Values
+
 ```bash
 # Extract assignees
 JiraUtil CsvExport extract-to-comma-separated-list "Assignee" input.csv
@@ -34,8 +34,8 @@ JiraUtil CsvExport extract-to-comma-separated-list "Status" input.csv
 JiraUtil ce ecl "Assignee" input.csv
 ```
 
-
 ### Fix Dates for European Excel
+
 ```bash
 # Basic usage
 JiraUtil CsvExport fix-dates-eu input.csv
@@ -47,10 +47,10 @@ JiraUtil CsvExport fix-dates-eu input.csv --output eu-data.csv
 JiraUtil ce fd input.csv
 ```
 
-
 ## Jira Test Fixture Examples
 
 ### ResetTestFixture
+
 ```bash
 # Default label (rule-testing)
 JiraUtil ResetTestFixture
@@ -65,8 +65,8 @@ JiraUtil ResetTestFixture --jira-url https://company.atlassian.net --username us
 JiraUtil rt my-test-label
 ```
 
-
 ### AssertExpectations
+
 ```bash
 # Default label (rule-testing)
 JiraUtil AssertExpectations
@@ -80,7 +80,6 @@ JiraUtil AssertExpectations --jira-url https://company.atlassian.net --username 
 # Short-hand
 JiraUtil ae my-test-label
 ```
-
 
 ## Help Commands
 
@@ -99,10 +98,10 @@ JiraUtil rt --help
 JiraUtil ae --help
 ```
 
-
 ## Complete Workflow Examples
 
 ### CSV Processing Workflow
+
 ```bash
 # 1. Clean the data
 JiraUtil ce rn raw-data.csv --output clean-data.csv
@@ -115,8 +114,8 @@ JiraUtil ce ecl "Status" clean-data.csv
 JiraUtil ce fd clean-data.csv --output final-data.csv
 ```
 
-
 ### Jira Test Fixture Workflow
+
 ```bash
 # 1. Reset test fixtures to initial state
 JiraUtil rt rule-testing
@@ -128,8 +127,8 @@ JiraUtil rt rule-testing
 JiraUtil ae rule-testing
 ```
 
-
 ### Development Workflow
+
 ```bash
 # 1. Setup environment
 ./setup-environment.ps1
@@ -144,7 +143,6 @@ python debug-helper.py
 ./build-windows.ps1
 ```
 
-
 ## Short-hand Command Reference
 
 | Full Command | Short | Description |
@@ -154,7 +152,6 @@ python debug-helper.py
 | `CsvExport fix-dates-eu` | `ce fd` | Fix dates for EU Excel |
 | `ResetTestFixture` | `rt` | Reset test fixtures |
 | `AssertExpectations` | `ae` | Assert expectations |
-
 
 ## Common Options
 

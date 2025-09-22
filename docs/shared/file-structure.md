@@ -50,32 +50,32 @@ Jira_csv_helper/
 ## Key Files
 
 ### Entry Points
+
 - **`JiraUtil.py`** - Main CLI entry point
 - **`ju.py`** - Short alias for JiraUtil
 - **`run.ps1`** - PowerShell runner script
 
-
 ### Development & Testing
+
 - **`test-runner.py`** - Test runner
 - **`debug-helper.py`** - Debug helper for all commands
 
-
 ### Environment Management
+
 - **`setup-environment.ps1`** - One-command environment setup/rebuild
 
-
 ### Build System
+
 - **`build-windows.ps1`** - Windows build script
 - **`build-unix.sh`** - Unix build script
 - **`JiraUtil.spec`** - PyInstaller configuration
 
-
 ### Configuration
+
 - **`jira_config_example.env`** - Template for Jira credentials
 - **`.venv/jira_config.env`** - Actual credentials (created by setup)
 - **`requirements.txt`** - Python package dependencies
 - **`requirements-build.txt`** - Build-specific dependencies
-
 
 ## File Naming Conventions
 

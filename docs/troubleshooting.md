@@ -7,17 +7,20 @@ Common issues and solutions for JiraUtil.
 ### "Failed to connect to Jira"
 
 **Symptoms:**
+
 - Error message: "Failed to connect to Jira"
 - Tool exits with error code 1
 
 **Solutions:**
+
 1. **Check Jira URL format:**
    - Use: `https://yourcompany.atlassian.net`
    - Avoid: `http://` (use HTTPS)
    - Avoid: trailing slashes
 
 2. **Verify API token:**
-   - Generate new token at: https://id.atlassian.com/manage-profile/security/api-tokens
+
+   - Generate new token at: <https://id.atlassian.com/manage-profile/security/api-tokens>
    - Use API token, not password
    - Ensure token has appropriate permissions
 
@@ -33,11 +36,14 @@ Common issues and solutions for JiraUtil.
 ### "Template values detected"
 
 **Symptoms:**
+
 - Prompted for credentials even with config file
 - Message about template values
 
 **Solutions:**
+
 1. **Edit `jira_config.env`:**
+
    ```env
    JIRA_URL=https://yourcompany.atlassian.net
    JIRA_USERNAME=your.email@company.com
@@ -53,10 +59,12 @@ Common issues and solutions for JiraUtil.
 ### "No issues found"
 
 **Symptoms:**
+
 - Message: "No issues found" or "0 issues processed"
 - Empty results
 
 **Solutions:**
+
 1. **Check label name:**
    - Verify label exists in Jira
    - Check spelling and case sensitivity
@@ -74,10 +82,12 @@ Common issues and solutions for JiraUtil.
 ### "Summary doesn't match expected pattern"
 
 **Symptoms:**
+
 - Issues skipped with pattern mismatch message
 - No status updates performed
 
 **Solutions:**
+
 1. **Check summary format:**
    - Required: `I was in <status1> - expected to be in <status2>`
    - Example: `I was in To Do - expected to be in In Progress`
@@ -92,10 +102,12 @@ Common issues and solutions for JiraUtil.
 ### "File not found" or "Permission denied"
 
 **Symptoms:**
+
 - Error opening CSV files
 - Cannot write output files
 
 **Solutions:**
+
 1. **Check file paths:**
    - Use absolute paths if needed
    - Avoid spaces in file names
@@ -113,10 +125,12 @@ Common issues and solutions for JiraUtil.
 ### "Invalid field name"
 
 **Symptoms:**
+
 - Error when extracting field values
 - Field not found in CSV
 
 **Solutions:**
+
 1. **Check field names:**
    - Use exact column headers from CSV
    - Check spelling and case
@@ -132,10 +146,12 @@ Common issues and solutions for JiraUtil.
 ### "Slow execution" or "Timeout"
 
 **Symptoms:**
+
 - Long wait times
 - Connection timeouts
 
 **Solutions:**
+
 1. **Reduce scope:**
    - Use more specific labels
    - Process smaller batches
@@ -156,11 +172,13 @@ Common issues and solutions for JiraUtil.
 ### Windows Issues
 
 **"Access denied" errors:**
+
 - Run Command Prompt as Administrator
 - Check antivirus software
 - Verify file permissions
 
 **"Python not found":**
+
 - Executable is self-contained
 - No Python installation required
 - Check if file is corrupted
@@ -168,11 +186,13 @@ Common issues and solutions for JiraUtil.
 ### macOS/Linux Issues
 
 **"Permission denied" on executable:**
+
 ```bash
 chmod +x JiraUtil
 ```
 
 **"Command not found":**
+
 ```bash
 ./JiraUtil --help
 ```
@@ -186,6 +206,7 @@ chmod +x JiraUtil
    - Check error messages carefully
 
 2. **Test with simple commands:**
+
    ```bash
    JiraUtil --help
    JiraUtil CsvExport --help
@@ -214,6 +235,7 @@ chmod +x JiraUtil
 ### When to Contact Support
 
 Contact your system administrator if:
+
 - Jira instance is down
 - Permission issues persist
 - Network connectivity problems
