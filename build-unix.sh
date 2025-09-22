@@ -89,7 +89,7 @@ build_executable() {
         echo "✅ $platform_name build completed successfully"
         
         # Copy additional files
-        cp jira_config_example.env "$output_dir/" 2>/dev/null || true
+        cp jira_config_example.env "$output_dir/jira_config.env" 2>/dev/null || true
         cp README.md "$output_dir/" 2>/dev/null || true
         cp -r docs "$output_dir/" 2>/dev/null || true
         
@@ -99,8 +99,7 @@ build_executable() {
 echo "JiraUtil - Jira Administration Tool"
 echo "==================================="
 echo ""
-echo "Make sure to configure jira_config.env with your Jira credentials"
-echo "before running the tool."
+echo "Edit jira_config.env with your Jira credentials, then run the tool."
 echo ""
 read -p "Press Enter to continue..."
 ./JiraUtil "$@"

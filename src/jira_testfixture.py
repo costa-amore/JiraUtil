@@ -310,13 +310,30 @@ def get_jira_credentials() -> Tuple[str, str, str]:
     username = os.getenv('JIRA_USERNAME')
     password = os.getenv('JIRA_PASSWORD')
     
-    if not jira_url:
+    # Check if values are template/placeholder values
+    def is_template_value(value, field_type):
+        if not value or value.strip() == '':
+            return True
+        
+        template_patterns = {
+            'url': ['yourcompany', 'example', 'placeholder'],
+            'username': ['your.email', 'example', 'placeholder', 'user@'],
+            'password': ['your_api', 'example', 'placeholder', 'token_here']
+        }
+        
+        value_lower = value.lower()
+        for pattern in template_patterns.get(field_type, []):
+            if pattern in value_lower:
+                return True
+        return False
+    
+    if is_template_value(jira_url, 'url'):
         jira_url = input("Enter Jira URL: ").strip()
     
-    if not username:
+    if is_template_value(username, 'username'):
         username = input("Enter Jira username: ").strip()
     
-    if not password:
+    if is_template_value(password, 'password'):
         import getpass
         password = getpass.getpass("Enter Jira password/API token: ")
     

@@ -87,7 +87,7 @@ build-executables/
 
 1. **Download** the appropriate ZIP file for your platform
 2. **Extract** the ZIP file to a folder
-3. **Configure** `jira_config.env` with your Jira credentials
+3. **Edit** `jira_config.env` with your Jira credentials (file is ready to use)
 4. **Run** the executable:
    - Windows: Double-click `JiraUtil.exe` or run `run.bat`
    - macOS/Linux: Run `./JiraUtil` or `./run.sh`

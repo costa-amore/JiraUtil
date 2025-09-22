@@ -73,7 +73,7 @@ function Build-Executable {
         Write-Host "✅ $PlatformName build completed successfully" -ForegroundColor Green
         
         # Copy additional files
-        Copy-Item "jira_config_example.env" "$outputDir\" -ErrorAction SilentlyContinue
+        Copy-Item "jira_config_example.env" "$outputDir\jira_config.env" -ErrorAction SilentlyContinue
         Copy-Item "README.md" "$outputDir\" -ErrorAction SilentlyContinue
         Copy-Item "docs" "$outputDir\" -Recurse -ErrorAction SilentlyContinue
         
@@ -84,8 +84,7 @@ function Build-Executable {
 echo JiraUtil - Jira Administration Tool
 echo ===================================
 echo.
-echo Make sure to configure jira_config.env with your Jira credentials
-echo before running the tool.
+echo Edit jira_config.env with your Jira credentials, then run the tool.
 echo.
 pause
 JiraUtil.exe %*
@@ -97,8 +96,7 @@ JiraUtil.exe %*
 echo "JiraUtil - Jira Administration Tool"
 echo "==================================="
 echo ""
-echo "Make sure to configure jira_config.env with your Jira credentials"
-echo "before running the tool."
+echo "Edit jira_config.env with your Jira credentials, then run the tool."
 echo ""
 read -p "Press Enter to continue..."
 ./JiraUtil "$@"
