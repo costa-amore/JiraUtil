@@ -236,3 +236,7 @@ If files show different versions:
 - **Don't delete `.code_hash`** - This stores file change detection data
 - **Don't edit generated files** - They're updated automatically during builds
 - **Test version changes** - Always verify the version is correct after changes
+
+---
+
+[🏠 Home](../README.md) | [← Building Executables](building-executables.md) | [Command Reference →](command-reference.md)

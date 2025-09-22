@@ -255,3 +255,7 @@ Contact your system administrator if:
 ---
 
 *For additional help, check the user guide or command reference.*
+
+---
+
+[🏠 Home](../README.md) | [← Command Reference](command-reference.md) | [User Guide →](../user-guide.md)

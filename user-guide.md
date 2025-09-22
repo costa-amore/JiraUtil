@@ -83,6 +83,13 @@ See [Test Fixture Pattern Reference](docs/shared/test-fixture-pattern.md) for de
 
 See [File Structure Reference](docs/shared/file-structure.md) for complete file organization details.
 
+## 📚 Documentation
+
+For detailed information, see the complete documentation:
+
+- **[Command Reference](docs/command-reference.md)** - Complete command syntax and options
+- **[Troubleshooting Guide](docs/troubleshooting.md)** - Detailed troubleshooting and error solutions
+
 ---
 
 *For developers and advanced users, see the full documentation in the `docs/` folder.*

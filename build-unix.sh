@@ -117,15 +117,25 @@ build_executable() {
                # Create versioned README files
                sed "1a\\
 \\
-**Version: $VERSION**" user-guide.md > "$output_dir/README.md"
+## Version\\
+\\
+Version: $VERSION" user-guide.md | sed -e :a -e '/^\s*$/N;ba' -e 's/\n*$//' > "$output_dir/README.md"
                
                sed "1a\\
 \\
-**Version: $VERSION**" docs/command-reference.md > "$output_dir/docs/command-reference.md"
+## Version\\
+\\
+Version: $VERSION" docs/command-reference.md > "$output_dir/docs/command-reference.md"
+               # Fix navigation for user environment (remove references to dev-only files)
+               # No specific fixes needed for command-reference.md
                
                sed "1a\\
 \\
-**Version: $VERSION**" docs/troubleshooting.md > "$output_dir/docs/troubleshooting.md"
+## Version\\
+\\
+Version: $VERSION" docs/troubleshooting.md > "$output_dir/docs/troubleshooting.md"
+               # Fix navigation for user environment (remove references to dev-only files)
+               sed -i 's/\[User Guide →\](\.\.\/user-guide\.md)/[End of User Documentation]/g' "$output_dir/docs/troubleshooting.md"
                
                # Copy shared documentation folder contents
                cp -r docs/shared/* "$output_dir/docs/shared/" 2>/dev/null || true

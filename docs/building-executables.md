@@ -193,4 +193,4 @@ Sizes may vary depending on included dependencies and compression settings.
 
 ---
 
-[🏠 Home](../README.md) | [← Project Structure](project-structure.md) | [Testing →](testing.md)
+[🏠 Home](../README.md) | [← Testing](testing.md) | [Versioning →](versioning.md)

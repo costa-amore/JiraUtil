@@ -239,3 +239,7 @@ See [Test Fixture Pattern Reference](shared/test-fixture-pattern.md) for pattern
 ## Examples
 
 See [Command Examples Reference](shared/command-examples.md) for comprehensive examples and usage patterns.
+
+---
+
+[🏠 Home](../README.md) | [Troubleshooting →](troubleshooting.md)

@@ -165,4 +165,4 @@ Currently, the project has basic test coverage. Consider adding tests for:
 
 ---
 
-[← Project Structure](project-structure.md) | [↑ Back to README](../README.md)
+[← Project Structure](project-structure.md) | [Building Executables →](building-executables.md)

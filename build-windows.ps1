@@ -101,15 +101,21 @@ function Build-Executable {
                
                # Create versioned README files
                $userReadme = Get-Content "user-guide.md" -Raw
-               $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n**Version: $version**"
+               $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n## Version`n`nVersion: $version"
+               # Remove trailing blank lines
+               $userReadme = $userReadme.TrimEnd()
                $userReadme | Out-File -FilePath "$outputDir\README.md" -Encoding UTF8
                
                $commandReadme = Get-Content "docs\command-reference.md" -Raw
-               $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n**Version: $version**"
+               $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
+               # Fix navigation for user environment (remove references to dev-only files)
+               # No specific fixes needed for command-reference.md
                $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
                
                $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
-               $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting", "# Troubleshooting`n`n**Version: $version**"
+               $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting", "# Troubleshooting`n`n## Version`n`nVersion: $version"
+               # Fix navigation for user environment (remove references to dev-only files)
+               $troubleshootReadme = $troubleshootReadme -replace "\[User Guide →\]\(\.\./user-guide\.md\)", "[End of User Documentation]"
                $troubleshootReadme | Out-File -FilePath "$outputDir\docs\troubleshooting.md" -Encoding UTF8
                
                # Copy shared documentation folder contents

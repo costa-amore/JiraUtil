@@ -32,16 +32,17 @@ def update_dev_readme():
         content = f.read()
     
     # Update version in README
-    # Look for existing version line and replace it
-    version_pattern = r'\*\*Version: \d+\.\d+\.\d+\*\*'
-    if re.search(version_pattern, content):
-        # Replace existing version
-        new_content = re.sub(version_pattern, f'**Version: {version_string}**', content)
+    # Look for existing version section and replace it, or add new one
+    version_heading_pattern = r'## Version\n\nVersion: \d+\.\d+\.\d+'
+    
+    if re.search(version_heading_pattern, content):
+        # Replace existing heading version
+        new_content = re.sub(version_heading_pattern, f'## Version\n\nVersion: {version_string}', content)
     else:
-        # Add version after title
+        # Add version after title as proper heading
         new_content = re.sub(
             r'(# JIRA utility\n\nA Python utility for supporting Jira admins\.)',
-            f'\\1\n\n**Version: {version_string}**',
+            f'\\1\n\n## Version\n\nVersion: {version_string}',
             content
         )
     
