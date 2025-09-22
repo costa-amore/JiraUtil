@@ -1,4 +1,6 @@
 import argparse
+import json
+import sys
 from pathlib import Path
 
 from jira_cleaner import run_remove_newlines
@@ -7,8 +9,26 @@ from jira_dates_eu import run as run_jira_dates_eu
 from jira_testfixture import run_TestFixture_Reset, run_assert_expectations, get_jira_credentials, DEFAULT_TEST_FIXTURE_LABEL
 
 
+def get_version() -> str:
+    """Get the current version from version.json."""
+    try:
+        version_file = Path("version.json")
+        if version_file.exists():
+            with open(version_file, 'r', encoding='utf-8') as f:
+                version_data = json.load(f)
+                return f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
+        else:
+            return "unknown"
+    except (json.JSONDecodeError, KeyError, IOError):
+        return "unknown"
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="JiraUtil", description="Jira utilities")
+    
+    # Add version argument
+    parser.add_argument("-v", "--version", action="version", version=f"JiraUtil {get_version()}")
+    
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # CsvExport subcommand group (alias: ce)

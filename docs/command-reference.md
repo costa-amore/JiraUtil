@@ -10,6 +10,13 @@ JiraUtil <command> [subcommand] [options] [arguments]
 
 ## Available Commands
 
+### General Options
+
+| Option | Description |
+|--------|-------------|
+| `-h`, `--help` | Show help message and exit |
+| `-v`, `--version` | Show program version and exit |
+
 ### CSV Export Commands
 
 | Command | Short | Description |
@@ -26,6 +33,28 @@ JiraUtil <command> [subcommand] [options] [arguments]
 | `AssertExpectations` | `ae` | Assert issues are in expected status |
 
 ## Command Details
+
+### Version Command
+
+```bash
+JiraUtil --version
+JiraUtil -v
+```
+
+**Description**: Display the current version of JiraUtil.
+
+**Output**: Shows version in format `JiraUtil X.Y.Z`
+
+**Examples**:
+```bash
+# Show version
+JiraUtil --version
+# Output: JiraUtil 1.0.2
+
+# Short form
+JiraUtil -v
+# Output: JiraUtil 1.0.2
+```
 
 ### CsvExport remove-newline
 

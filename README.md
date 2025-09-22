@@ -2,13 +2,14 @@
 
 A Python utility for supporting Jira admins.
 
-**Version: 1.0.1**
+**Version: 1.0.2**
 
 ## 🚀 Quick Start
 
 1. **Setup**: Run `./setup-environment.ps1` to create the environment and install dependencies
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
 3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` or `./run.ps1 .\ju.py --help` to see all available commands
+4. **Version**: Use `./run.ps1 .\ju.py --version` or `./run.ps1 .\ju.py -v` to check the current version
 
 ## 🔢 Version Management
 
