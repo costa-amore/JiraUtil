@@ -34,15 +34,23 @@ echo "Platform: $PLATFORM"
 
 # Handle versioning
 echo "📋 Managing version..."
-python version-manager.py increment
-VERSION=$(python version-manager.py get)
-echo "✅ Version: $VERSION"
+
+# Check if code has changed and increment if needed
+VERSION_RESULT=$(python version_manager.py increment-if-changed)
+VERSION=$(python version_manager.py get)
+
+if echo "$VERSION_RESULT" | grep -q "incremented"; then
+    echo "✅ Version incremented: $VERSION"
+    # Update all files to new version
+    python update-dev-version.py
+    # Mark version update as complete to update hashes
+    python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
+else
+    echo "ℹ️  Version unchanged: $VERSION (no code changes)"
+fi
 
 # Create version info file
 python create-version-info.py
-
-# Update development README with version
-python update-dev-version.py
 
 # Check if PyInstaller is installed
 echo "📦 Checking PyInstaller installation..."

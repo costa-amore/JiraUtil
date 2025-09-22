@@ -14,7 +14,7 @@ def update_dev_readme():
     # Load version information
     version_file = Path("version.json")
     if not version_file.exists():
-        print("Error: version.json not found. Run version-manager.py first.")
+        print("Error: version.json not found. Run version_manager.py first.")
         return False
     
     with open(version_file, 'r') as f:

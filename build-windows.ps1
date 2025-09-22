@@ -13,15 +13,23 @@ Write-Host "Platform: $Platform" -ForegroundColor Yellow
 
 # Handle versioning
 Write-Host "📋 Managing version..." -ForegroundColor Yellow
-python version-manager.py increment
-$version = python version-manager.py get
-Write-Host "✅ Version: $version" -ForegroundColor Green
+
+# Check if code has changed and increment if needed
+$versionResult = python version_manager.py increment-if-changed
+$version = python version_manager.py get
+
+if ($versionResult -match "incremented") {
+    Write-Host "✅ Version incremented: $version" -ForegroundColor Green
+    # Update all files to new version
+    python update-dev-version.py
+    # Mark version update as complete to update hashes
+    python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
+} else {
+    Write-Host "ℹ️  Version unchanged: $version (no code changes)" -ForegroundColor Yellow
+}
 
 # Create version info file
 python create-version-info.py
-
-# Update development README with version
-python update-dev-version.py
 
 # Check if PyInstaller is installed in virtual environment
 Write-Host "📦 Checking PyInstaller installation..." -ForegroundColor Yellow

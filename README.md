@@ -2,13 +2,27 @@
 
 A Python utility for supporting Jira admins.
 
-**Version: 1.0.2**
+**Version: 1.0.1**
 
 ## 🚀 Quick Start
 
 1. **Setup**: Run `./setup-environment.ps1` to create the environment and install dependencies
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
 3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` or `./run.ps1 .\ju.py --help` to see all available commands
+
+## 🔢 Version Management
+
+JiraUtil uses smart versioning that automatically increments build numbers only when code changes are detected.
+
+**Quick Commands:**
+```bash
+python set-version.py 1.0.0          # Set version to 1.0.0
+python set-version.py --current      # Show current version
+```
+
+**⚠️ Never edit `version.json` manually!** Use `set-version.py` instead.
+
+📖 **[Complete Versioning Guide](docs/versioning.md)** - Detailed documentation on how versioning works
 
 ## 📋 Available Commands
 
@@ -76,3 +90,4 @@ Jira_csv_helper/
 ---
 
 *For detailed information, see the [documentation](docs/) folder.*
+# Test change for versioning
