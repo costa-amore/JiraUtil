@@ -1,5 +1,7 @@
 # Configuration Reference
 
+🏠 [Home](../../README.md)
+
 ## Configuration File
 
 The tool looks for credentials in this order:

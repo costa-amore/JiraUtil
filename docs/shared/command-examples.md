@@ -1,5 +1,7 @@
 # Command Examples Reference
 
+🏠 [Home](../../README.md)
+
 ## Basic Command Structure
 
 ```bash

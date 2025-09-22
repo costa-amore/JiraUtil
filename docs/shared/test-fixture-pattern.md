@@ -1,5 +1,7 @@
 # Test Fixture Pattern Reference
 
+🏠 [Home](../../README.md)
+
 ## Pattern Format
 
 For Jira test fixture management, issue summaries must match this pattern:

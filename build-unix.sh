@@ -111,6 +111,9 @@ build_executable() {
                # Copy additional files
                cp jira_config_example.env "$output_dir/jira_config.env" 2>/dev/null || true
                
+               # Create docs folder structure
+               mkdir -p "$output_dir/docs/shared"
+               
                # Create versioned README files
                sed "1a\\
 \\
@@ -118,14 +121,14 @@ build_executable() {
                
                sed "1a\\
 \\
-**Version: $VERSION**" docs/command-reference.md > "$output_dir/command-reference.md"
+**Version: $VERSION**" docs/command-reference.md > "$output_dir/docs/command-reference.md"
                
                sed "1a\\
 \\
-**Version: $VERSION**" docs/troubleshooting.md > "$output_dir/troubleshooting.md"
+**Version: $VERSION**" docs/troubleshooting.md > "$output_dir/docs/troubleshooting.md"
                
-               # Copy shared documentation folder
-               cp -r docs/shared "$output_dir/" 2>/dev/null || true
+               # Copy shared documentation folder contents
+               cp -r docs/shared/* "$output_dir/docs/shared/" 2>/dev/null || true
         
         # Create a simple launcher script
         cat > "$output_dir/run.sh" << 'EOF'

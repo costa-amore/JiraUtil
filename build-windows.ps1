@@ -95,6 +95,10 @@ function Build-Executable {
                # Copy additional files
                Copy-Item "jira_config_example.env" "$outputDir\jira_config.env" -ErrorAction SilentlyContinue
                
+               # Create docs folder structure
+               New-Item -ItemType Directory -Path "$outputDir\docs" -Force | Out-Null
+               New-Item -ItemType Directory -Path "$outputDir\docs\shared" -Force | Out-Null
+               
                # Create versioned README files
                $userReadme = Get-Content "docs\user-guide.md" -Raw
                $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n**Version: $version**"
@@ -102,14 +106,14 @@ function Build-Executable {
                
                $commandReadme = Get-Content "docs\command-reference.md" -Raw
                $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n**Version: $version**"
-               $commandReadme | Out-File -FilePath "$outputDir\command-reference.md" -Encoding UTF8
+               $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
                
                $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
                $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting", "# Troubleshooting`n`n**Version: $version**"
-               $troubleshootReadme | Out-File -FilePath "$outputDir\troubleshooting.md" -Encoding UTF8
+               $troubleshootReadme | Out-File -FilePath "$outputDir\docs\troubleshooting.md" -Encoding UTF8
                
-               # Copy shared documentation folder
-               Copy-Item "docs\shared" "$outputDir\shared" -Recurse -ErrorAction SilentlyContinue
+               # Copy shared documentation folder contents
+               Copy-Item "docs\shared\*" "$outputDir\docs\shared\" -Recurse -ErrorAction SilentlyContinue
         
         # Create a simple launcher script for the platform
         if ($TargetOS -eq "windows") {

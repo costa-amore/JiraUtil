@@ -1,5 +1,7 @@
 # File Structure Reference
 
+🏠 [Home](../../README.md)
+
 ## Executable Package Structure
 
 ```text
