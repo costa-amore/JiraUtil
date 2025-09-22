@@ -33,5 +33,9 @@ env.bak/
 .idea/
 *.code-workspace
 
+# Build outputs
+build-executables/
+*.spec
+
 
 

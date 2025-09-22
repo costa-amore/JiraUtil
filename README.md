@@ -28,12 +28,14 @@ A Python utility for supporting Jira admins.
 - **[Jira Commands](docs/jira-commands.md)** - Jira integration features
 - **[Project Structure](docs/project-structure.md)** - Code organization
 - **[Testing](docs/testing.md)** - Running tests and development
+- **[Building Executables](docs/building-executables.md)** - Creating standalone executables
 
 ## 🛠️ Development
 
 - **Tests**: `python run_tests.py`
 - **Debug**: Use `python debug_all_commands.py` for debugging any command
 - **Rebuild**: `./rebuild-venv.ps1` to update dependencies
+- **Build Executables**: `./build-executables.ps1` (Windows) or `./build-executables.sh` (macOS/Linux)
 
 ## 📁 Project Structure
 

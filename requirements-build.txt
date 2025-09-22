@@ -1,0 +1,11 @@
+# Requirements for building executables
+# This file contains additional dependencies needed for PyInstaller
+
+# Core dependencies (already in requirements.txt)
+jira>=3.10.5
+python-dateutil>=2.8.2
+pandas>=2.0.0
+pytest>=8.0.0
+
+# Build dependencies
+pyinstaller>=6.0.0
