@@ -21,16 +21,23 @@ JiraUtil <command> [subcommand] [options] [arguments]
 
 | Command | Short | Description |
 |---------|-------|-------------|
-| `CsvExport remove-newline` | `ce rn` | Remove newline characters from CSV fields |
-| `CsvExport extract-to-comma-separated-list` | `ce ecl` | Extract field values to comma-separated text file |
-| `CsvExport fix-dates-eu` | `ce fd` | Convert dates for European Excel format |
+| `csv-export remove-newlines` | `ce rn` | Remove newline characters from CSV fields |
+| `csv-export extract-to-comma-separated-list` | `ce ecl` | Extract field values to comma-separated text file |
+| `csv-export fix-dates-eu` | `ce fd` | Convert dates for European Excel format |
 
-### Jira Commands
+### Test Fixture Commands
 
 | Command | Short | Description |
 |---------|-------|-------------|
-| `ResetTestFixture` | `rt` | Update issue status based on summary pattern |
-| `AssertExpectations` | `ae` | Assert issues are in expected status |
+| `test-fixture reset` | `tf r` | Reset test fixture issues based on summary pattern |
+| `test-fixture assert` | `tf a` | Assert test fixture issues are in expected status |
+
+### Utility Commands
+
+| Command | Short | Description |
+|---------|-------|-------------|
+| `list` | `ls` | Show all available commands |
+| `status` | `st` | Show tool status and information |
 
 ## Command Details
 
@@ -56,11 +63,11 @@ JiraUtil -v
 # Output: JiraUtil 1.0.2
 ```
 
-### CsvExport remove-newline
+### csv-export remove-newlines
 
 **Usage:**
 ```bash
-JiraUtil CsvExport remove-newline <input> [--output <file>]
+JiraUtil csv-export remove-newlines <input> [--output <file>]
 JiraUtil ce rn <input> [--output <file>]
 ```
 
@@ -75,11 +82,11 @@ JiraUtil ce rn <input> [--output <file>]
 JiraUtil ce rn data.csv --output clean-data.csv
 ```
 
-### CsvExport extract-to-comma-separated-list
+### csv-export extract-to-comma-separated-list
 
 **Usage:**
 ```bash
-JiraUtil CsvExport extract-to-comma-separated-list <field_name> <input>
+JiraUtil csv-export extract-to-comma-separated-list <field_name> <input>
 JiraUtil ce ecl <field_name> <input>
 ```
 
@@ -92,11 +99,11 @@ JiraUtil ce ecl <field_name> <input>
 JiraUtil ce ecl "Assignee" data.csv
 ```
 
-### CsvExport fix-dates-eu
+### csv-export fix-dates-eu
 
 **Usage:**
 ```bash
-JiraUtil CsvExport fix-dates-eu <input> [--output <file>]
+JiraUtil csv-export fix-dates-eu <input> [--output <file>]
 JiraUtil ce fd <input> [--output <file>]
 ```
 
@@ -111,12 +118,12 @@ JiraUtil ce fd <input> [--output <file>]
 JiraUtil ce fd data.csv --output eu-data.csv
 ```
 
-### ResetTestFixture
+### test-fixture reset
 
 **Usage:**
 ```bash
-JiraUtil ResetTestFixture [label] [--jira-url <url>] [--username <user>] [--password <pass>]
-JiraUtil rt [label] [--jira-url <url>] [--username <user>] [--password <pass>]
+JiraUtil test-fixture reset [label] [--jira-url <url>] [--username <user>] [--password <pass>]
+JiraUtil tf r [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 ```
 
 **Arguments:**
@@ -129,15 +136,15 @@ JiraUtil rt [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 
 **Example:**
 ```bash
-JiraUtil rt my-test-label
+JiraUtil tf r my-test-label
 ```
 
-### AssertExpectations
+### test-fixture assert
 
 **Usage:**
 ```bash
-JiraUtil AssertExpectations [label] [--jira-url <url>] [--username <user>] [--password <pass>]
-JiraUtil ae [label] [--jira-url <url>] [--username <user>] [--password <pass>]
+JiraUtil test-fixture assert [label] [--jira-url <url>] [--username <user>] [--password <pass>]
+JiraUtil tf a [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 ```
 
 **Arguments:**
@@ -150,7 +157,37 @@ JiraUtil ae [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 
 **Example:**
 ```bash
-JiraUtil ae my-test-label
+JiraUtil tf a my-test-label
+```
+
+### list
+
+**Usage:**
+```bash
+JiraUtil list
+JiraUtil ls
+```
+
+**Description:** Show all available commands and their descriptions.
+
+**Example:**
+```bash
+JiraUtil ls
+```
+
+### status
+
+**Usage:**
+```bash
+JiraUtil status
+JiraUtil st
+```
+
+**Description:** Show tool status and information including version and configuration.
+
+**Example:**
+```bash
+JiraUtil st
 ```
 
 ## Global Options

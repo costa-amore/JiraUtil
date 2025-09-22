@@ -29,14 +29,19 @@ python set-version.py --current      # Show current version
 
 ### CSV Export File Support
 
-- **CsvExport remove-newline** (`ju.py ce rn`): Clean CSV fields from newline characters
-- **CsvExport extract-to-comma-separated-list** (`ju.py ce ecl`): Extract specific field values to comma-separated lists
-- **CsvExport fix-dates-eu** (`ju.py ce fd`): Convert dates for European Excel format
+- **csv-export remove-newlines** (`ju.py ce rn`): Clean CSV fields from newline characters
+- **csv-export extract-to-comma-separated-list** (`ju.py ce ecl`): Extract specific field values to comma-separated lists
+- **csv-export fix-dates-eu** (`ju.py ce fd`): Convert dates for European Excel format
 
-### Jira Automations Support
+### Test Fixture Management
 
-- **ResetTestFixture** (`ju.py rt`): Update issue status based on summary patterns
-- **AssertExpectations** (`ju.py ae`): Assert that issues are in their expected status based on summary patterns
+- **test-fixture reset** (`ju.py tf r`): Reset test fixture issues based on summary patterns
+- **test-fixture assert** (`ju.py tf a`): Assert that test fixture issues are in expected status
+
+### Utility Commands
+
+- **list** (`ju.py ls`): Show all available commands
+- **status** (`ju.py st`): Show tool status and information
 
 ## 📚 Documentation
 
