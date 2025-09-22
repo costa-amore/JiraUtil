@@ -216,11 +216,11 @@ echo "📦 Creating distribution packages..."
 for dir in "$BUILD_DIR"/*; do
     if [ -d "$dir" ]; then
         platform_name=$(basename "$dir")
-        zip_path="$BUILD_DIR/JiraUtil-$platform_name.zip"
+        zip_path="$BUILD_DIR/JiraUtil-$platform_name-v$VERSION.zip"
         
         echo "Creating $zip_path..."
         cd "$dir"
-        zip -r "../JiraUtil-$platform_name.zip" . >/dev/null
+        zip -r "../JiraUtil-$platform_name-v$VERSION.zip" . >/dev/null
         cd - >/dev/null
         
         if [ -f "$zip_path" ]; then

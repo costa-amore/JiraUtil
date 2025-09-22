@@ -202,8 +202,8 @@ Get-ChildItem $buildDir -Directory | ForEach-Object {
     $platformName = $_.Name
     $platformDir = $_.FullName
     
-    # Create ZIP archive
-    $zipPath = "$buildDir\JiraUtil-$platformName.zip"
+    # Create ZIP archive with version number
+    $zipPath = "$buildDir\JiraUtil-$platformName-v$version.zip"
     Write-Host "Creating $zipPath..." -ForegroundColor Gray
     
     # Use PowerShell's Compress-Archive
