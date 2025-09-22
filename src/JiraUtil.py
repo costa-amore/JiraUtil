@@ -115,7 +115,17 @@ def show_status() -> None:
     print("Status: Ready")
     print()
     print("Configuration:")
-    print("  Jira credentials: Check .venv/jira_config.env or environment variables")
+    
+    # Check if running as executable to determine context
+    import sys
+    
+    if getattr(sys, 'frozen', False):
+        # Running as executable - user context
+        print("  Jira credentials: Check jira_config.env or environment variables")
+    else:
+        # Running as script - development context
+        print("  Jira credentials: Check .venv/jira_config.env or environment variables")
+    
     print("  Default test fixture label: rule-testing")
     print()
     print("Available commands: Use 'JiraUtil list' or 'JiraUtil --help'")
