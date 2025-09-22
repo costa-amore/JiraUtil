@@ -23,12 +23,18 @@ A Python utility for supporting Jira admins.
 
 ## 📚 Documentation
 
-- **[Setup Guide](docs/setup.md)** - Detailed installation and configuration
-- **[CSV Export Commands](docs/csv_export-commands.md)** - CSV processing functionality
-- **[Jira Commands](docs/jira-commands.md)** - Jira integration features
+### For Users
+- **[User Guide](docs/user-guide.md)** - Complete user guide for executable users
+- **[Command Reference](docs/command-reference.md)** - Quick command reference
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+
+### For Developers
+- **[Setup Guide](docs/setup.md)** - Development environment setup
 - **[Project Structure](docs/project-structure.md)** - Code organization
 - **[Testing](docs/testing.md)** - Running tests and development
 - **[Building Executables](docs/building-executables.md)** - Creating standalone executables
+- **[Detailed Commands](docs/csv_export-commands.md)** - CSV processing details
+- **[Jira Integration](docs/jira-commands.md)** - Jira integration details
 
 ## 🛠️ Development
 

@@ -90,8 +90,9 @@ build_executable() {
         
         # Copy additional files
         cp jira_config_example.env "$output_dir/jira_config.env" 2>/dev/null || true
-        cp README.md "$output_dir/" 2>/dev/null || true
-        cp -r docs "$output_dir/" 2>/dev/null || true
+        cp docs/user-guide.md "$output_dir/README.md" 2>/dev/null || true
+        cp docs/command-reference.md "$output_dir/" 2>/dev/null || true
+        cp docs/troubleshooting.md "$output_dir/" 2>/dev/null || true
         
         # Create a simple launcher script
         cat > "$output_dir/run.sh" << 'EOF'
