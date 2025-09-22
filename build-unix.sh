@@ -117,7 +117,7 @@ build_executable() {
                # Create versioned README files
                sed "1a\\
 \\
-**Version: $VERSION**" docs/user-guide.md > "$output_dir/README.md"
+**Version: $VERSION**" user-guide.md > "$output_dir/README.md"
                
                sed "1a\\
 \\

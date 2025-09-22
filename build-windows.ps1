@@ -100,7 +100,7 @@ function Build-Executable {
                New-Item -ItemType Directory -Path "$outputDir\docs\shared" -Force | Out-Null
                
                # Create versioned README files
-               $userReadme = Get-Content "docs\user-guide.md" -Raw
+               $userReadme = Get-Content "user-guide.md" -Raw
                $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n**Version: $version**"
                $userReadme | Out-File -FilePath "$outputDir\README.md" -Encoding UTF8
                
