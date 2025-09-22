@@ -11,6 +11,18 @@ $ErrorActionPreference = 'Stop'
 Write-Host "🔨 Building JiraUtil Executables" -ForegroundColor Cyan
 Write-Host "Platform: $Platform" -ForegroundColor Yellow
 
+# Handle versioning
+Write-Host "📋 Managing version..." -ForegroundColor Yellow
+python version-manager.py increment
+$version = python version-manager.py get
+Write-Host "✅ Version: $version" -ForegroundColor Green
+
+# Create version info file
+python create-version-info.py
+
+# Update development README with version
+python update-dev-version.py
+
 # Check if PyInstaller is installed in virtual environment
 Write-Host "📦 Checking PyInstaller installation..." -ForegroundColor Yellow
 try {
@@ -74,9 +86,19 @@ function Build-Executable {
         
                # Copy additional files
                Copy-Item "jira_config_example.env" "$outputDir\jira_config.env" -ErrorAction SilentlyContinue
-               Copy-Item "docs\user-guide.md" "$outputDir\README.md" -ErrorAction SilentlyContinue
-               Copy-Item "docs\command-reference.md" "$outputDir\" -ErrorAction SilentlyContinue
-               Copy-Item "docs\troubleshooting.md" "$outputDir\" -ErrorAction SilentlyContinue
+               
+               # Create versioned README files
+               $userReadme = Get-Content "docs\user-guide.md" -Raw
+               $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n**Version: $version**"
+               $userReadme | Out-File -FilePath "$outputDir\README.md" -Encoding UTF8
+               
+               $commandReadme = Get-Content "docs\command-reference.md" -Raw
+               $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n**Version: $version**"
+               $commandReadme | Out-File -FilePath "$outputDir\command-reference.md" -Encoding UTF8
+               
+               $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
+               $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting", "# Troubleshooting`n`n**Version: $version**"
+               $troubleshootReadme | Out-File -FilePath "$outputDir\troubleshooting.md" -Encoding UTF8
                
                # Copy shared documentation folder
                Copy-Item "docs\shared" "$outputDir\shared" -Recurse -ErrorAction SilentlyContinue

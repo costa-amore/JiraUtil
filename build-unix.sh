@@ -32,6 +32,18 @@ done
 echo "🔨 Building JiraUtil Executables"
 echo "Platform: $PLATFORM"
 
+# Handle versioning
+echo "📋 Managing version..."
+python version-manager.py increment
+VERSION=$(python version-manager.py get)
+echo "✅ Version: $VERSION"
+
+# Create version info file
+python create-version-info.py
+
+# Update development README with version
+python update-dev-version.py
+
 # Check if PyInstaller is installed
 echo "📦 Checking PyInstaller installation..."
 if ! python3 -m PyInstaller --version >/dev/null 2>&1; then
@@ -90,9 +102,19 @@ build_executable() {
         
                # Copy additional files
                cp jira_config_example.env "$output_dir/jira_config.env" 2>/dev/null || true
-               cp docs/user-guide.md "$output_dir/README.md" 2>/dev/null || true
-               cp docs/command-reference.md "$output_dir/" 2>/dev/null || true
-               cp docs/troubleshooting.md "$output_dir/" 2>/dev/null || true
+               
+               # Create versioned README files
+               sed "1a\\
+\\
+**Version: $VERSION**" docs/user-guide.md > "$output_dir/README.md"
+               
+               sed "1a\\
+\\
+**Version: $VERSION**" docs/command-reference.md > "$output_dir/command-reference.md"
+               
+               sed "1a\\
+\\
+**Version: $VERSION**" docs/troubleshooting.md > "$output_dir/troubleshooting.md"
                
                # Copy shared documentation folder
                cp -r docs/shared "$output_dir/" 2>/dev/null || true

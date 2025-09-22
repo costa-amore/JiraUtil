@@ -43,5 +43,8 @@ jira_config_backup.env
 *_backup.env
 *.backup
 
+# Version files (auto-generated)
+version_info.txt
+
 
 

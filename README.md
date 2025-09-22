@@ -2,6 +2,8 @@
 
 A Python utility for supporting Jira admins.
 
+**Version: 1.0.2**
+
 ## 🚀 Quick Start
 
 1. **Setup**: Run `./setup-environment.ps1` to create the environment and install dependencies
