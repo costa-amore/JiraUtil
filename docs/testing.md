@@ -7,7 +7,7 @@
 ### Quick Start
 
 ```powershell
-python run_tests.py
+python test-runner.py
 ```
 
 ### Alternative Methods
@@ -30,7 +30,7 @@ python -m pytest tests/ -v -s
 .\.venv\Scripts\Activate.ps1
 
 # Then run tests
-python run_tests.py
+python test-runner.py
 ```
 
 ## Test Structure
@@ -65,7 +65,7 @@ The test runner automatically discovers files matching `test_*.py` pattern.
 ### 3. Run Tests
 
 ```powershell
-python run_tests.py
+python test-runner.py
 ```
 
 ## Test Dependencies
@@ -103,7 +103,7 @@ python -m pytest tests/ -x
 The project includes a comprehensive debug script for all commands:
 
 ```powershell
-python debug_all_commands.py
+python debug-helper.py
 ```
 
 ### VS Code Debugging
@@ -114,7 +114,7 @@ Use the Debug panel (`Ctrl+Shift+D`) and select:
 
 ### Custom Debug Commands
 
-Edit `debug_all_commands.py` to test specific commands:
+Edit `debug-helper.py` to test specific commands:
 
 ```python
 # Uncomment the command you want to debug:
@@ -140,7 +140,7 @@ debug_command(["JiraUtil.py", "CsvExport", "fix-dates-eu", "test.csv"])
 .\.venv\Scripts\python.exe -m pip install pytest
 
 # Or rebuild environment
-./rebuild-venv.ps1
+./setup-environment.ps1
 ```
 
 ### Import Errors
@@ -151,7 +151,7 @@ Ensure you're running tests from the project root directory.
 
 ```powershell
 # Rebuild environment
-./rebuild-venv.ps1
+./setup-environment.ps1
 ```
 
 ## Test Coverage

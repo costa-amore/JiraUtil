@@ -14,27 +14,27 @@ This guide explains how to build standalone executables for the JiraUtil project
 
 ```powershell
 # Build for all platforms
-./build-executables.ps1
+./build-windows.ps1
 
 # Build for specific platform
-./build-executables.ps1 -Platform windows
+./build-windows.ps1 -Platform windows
 
 # Clean build before building
-./build-executables.ps1 -Clean
+./build-windows.ps1 -Clean
 ```
 
 ### macOS/Linux
 
 ```bash
 # Build for all platforms
-./build-executables.sh
+./build-unix.sh
 
 # Build for specific platform
-./build-executables.sh --platform macos
-./build-executables.sh --platform linux
+./build-unix.sh --platform macos
+./build-unix.sh --platform linux
 
 # Clean build before building
-./build-executables.sh --clean
+./build-unix.sh --clean
 ```
 
 ## Build Options
@@ -48,8 +48,8 @@ This guide explains how to build standalone executables for the JiraUtil project
 
 ### Build Scripts
 
-1. **`build-executables.ps1`** - PowerShell script for Windows
-2. **`build-executables.sh`** - Bash script for macOS/Linux
+1. **`build-windows.ps1`** - PowerShell script for Windows
+2. **`build-unix.sh`** - Bash script for macOS/Linux
 3. **`JiraUtil.spec`** - PyInstaller configuration file
 
 ## Output Structure

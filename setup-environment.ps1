@@ -51,9 +51,28 @@ if (Test-Path .venv\jira_config.env) {
     Write-Host "ℹ️  No jira_config.env found in .venv folder" -ForegroundColor Yellow
 }
 
+# Deactivate current virtual environment if active
+if ($env:VIRTUAL_ENV) {
+    Write-Host "🔄 Deactivating current virtual environment..." -ForegroundColor Yellow
+    # In PowerShell, we need to remove the virtual environment from the PATH
+    $env:PATH = $env:PATH -replace [regex]::Escape($env:VIRTUAL_ENV + "\Scripts;"), ""
+    $env:VIRTUAL_ENV = $null
+    Write-Host "✅ Virtual environment deactivated" -ForegroundColor Green
+}
+
 # Remove the old virtual environment
 Write-Host "🗑️  Removing old virtual environment..." -ForegroundColor Yellow
-Remove-Item -Recurse -Force .venv
+# Kill any Python processes that might be using the virtual environment
+taskkill /f /im python.exe 2>$null
+Start-Sleep 2
+Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
+
+# Check if removal was successful
+if (Test-Path .venv) {
+    Write-Host "❌ Failed to remove old virtual environment. Please close any Python processes and try again." -ForegroundColor Red
+    Write-Host "💡 You can also manually delete the .venv folder and run this script again." -ForegroundColor Yellow
+    exit 1
+}
 
 # Recreate it
 Write-Host "🆕 Creating new virtual environment..." -ForegroundColor Yellow

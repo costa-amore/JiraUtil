@@ -35,7 +35,13 @@ env.bak/
 
 # Build outputs
 build-executables/
+build/
 *.spec
+
+# Backup files
+jira_config_backup.env
+*_backup.env
+*.backup
 
 
 

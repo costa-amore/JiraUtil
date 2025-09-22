@@ -4,7 +4,7 @@ A Python utility for supporting Jira admins.
 
 ## 🚀 Quick Start
 
-1. **Setup**: Run `./rebuild-venv.ps1` to create the environment and install dependencies
+1. **Setup**: Run `./setup-environment.ps1` to create the environment and install dependencies
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
 3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` or `./run.ps1 .\ju.py --help` to see all available commands
 
@@ -32,21 +32,37 @@ A Python utility for supporting Jira admins.
 
 ## 🛠️ Development
 
-- **Tests**: `python run_tests.py`
-- **Debug**: Use `python debug_all_commands.py` for debugging any command
-- **Rebuild**: `./rebuild-venv.ps1` to update dependencies
-- **Build Executables**: `./build-executables.ps1` (Windows) or `./build-executables.sh` (macOS/Linux)
+- **Tests**: `python test-runner.py`
+- **Debug**: Use `python debug-helper.py` for debugging any command
+- **Rebuild**: `./setup-environment.ps1` to update dependencies
+- **Build Executables**: `./build-windows.ps1` (Windows) or `./build-unix.sh` (macOS/Linux)
 
 ## 📁 Project Structure
 
 ```text
 Jira_csv_helper/
-├── src/                    # Source code
+├── # Entry Points
+├── JiraUtil.py             # Main CLI entry point
+├── ju.py                   # Short alias
+├── run.ps1                 # PowerShell runner
+├── 
+├── # Development & Testing
+├── test-runner.py          # Test runner
+├── debug-helper.py         # Debug helper
+├── 
+├── # Environment Management
+├── setup-environment.ps1   # Environment setup
+├── 
+├── # Build System
+├── build-windows.ps1       # Windows build script
+├── build-unix.sh           # Unix build script
+├── JiraUtil.spec           # PyInstaller spec
+├── 
+├── # Source Code
+├── src/                    # Main source code
 ├── tests/                  # Test files
 ├── docs/                   # Documentation
-├── .venv/                  # Virtual environment
-├── rebuild-venv.ps1        # Environment setup script
-└── run.ps1                 # PowerShell runner
+└── .venv/                  # Virtual environment
 ```
 
 ---

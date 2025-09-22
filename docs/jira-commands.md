@@ -199,7 +199,7 @@ Assertion process completed:
 Use the debug script for development:
 
 ```powershell
-python debug_all_commands.py
+python debug-helper.py
 ```
 
 ---

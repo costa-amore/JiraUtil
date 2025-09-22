@@ -5,7 +5,7 @@
             "name": "Debug All Commands",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/debug_all_commands.py",
+            "program": "${workspaceFolder}/debug-helper.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {

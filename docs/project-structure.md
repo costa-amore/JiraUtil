@@ -25,13 +25,28 @@ Jira_csv_helper/
 │   └── testing.md
 ├── .venv/                        # Virtual environment
 │   └── jira_config.env          # Jira credentials (not in git)
-├── JiraUtil.py                   # Root entry point
-├── debug_all_commands.py        # Debug script for all commands
-├── rebuild-venv.ps1             # Environment setup/rebuild script
-├── run.ps1                      # PowerShell runner script
-├── jira_config_example.env      # Example configuration file
+├── # Entry Points
+├── JiraUtil.py                   # Main CLI entry point
+├── ju.py                         # Short alias
+├── run.ps1                       # PowerShell runner
+├── 
+├── # Development & Testing
+├── test-runner.py                # Test runner
+├── debug-helper.py               # Debug helper
+├── 
+├── # Environment Management
+├── setup-environment.ps1         # Environment setup
+├── 
+├── # Build System
+├── build-windows.ps1             # Windows build script
+├── build-unix.sh                 # Unix build script
+├── JiraUtil.spec                 # PyInstaller spec
+├── 
+├── # Configuration
+├── jira_config_example.env      # Configuration template
 ├── requirements.txt             # Python dependencies
-└── README.md                    # Main project overview
+├── requirements-build.txt       # Build dependencies
+└── README.md                    # Project documentation
 ```
 
 ## Key Files
@@ -54,11 +69,24 @@ Jira_csv_helper/
 - **`.venv/jira_config.env`** - Actual credentials (created by setup)
 - **`requirements.txt`** - Python package dependencies
 
-### Scripts
+### Development & Testing
 
-- **`rebuild-venv.ps1`** - One-command environment setup/rebuild
+- **`test-runner.py`** - Test runner
+- **`debug-helper.py`** - Debug helper for all commands
+
+### Environment Management
+
+- **`setup-environment.ps1`** - One-command environment setup/rebuild
+
+### Build System
+
+- **`build-windows.ps1`** - Windows build script
+- **`build-unix.sh`** - Unix build script
+- **`JiraUtil.spec`** - PyInstaller configuration
+
+### Utilities
+
 - **`run.ps1`** - PowerShell wrapper for running Python scripts
-- **`debug_all_commands.py`** - Debug script for all commands
 
 ### Testing
 
@@ -79,11 +107,11 @@ JiraUtil.py (root)
 
 ## Development Workflow
 
-1. **Setup**: `./rebuild-venv.ps1`
+1. **Setup**: `./setup-environment.ps1`
 2. **Develop**: Edit files in `src/`
-3. **Test**: `python run_tests.py`
-4. **Debug**: Use `debug_all_commands.py` for debugging any command
-5. **Rebuild**: `./rebuild-venv.ps1` when dependencies change
+3. **Test**: `python test-runner.py`
+4. **Debug**: Use `debug-helper.py` for debugging any command
+5. **Rebuild**: `./setup-environment.ps1` when dependencies change
 
 ## Adding New Features
 

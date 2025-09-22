@@ -24,7 +24,7 @@ cd Jira_csv_helper
 
 ```powershell
 # Run the setup script (creates virtual environment and installs dependencies)
-./rebuild-venv.ps1
+./setup-environment.ps1
 ```
 
 This script will:
@@ -62,7 +62,7 @@ If you encounter issues with the virtual environment:
 
 ```powershell
 # Rebuild everything
-./rebuild-venv.ps1
+./setup-environment.ps1
 ```
 
 ### Dependencies Issues
@@ -71,7 +71,7 @@ If you update `requirements.txt`:
 
 ```powershell
 # Rebuild with new dependencies
-./rebuild-venv.ps1
+./setup-environment.ps1
 ```
 
 ### Jira Connection Issues
