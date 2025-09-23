@@ -1,9 +1,10 @@
 name: Build and Release (Containerized)
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch: # Allow manual triggering
+  # Disabled temporarily - using native builds instead
+  # push:
+  #   branches: [ main ]
+  # workflow_dispatch: # Allow manual triggering
 
 env:
   PYTHON_VERSION: '3.11'
