@@ -1,6 +1,6 @@
 #!/bin/bash
-# Generic Build Executables Script for Unix-like systems
-# This script compiles the JiraUtil project into standalone executables for specified platforms
+# Build Executables Script for macOS and Linux
+# This script compiles the JiraUtil project into standalone executables
 
 set -e
 
@@ -19,8 +19,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            echo "Usage: $0 [--platform macos|linux|all] [--clean]"
-            echo "Note: Windows builds should use build-windows.ps1 on Windows systems"
+            echo "Usage: $0 [--platform windows|macos|linux|all] [--clean]"
             exit 0
             ;;
         *)
@@ -182,13 +181,6 @@ EOF
 
 # Build for requested platforms
 declare -A build_results
-
-# Note: Windows builds are not supported on Unix systems
-if [ "$PLATFORM" = "windows" ]; then
-    echo "❌ Windows builds are not supported on Unix systems"
-    echo "Please use build-windows.ps1 on a Windows system"
-    exit 1
-fi
 
 if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "macos" ]; then
     if build_executable "macOS" "macos"; then

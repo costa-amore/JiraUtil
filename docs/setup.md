@@ -50,8 +50,14 @@ JIRA_PASSWORD=your_api_token_here
 Test your setup:
 
 ```powershell
-# Check if everything works
+# 1. Check if everything works
 ./run.ps1 .\JiraUtil.py --help
+
+# 2. Run comprehensive tests
+python tests/run_tests.py
+
+# 3. Build executables (includes testing and versioning)
+./build-windows.ps1
 ```
 
 ## Troubleshooting

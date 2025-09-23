@@ -10,11 +10,12 @@ This guide explains how to build standalone executables for the JiraUtil project
 
 ## Quick Start
 
+**Important**: The build process runs tests first and will abort if any tests fail. This ensures only working code gets built into executables.
+
 ### Windows
 
 ```powershell
 # Build for all platforms
-./build-windows.ps1
 
 # Build for specific platform
 ./build-windows.ps1 -Platform windows
@@ -27,14 +28,13 @@ This guide explains how to build standalone executables for the JiraUtil project
 
 ```bash
 # Build for all platforms
-./build-unix.sh
 
 # Build for specific platform
-./build-unix.sh --platform macos
-./build-unix.sh --platform linux
+./build.sh --platform macos
+./build.sh --platform linux
 
 # Clean build before building
-./build-unix.sh --clean
+./build.sh --clean
 ```
 
 ## Build Options
@@ -132,9 +132,13 @@ pip install -r requirements-build.txt
 
 ### Build Verification
 
-Test the built executables:
+The build process automatically runs tests before building, but you can also verify manually:
 
 ```bash
+# Run tests before building (good practice - although the build process runs the tests as well )
+python tests/run_tests.py
+
+# Test the built executables
 # Windows
 .\JiraUtil.exe --help
 

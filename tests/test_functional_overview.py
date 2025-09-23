@@ -234,13 +234,15 @@ PROJ-3,"Another task","Another description",EPIC-2,To Do,Bob Wilson,2024-03-10 1
         assert "Short Aliases:" in printed_content
         
         # Test 3: Status command
-        with patch('builtins.print') as mock_print, \
-             patch('version.manager.get_version', return_value="1.0.24"):
+        with patch('builtins.print') as mock_print:
             show_status()
         
         printed_content = ' '.join([str(call) for call in mock_print.call_args_list])
         assert "JiraUtil Status" in printed_content
-        assert "Version: 1.0.24" in printed_content
+        # Test for version pattern instead of hardcoded version
+        import re
+        version_pattern = r"Version: \d+\.\d+\.\d+"
+        assert re.search(version_pattern, printed_content), f"Version pattern not found in: {printed_content}"
         assert "Status: Ready" in printed_content
         
         # Test 4: Version detection

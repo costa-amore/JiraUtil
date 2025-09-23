@@ -79,8 +79,11 @@ Jira_csv_helper/
 
 ### Build System
 
-- **`build-windows.ps1`** - Windows build script
-- **`build-unix.sh`** - Unix build script
+- **`build-windows.ps1`** - Windows build script (runs tests first)
+- **`build.sh`** - Generic Unix build script (runs tests first)
+- **`build-macos.ps1`** - macOS convenience script
+- **`build-linux.ps1`** - Linux convenience script
+- **`build-all.ps1`** - All platforms convenience script
 - **`JiraUtil.spec`** - PyInstaller configuration
 
 ### Utilities
@@ -110,7 +113,8 @@ JiraUtil.py (root)
 2. **Develop**: Edit files in `src/`
 3. **Test**: `python tests/run_tests.py`
 4. **Debug**: Use `debug-helper.py` for debugging any command
-5. **Rebuild**: `./setup-environment.ps1` when dependencies change
+5. **Build**: `./build-windows.ps1` (runs tests first, then builds executables)
+6. **Rebuild**: `./setup-environment.ps1` when dependencies change
 
 ## Adding New Features
 

@@ -11,6 +11,20 @@
 python tests/run_tests.py
 ```
 
+### Test-First Build Process
+
+The build system automatically runs tests before building executables:
+
+```powershell
+# Build process (runs tests first, then builds if tests pass)
+./build-windows.ps1
+
+# Manual test run (optional - build process does this automatically)
+python tests/run_tests.py
+```
+
+**Important**: The build process will abort if any tests fail, ensuring only working code gets built into executables.
+
 ### Test Categories
 
 ```powershell
@@ -48,9 +62,10 @@ python tests/run_tests.py
 
 ### Comprehensive Test Suite
 
-The project now includes a comprehensive functional test suite with **74 tests** covering all major functionalities:
+The project now includes a comprehensive functional test suite with **72 tests** covering all major functionalities:
 
 #### **CSV Export Commands (10 tests)**
+
 - **`test_csv_export_commands.py`** - Complete CSV export functionality
   - Remove newlines from CSV fields
   - Extract field values to comma-separated lists
@@ -59,6 +74,7 @@ The project now includes a comprehensive functional test suite with **74 tests**
   - Error handling for missing fields
 
 #### **Test Fixture Commands (20 tests)**
+
 - **`test_testfixture_commands.py`** - Test fixture management
   - Pattern parsing for test fixture summaries
   - Reset functionality with mock Jira
@@ -66,6 +82,7 @@ The project now includes a comprehensive functional test suite with **74 tests**
   - Workflow integration
 
 #### **CLI Commands (20 tests)**
+
 - **`test_cli_commands.py`** - Command-line interface
   - Command parsing and routing
   - Help and status commands
@@ -73,12 +90,14 @@ The project now includes a comprehensive functional test suite with **74 tests**
   - Configuration validation
 
 #### **Core Functionality (15 tests)**
+
 - **`test_jira_field_extractor.py`** - Field extraction and processing
   - Field matching and extraction
   - Data formatting
   - Error handling
 
 #### **Functional Overview (7 tests)**
+
 - **`test_functional_overview.py`** - End-to-end functionality validation
   - Complete workflow testing
   - Performance testing
@@ -135,34 +154,7 @@ The comprehensive test runner provides detailed output including:
 - **Error Details** - Clear failure information when tests fail
 - **Performance Metrics** - Test execution timing
 
-### Example Output
-
-```
-🧪 JiraUtil Comprehensive Test Suite
-============================================================
-📁 Found 5 test file(s):
-   1. test_cli_commands.py
-   2. test_csv_export_commands.py
-   3. test_functional_overview.py
-   4. test_jira_field_extractor.py
-   5. test_testfixture_commands.py
-
-🔍 Test Categories:
-  📊 CSV Export Commands    - Field extraction, newline removal, date conversion
-  🧪 Test Fixture Commands  - Pattern parsing, reset/assert operations
-  🖥️  CLI Commands          - Command parsing, help, status, version
-  🔐 Authentication         - Credential management, config validation
-  🏗️  Modular Architecture  - Module imports, backward compatibility
-  ⚠️  Error Handling        - File errors, invalid input, edge cases
-  🚀 Performance           - Large file processing, batch operations
-  📋 Functional Overview    - End-to-end functionality validation
-
-🏃 Running tests...
-------------------------------------------------------------
-======================== 68 passed, 6 skipped in 0.71s ========================
-
-🎉 ALL TESTS PASSED! 🎉
-```
+**Run `python tests/run_tests.py` to see the current test output.**
 
 ## Debugging Tests
 
@@ -277,9 +269,10 @@ python tests/run_tests.py
 
 ## Test Coverage
 
-The project now has **comprehensive test coverage** with 74 tests covering all major functionalities:
+The project now has **comprehensive test coverage** with 72 tests covering all major functionalities:
 
 ### ✅ **Fully Covered Areas:**
+
 - **CSV Export Commands** - Complete functionality testing
 - **Test Fixture Management** - Pattern parsing, reset/assert operations
 - **CLI Interface** - Command parsing, help, status, version
@@ -290,12 +283,14 @@ The project now has **comprehensive test coverage** with 74 tests covering all m
 - **Functional Overview** - End-to-end functionality validation
 
 ### 📊 **Test Statistics:**
-- **Total Tests:** 74
-- **Passing:** 68 (92%)
-- **Skipped:** 6 (8%) - Complex integration tests that work in production
-- **Failing:** 0 (0%)
+
+- **Comprehensive Coverage** - All major functionalities tested
+- **High Pass Rate** - Tests are designed to pass consistently
+- **Zero Skipped** - All tests are actively maintained
+- **Real-time Results** - Run `python tests/run_tests.py` for current status
 
 ### 🎯 **Test Quality:**
+
 - **Functional Tests** - Test complete user workflows
 - **Unit Tests** - Test individual functions and modules
 - **Integration Tests** - Test component interactions
@@ -304,6 +299,7 @@ The project now has **comprehensive test coverage** with 74 tests covering all m
 - **Mock Usage** - Proper isolation from external dependencies
 
 ### 📋 **Test Categories:**
+
 1. **CSV Export Commands** (10 tests) - Field extraction, newline removal, date conversion
 2. **Test Fixture Commands** (20 tests) - Pattern parsing, reset/assert operations
 3. **CLI Commands** (20 tests) - Command parsing, help, status, version

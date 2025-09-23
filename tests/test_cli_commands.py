@@ -87,7 +87,10 @@ class TestCLIStatusCommand:
         printed_content = ' '.join([str(call) for call in mock_print.call_args_list])
         
         assert "JiraUtil Status" in printed_content
-        assert "Version: 1.0.24" in printed_content
+        # Test for version pattern instead of hardcoded version
+        import re
+        version_pattern = r"Version: \d+\.\d+\.\d+"
+        assert re.search(version_pattern, printed_content), f"Version pattern not found in: {printed_content}"
         assert "Status: Ready" in printed_content
         assert "Configuration:" in printed_content
         assert "Default test fixture label: rule-testing" in printed_content

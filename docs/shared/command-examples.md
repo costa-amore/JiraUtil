@@ -135,13 +135,16 @@ JiraUtil ae rule-testing
 # 1. Setup environment
 ./setup-environment.ps1
 
-# 2. Run tests
+# 2. Test basic functionality
+./run.ps1 .\JiraUtil.py --help
+
+# 3. Run comprehensive tests
 python tests/run_tests.py
 
-# 3. Debug specific command
+# 4. Debug specific command
 python debug-helper.py
 
-# 4. Build executable
+# 5. Build executable (runs tests first, then builds)
 ./build-windows.ps1
 ```
 
