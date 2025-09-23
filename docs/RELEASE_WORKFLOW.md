@@ -7,7 +7,7 @@ This document describes the current release workflow strategy for JiraUtil, whic
 ## Workflow Strategy
 
 ### 🛠️ Development Phase
-- **Command**: `.\build-windows.ps1`
+- **Command**: `.\scripts\build-windows.ps1`
 - **Purpose**: Local development and testing
 - **Behavior**:
   - ✅ Builds executables
@@ -29,7 +29,7 @@ This document describes the current release workflow strategy for JiraUtil, whic
 - **Use case**: Getting CI feedback, testing in cloud environment
 
 ### 🚀 Release Phase
-- **Command**: `.\release.ps1 -Platform windows`
+- **Command**: `.\scripts\release.ps1 -Platform windows`
 - **Purpose**: Create official release
 - **Behavior**:
   - ✅ **Increments version** (e.g., 1.0.32 → 1.0.33)

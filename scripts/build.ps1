@@ -2,14 +2,14 @@
 # This script compiles the JiraUtil project into standalone executables for specified platforms
 # Use platform-specific convenience scripts for common use cases:
 #   - build-windows.ps1 (Windows only)
-#   - build-macos.ps1 (macOS only) 
-#   - build-linux.ps1 (Linux only)
-#   - build-all.ps1 (All platforms)
+#   - build-all.ps1 (All platforms - currently Windows only)
+#   
+# Note: macOS and Linux builds are temporarily disabled
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("windows", "macos", "linux", "all")]
-    [string]$Platform,          # Target platform: "windows", "macos", "linux", or "all"
+    [ValidateSet("windows", "all")]
+    [string]$Platform,          # Target platform: "windows" or "all" (Windows only for now)
     [switch]$Clean = $false,    # Clean build directories before building
     [switch]$IncrementVersion = $false  # Increment version before building
 )
@@ -52,26 +52,30 @@ if ($shouldIncrement) {
     }
     
     # Check if code has changed and increment if needed
-    $versionResult = python version_manager.py increment-if-changed
-    $version = python version_manager.py get
+    $versionResult = python tools\version_manager.py increment-if-changed --version-file scripts/version.json
+    $version = python tools\version_manager.py get --version-file scripts/version.json
 
     if ($versionResult -match "incremented") {
         Write-Host "[OK] Version incremented: $version" -ForegroundColor Green
         # Update all files to new version
-        python update-dev-version.py
+        python tools\update-dev-version.py
         # Mark version update as complete to update hashes
-        python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
+        python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
     } else {
         Write-Host "[INFO] Version unchanged: $version (no code changes)" -ForegroundColor Yellow
     }
 } else {
     Write-Host "[INFO] Local build - using current version without incrementing" -ForegroundColor Yellow
-    $version = python version_manager.py get
+    $version = python tools\version_manager.py get --version-file scripts/version.json
     Write-Host "[INFO] Current version: $version" -ForegroundColor Cyan
 }
 
 # Create version info file
-python create-version-info.py
+python tools\create-version-info.py
+
+# Generate PyInstaller spec file
+Write-Host "[SPEC] Generating PyInstaller spec file..." -ForegroundColor Yellow
+python tools\generate-spec.py
 
 # Detect Python executable path
 $pythonExe = "python"
@@ -151,7 +155,7 @@ function Build-Executable {
                New-Item -ItemType Directory -Path "$outputDir\docs\shared" -Force | Out-Null
                
                # Create versioned README files
-               $userReadme = Get-Content "user-guide.md" -Raw
+               $userReadme = Get-Content "docs\user-guide.md" -Raw
                $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n## Version`n`nVersion: $version"
                # Remove trailing blank lines
                $userReadme = $userReadme.TrimEnd()
@@ -232,13 +236,14 @@ if ($Platform -eq "all" -or $Platform -eq "windows") {
     $buildResults["Windows"] = Build-Executable -PlatformName "Windows" -TargetOS "windows"
 }
 
-if ($Platform -eq "all" -or $Platform -eq "macos") {
-    $buildResults["macOS"] = Build-Executable -PlatformName "macOS" -TargetOS "macos"
-}
+# Note: macOS and Linux builds are temporarily disabled
+# if ($Platform -eq "all" -or $Platform -eq "macos") {
+#     $buildResults["macOS"] = Build-Executable -PlatformName "macOS" -TargetOS "macos"
+# }
 
-if ($Platform -eq "all" -or $Platform -eq "linux") {
-    $buildResults["Linux"] = Build-Executable -PlatformName "Linux" -TargetOS "linux"
-}
+# if ($Platform -eq "all" -or $Platform -eq "linux") {
+#     $buildResults["Linux"] = Build-Executable -PlatformName "Linux" -TargetOS "linux"
+# }
 
 # Summary
 Write-Host "`n[SUMMARY] Build Summary" -ForegroundColor Cyan
@@ -289,3 +294,14 @@ Write-Host "4. Run the executable or launcher script" -ForegroundColor White
 Write-Host "`n[TIP] Usage Examples:" -ForegroundColor Cyan
 Write-Host "Windows: .\JiraUtil.exe --help" -ForegroundColor White
 Write-Host "macOS/Linux: ./JiraUtil --help" -ForegroundColor White
+
+# Cleanup temporary files
+Write-Host "`n[CLEANUP] Cleaning up temporary files..." -ForegroundColor Yellow
+if (Test-Path "version_info.txt") {
+    Remove-Item "version_info.txt" -Force
+    Write-Host "[OK] Removed version_info.txt" -ForegroundColor Green
+}
+if (Test-Path "JiraUtil.spec") {
+    Remove-Item "JiraUtil.spec" -Force
+    Write-Host "[OK] Removed JiraUtil.spec" -ForegroundColor Green
+}

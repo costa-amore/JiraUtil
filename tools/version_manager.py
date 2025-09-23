@@ -122,10 +122,28 @@ def main():
         print("  python version_manager.py increment-if-changed   # Increment only if code changed")
         print("  python version_manager.py set <major> <minor>    # Set major.minor version")
         print("  python version_manager.py set <major> <minor> <build>  # Set full version")
+        print("  --version-file <path>                            # Specify version file path")
         sys.exit(1)
     
-    manager = VersionManager()
-    command = sys.argv[1].lower()
+    # Parse command line arguments
+    version_file = "version.json"  # Default
+    command_args = []
+    
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i] == "--version-file" and i + 1 < len(sys.argv):
+            version_file = sys.argv[i + 1]
+            i += 2  # Skip both --version-file and its value
+        else:
+            command_args.append(sys.argv[i])
+            i += 1
+    
+    if len(command_args) < 1:
+        print("Error: Command required")
+        sys.exit(1)
+    
+    manager = VersionManager(version_file)
+    command = command_args[0].lower()
     
     if command == "get":
         print(manager.get_version_string())
@@ -139,14 +157,14 @@ def main():
         else:
             print(f"Version unchanged: {version} (no code changes)")
     elif command == "set":
-        if len(sys.argv) < 4:
+        if len(command_args) < 3:
             print("Error: set command requires major and minor version")
             sys.exit(1)
         
         try:
-            major = int(sys.argv[2])
-            minor = int(sys.argv[3])
-            build = int(sys.argv[4]) if len(sys.argv) > 4 else None
+            major = int(command_args[1])
+            minor = int(command_args[2])
+            build = int(command_args[3]) if len(command_args) > 3 else None
             new_version = manager.set_version(major, minor, build)
             print(f"Version set to: {new_version}")
         except ValueError:

@@ -12,8 +12,8 @@ Version: 1.0.34
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
 3. **Run**: Use `.\run.ps1 .\JiraUtil.py --help` or `.\run.ps1 .\ju.py --help` to see all available commands
 4. **Test**: Run `.\run.ps1 tests\run_tests.py` to verify everything works correctly
-5. **Build**: Use `.\build-windows.ps1` to create executables (runs tests first, then versioning and building)
-6. **Release**: Use `.\release.ps1 -Platform windows` to create a new release (increments version and publishes)
+5. **Build**: Use `.\scripts\build-windows.ps1` to create executables (runs tests first, then versioning and building)
+6. **Release**: Use `.\scripts\release.ps1 -Platform windows` to create a new release (increments version and publishes)
 
 **Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions.
 

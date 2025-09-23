@@ -90,7 +90,7 @@ jobs:
       run: |
         .venv\Scripts\Activate.ps1
         echo "Generating PyInstaller spec file..."
-        python generate-spec.py
+        python tools\generate-spec.py
         
     - name: Build Windows executables
       run: |
@@ -102,7 +102,7 @@ jobs:
       id: version
       run: |
         .venv\Scripts\Activate.ps1
-        $VERSION = python version_manager.py get
+        $VERSION = python tools\version_manager.py get --version-file scripts/version.json
         echo "version=$VERSION" >> $env:GITHUB_OUTPUT
         echo "Current version: $VERSION"
         
@@ -206,7 +206,7 @@ jobs:
     - name: Get version from version.json
       id: version
       run: |
-        VERSION=$(python version_manager.py get)
+        VERSION=$(python tools\version_manager.py get --version-file scripts/version.json)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Current version: $VERSION"
         
@@ -310,7 +310,7 @@ jobs:
     - name: Get version from version.json
       id: version
       run: |
-        VERSION=$(python version_manager.py get)
+        VERSION=$(python tools\version_manager.py get --version-file scripts/version.json)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Current version: $VERSION"
         
@@ -363,7 +363,7 @@ jobs:
       id: version
       run: |
 
-        VERSION=$(python version_manager.py get)
+        VERSION=$(python tools\version_manager.py get --version-file scripts/version.json)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
         echo "Current version: $VERSION"

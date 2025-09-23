@@ -53,12 +53,12 @@ if ($gitStatus) {
 }
 
 # Get current version
-$currentVersion = python version_manager.py get
+$currentVersion = python tools\version_manager.py get --version-file scripts/version.json
 Write-Host "[INFO] Current version: $currentVersion" -ForegroundColor Cyan
 
 # Build with version increment
 Write-Host "`n[BUILD] Building with version increment..." -ForegroundColor Yellow
-& .\build.ps1 -Platform $Platform -Clean:$Clean -IncrementVersion
+& .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -IncrementVersion
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Build failed! Release aborted." -ForegroundColor Red
@@ -66,7 +66,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Get new version
-$newVersion = python version_manager.py get
+$newVersion = python tools\version_manager.py get --version-file scripts/version.json
 Write-Host "`n[VERSION] Version incremented: $currentVersion → $newVersion" -ForegroundColor Green
 
 # Check if version actually changed
@@ -87,7 +87,7 @@ if ($Message -eq "") {
 
 # Commit version changes
 Write-Host "`n[GIT] Committing version changes..." -ForegroundColor Yellow
-git add version.json README.md version_info.txt .code_hash
+git add scripts\version.json README.md build\version_info.txt .code_hash
 git commit -m $Message
 
 if ($LASTEXITCODE -ne 0) {

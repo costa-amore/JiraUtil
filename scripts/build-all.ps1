@@ -5,7 +5,7 @@ Write-Host "🔨 Building JiraUtil for All Platforms" -ForegroundColor Cyan
 Write-Host "Calling generic build script with all platforms..." -ForegroundColor Yellow
 
 # Call the generic build script with all platforms
-& .\build.ps1 -Platform all @args
+& .\scripts\build.ps1 -Platform all @args
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ All platforms build completed successfully!" -ForegroundColor Green

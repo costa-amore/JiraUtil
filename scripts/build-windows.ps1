@@ -5,7 +5,7 @@ Write-Host "🔨 Building JiraUtil for Windows" -ForegroundColor Cyan
 Write-Host "Calling generic build script with Windows platform..." -ForegroundColor Yellow
 
 # Call the generic build script with Windows platform
-& .\build.ps1 -Platform windows @args
+& .\scripts\build.ps1 -Platform windows @args
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ Windows build completed successfully!" -ForegroundColor Green

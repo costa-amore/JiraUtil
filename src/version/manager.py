@@ -46,7 +46,7 @@ def get_version() -> str:
     
     # Fallback to version.json (for development or if file properties fail)
     try:
-        version_file = Path("version.json")
+        version_file = Path("scripts/version.json")
         if version_file.exists():
             with open(version_file, 'r', encoding='utf-8') as f:
                 version_data = json.load(f)

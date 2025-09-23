@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Generate PyInstaller spec file with version information.
+Create version_info.txt for PyInstaller with current version information.
 """
 
 import json
 from pathlib import Path
 
 
-def generate_spec_file():
-    """Generate JiraUtil.spec with current version information."""
+def create_version_info():
+    """Create version_info.txt file for PyInstaller."""
     
     # Load version information
-    version_file = Path("version.json")
+    version_file = Path("scripts/version.json")
     if not version_file.exists():
-        print("Error: version.json not found. Run version_manager.py first.")
+        print("Error: scripts/version.json not found. Run version_manager.py first.")
         return False
     
     with open(version_file, 'r') as f:
@@ -22,83 +22,8 @@ def generate_spec_file():
     version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
     description = version_data.get('description', 'JiraUtil - Jira Administration Tool')
     
-    # Generate spec file content
-    spec_content = f'''# -*- mode: python ; coding: utf-8 -*-
-
-block_cipher = None
-
-a = Analysis(
-    ['src/JiraUtil.py'],
-    pathex=['src'],
-    binaries=[],
-    datas=[
-        ('jira_config_example.env', '.'),
-        ('README.md', '.'),
-        ('docs', 'docs'),
-    ],
-    hiddenimports=[
-        'jira',
-        'jira.exceptions',
-        'jira.exceptions.JIRAError',
-        'pandas',
-        'dateutil',
-        'dateutil.parser',
-        'csv',
-        'pathlib',
-        'argparse',
-        'os',
-        're',
-        'typing',
-        'getpass',
-        'jira_cleaner',
-        'jira_field_extractor',
-        'jira_dates_eu',
-        'jira_testfixture',
-        'jira_manager',
-    ],
-    hookspath=[],
-    hooksconfig={{}},
-    runtime_hooks=[],
-    excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
-    noarchive=False,
-)
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name='JiraUtil',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    version='version_info.txt',
-)
-'''
-    
-    # Write spec file
-    with open('JiraUtil.spec', 'w') as f:
-        f.write(spec_content)
-    
-    # Create version info file
-    with open('version_info.txt', 'w') as f:
-        f.write(f"""# UTF-8
+    # Create version info content
+    version_info_content = f'''# UTF-8
 #
 # For more details about fixed file info 'ffi' see:
 # http://msdn.microsoft.com/en-us/library/ms646997.aspx
@@ -141,11 +66,15 @@ VSVersionInfo(
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
   ]
 )
-""")
+'''
     
-    print(f"Generated JiraUtil.spec with version {version_string}")
+    # Write version info file
+    with open('version_info.txt', 'w') as f:
+        f.write(version_info_content)
+    
+    print(f"Created version_info.txt with version {version_string}")
     return True
 
 
 if __name__ == "__main__":
-    generate_spec_file()
+    create_version_info()
