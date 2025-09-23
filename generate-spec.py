@@ -90,24 +90,15 @@ exe = EXE(
     entitlements_file=None,
     version='version_info.txt',
 )
-
-# Version information for Windows executable
-version_info = Version(
-    vs_ver=(4, 0),
-    filevers=(4, 0, 0, 0),
-    prodvers=(4, 0, 0, 0),
-    # 0x64bit, 0x04L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L, 0x00L
-    mask=0x3f,
-    flags=0x0,
-    OS=0x40004,
-    fileType=0x1,
-    subtype=0x0,
-    date=(0, 0)
-    )
-
-# Create version info file
-with open('version_info.txt', 'w') as f:
-    f.write(f"""# UTF-8
+'''
+    
+    # Write spec file
+    with open('JiraUtil.spec', 'w') as f:
+        f.write(spec_content)
+    
+    # Create version info file
+    with open('version_info.txt', 'w') as f:
+        f.write(f"""# UTF-8
 #
 # For more details about fixed file info 'ffi' see:
 # http://msdn.microsoft.com/en-us/library/ms646997.aspx
@@ -151,18 +142,6 @@ VSVersionInfo(
   ]
 )
 """)
-
-print(f"Generated JiraUtil.spec with version {version_string}")
-return True
-
-
-if __name__ == "__main__":
-    generate_spec_file()
-'''
-    
-    # Write spec file
-    with open('JiraUtil.spec', 'w') as f:
-        f.write(spec_content)
     
     print(f"Generated JiraUtil.spec with version {version_string}")
     return True
