@@ -96,7 +96,7 @@ jobs:
       run: |
         .venv\Scripts\Activate.ps1
         echo "Building on Windows..."
-        powershell -ExecutionPolicy Bypass -File build.ps1 -Platform windows
+        powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Platform windows
         
     - name: Get version from version.json
       id: version
