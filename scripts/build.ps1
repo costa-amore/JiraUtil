@@ -167,27 +167,39 @@ function Build-Executable {
                
                # Create versioned README files
                $userReadme = Get-Content "docs\user-guide.md" -Raw
-               $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n## Version`n`nVersion: $version"
+               # Add version only if not already present
+               if ($userReadme -notmatch "## Version") {
+                   $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n## Version`n`nVersion: $version"
+               }
                # Remove trailing blank lines
                $userReadme = $userReadme.TrimEnd()
                $userReadme | Out-File -FilePath "$outputDir\README.md" -Encoding UTF8
                
                $commandReadme = Get-Content "docs\command-reference.md" -Raw
-               $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
+               # Add version only if not already present (look for actual version chapter, not command descriptions)
+               if ($commandReadme -notmatch "## Version`n`nVersion:") {
+                   $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
+               }
                # Fix navigation for user environment (remove references to dev-only files)
                $commandReadme = $commandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← Building Executables](building-executables.md)"
                $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
                
                # Copy building-executables.md for user reference
                $buildingReadme = Get-Content "docs\building-executables.md" -Raw
-               $buildingReadme = $buildingReadme -replace "# Building Executables", "# Building Executables`n`n## Version`n`nVersion: $version"
+               # Add version only if not already present
+               if ($buildingReadme -notmatch "## Version") {
+                   $buildingReadme = $buildingReadme -replace "# Building Executables", "# Building Executables`n`n## Version`n`nVersion: $version"
+               }
                # Fix navigation for user environment (remove references to dev-only files)
                $buildingReadme = $buildingReadme -replace "\[← Testing\]\(testing\.md\)", "[← User Guide](../README.md)"
                $buildingReadme = $buildingReadme -replace "\[Release and Versioning →\]\(release-and-versioning\.md\)", "[Command Reference →](command-reference.md)"
                $buildingReadme | Out-File -FilePath "$outputDir\docs\building-executables.md" -Encoding UTF8
                
                $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
-               $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting Guide", "# Troubleshooting Guide`n`n## Version`n`nVersion: $version"
+               # Add version only if not already present
+               if ($troubleshootReadme -notmatch "## Version") {
+                   $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting Guide", "# Troubleshooting Guide`n`n## Version`n`nVersion: $version"
+               }
                # Fix navigation for user environment (remove references to dev-only files)
                $troubleshootReadme = $troubleshootReadme -replace "\[User Guide →\]\(\.\./user-guide\.md\)", "[End of User Documentation]"
                $troubleshootReadme | Out-File -FilePath "$outputDir\docs\troubleshooting.md" -Encoding UTF8
@@ -199,8 +211,10 @@ function Build-Executable {
                    $targetFile = "$outputDir\docs\shared\$file"
                    if (Test-Path $sourceFile) {
                        $content = Get-Content $sourceFile -Raw
-                       # Add version after the title (first # heading)
-                       $content = $content -replace "(# [^`n]+)", "`$1`n`n## Version`n`nVersion: $version"
+                       # Add version after the title (first # heading) only if not already present
+                       if ($content -notmatch "## Version") {
+                           $content = $content -replace "^# [^`n]+", "`$&`n`n## Version`n`nVersion: $version"
+                       }
                        $content | Out-File -FilePath $targetFile -Encoding UTF8
                    }
                }

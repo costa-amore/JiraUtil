@@ -1,5 +1,7 @@
 # Building Executables
 
+🏠 [Home](../README.md)
+
 This guide explains how to build standalone executables for the JiraUtil project that can run on Windows, macOS, and Linux systems without requiring Python to be installed.
 
 ## Prerequisites

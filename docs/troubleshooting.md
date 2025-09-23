@@ -1,5 +1,7 @@
 # Troubleshooting Guide
 
+🏠 [Home](../README.md)
+
 Common issues and solutions for JiraUtil.
 
 ## Connection Issues

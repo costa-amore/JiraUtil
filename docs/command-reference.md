@@ -1,5 +1,7 @@
 # Command Reference
 
+🏠 [Home](../README.md)
+
 Quick reference for all JiraUtil commands and options.
 
 ## Command Structure

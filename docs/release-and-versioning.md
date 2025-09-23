@@ -1,5 +1,7 @@
 # Release and Versioning Guide
 
+🏠 [Home](../README.md)
+
 This guide covers the versioning system and release workflow for JiraUtil.
 
 ## 🎯 Overview
