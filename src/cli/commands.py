@@ -44,6 +44,16 @@ def show_status() -> None:
     print("=" * 20)
     print(f"Version: {get_version()}")
     print("Status: Ready")
+    
+    # Show emoji configuration
+    try:
+        from config.emoji_config import EmojiConfig
+        config = EmojiConfig()
+        emoji_status = "enabled" if config.get_use_emoji() else "disabled (using text fallbacks)"
+        print(f"Emoji display: {emoji_status}")
+    except ImportError:
+        print("Emoji display: unknown (emoji_config not available)")
+    
     print()
     print("Configuration:")
     

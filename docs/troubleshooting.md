@@ -197,6 +197,81 @@ chmod +x JiraUtil
 ./JiraUtil --help
 ```
 
+## Display Issues
+
+### Emoji Display Problems
+
+**Symptoms:**
+
+- Build scripts show `[BUILD]` instead of `🔨`
+- Test output shows `[TEST]` instead of `🧪`
+- UnicodeEncodeError on Windows
+- Garbled characters in terminal output
+
+**Causes:**
+
+- **Windows Console**: Older Windows terminals use cp1252 encoding
+- **Docker Containers**: Minimal environments without emoji fonts
+- **CI/CD Systems**: GitHub Actions, Jenkins may not support emojis
+- **Terminal Settings**: Console not configured for UTF-8
+
+**Solutions:**
+
+1. **Edit the configuration file:**
+   ```json
+   # Edit .vscode/emoji-config.json
+   {
+     "useEmoji": false,  // Set to true to enable emojis
+     "emojiFallbacks": {
+       "🔨": "[BUILD]",
+       "🧪": "[TEST]",
+       "❌": "[FAIL]",
+       "✅": "[OK]"
+     }
+   }
+   ```
+
+2. **Environment variable override:**
+   ```bash
+   # Disable emojis
+   export USE_EMOJI=false
+   
+   # Windows PowerShell
+   $env:USE_EMOJI="false"
+   ```
+
+3. **Windows-specific fixes:**
+   ```powershell
+   # Set UTF-8 encoding
+   $env:PYTHONIOENCODING="utf-8"
+   
+   # Use Windows Terminal (recommended)
+   # Download from Microsoft Store
+   ```
+
+4. **Check current settings:**
+   ```bash
+   # Show emoji configuration
+   python src/config/emoji_config.py status
+   ```
+
+**Configuration Priority:**
+
+1. **Environment variable** `USE_EMOJI=false` (highest priority)
+2. **Config file** `.vscode/emoji-config.json` with `"useEmoji": false`
+3. **Default** emojis enabled
+
+**Fallback Behavior:**
+
+When emojis are disabled, the system automatically uses text alternatives:
+- `🔨` → `[BUILD]`
+- `🧪` → `[TEST]`
+- `❌` → `[FAIL]`
+- `✅` → `[OK]`
+- `ℹ️` → `[INFO]`
+
+This ensures consistent output across all environments.
+
 ## Getting Help
 
 ### Debug Information
