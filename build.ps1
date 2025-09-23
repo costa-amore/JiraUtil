@@ -10,7 +10,8 @@ param(
     [Parameter(Mandatory=$true)]
     [ValidateSet("windows", "macos", "linux", "all")]
     [string]$Platform,          # Target platform: "windows", "macos", "linux", or "all"
-    [switch]$Clean = $false     # Clean build directories before building
+    [switch]$Clean = $false,    # Clean build directories before building
+    [switch]$IncrementVersion = $false  # Increment version before building
 )
 
 $ErrorActionPreference = 'Stop'
@@ -39,18 +40,34 @@ try {
 # Handle versioning AFTER tests pass
 Write-Host "[VERSION] Managing version..." -ForegroundColor Yellow
 
-# Check if code has changed and increment if needed
-$versionResult = python version_manager.py increment-if-changed
-$version = python version_manager.py get
+# Check if we're in CI environment or if version increment is requested
+$isCI = $env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true"
+$shouldIncrement = $isCI -or $IncrementVersion
 
-if ($versionResult -match "incremented") {
-    Write-Host "[OK] Version incremented: $version" -ForegroundColor Green
-    # Update all files to new version
-    python update-dev-version.py
-    # Mark version update as complete to update hashes
-    python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
+if ($shouldIncrement) {
+    if ($isCI) {
+        Write-Host "[INFO] Running in CI - handling version management" -ForegroundColor Cyan
+    } else {
+        Write-Host "[INFO] Version increment requested - handling version management" -ForegroundColor Cyan
+    }
+    
+    # Check if code has changed and increment if needed
+    $versionResult = python version_manager.py increment-if-changed
+    $version = python version_manager.py get
+
+    if ($versionResult -match "incremented") {
+        Write-Host "[OK] Version incremented: $version" -ForegroundColor Green
+        # Update all files to new version
+        python update-dev-version.py
+        # Mark version update as complete to update hashes
+        python -c "from version_manager import VersionManager; VersionManager().mark_version_update_complete()"
+    } else {
+        Write-Host "[INFO] Version unchanged: $version (no code changes)" -ForegroundColor Yellow
+    }
 } else {
-    Write-Host "[INFO] Version unchanged: $version (no code changes)" -ForegroundColor Yellow
+    Write-Host "[INFO] Local build - using current version without incrementing" -ForegroundColor Yellow
+    $version = python version_manager.py get
+    Write-Host "[INFO] Current version: $version" -ForegroundColor Cyan
 }
 
 # Create version info file

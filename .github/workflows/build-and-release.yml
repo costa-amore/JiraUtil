@@ -340,7 +340,7 @@ jobs:
     needs: [build-windows] # macOS and Linux temporarily disabled
     runs-on: ubuntu-latest
 
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: false # Temporarily disabled due to permissions issue
     
     steps:
     - name: Checkout code
@@ -395,47 +395,91 @@ jobs:
           COMMITS=$(git log --oneline --pretty=format:"- %s (%h)" --no-merges)
 
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "# JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "# 🚀 JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## What's New" >> $GITHUB_OUTPUT
+          echo "A powerful command-line tool for Jira administrators and power users." >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## ✨ What's New" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## Downloads" >> $GITHUB_OUTPUT
+          echo "## 📦 Downloads" >> $GITHUB_OUTPUT
           echo "Download the appropriate package for your operating system:" >> $GITHUB_OUTPUT
-          echo "- **Windows**: JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
-          echo "- **macOS**: JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
-          echo "- **Linux**: JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## Installation" >> $GITHUB_OUTPUT
-          echo "1. Download the appropriate package for your operating system" >> $GITHUB_OUTPUT
-          echo "2. Extract the ZIP file to a folder" >> $GITHUB_OUTPUT
-          echo "3. Edit `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
-          echo "4. Run the executable or launcher script" >> $GITHUB_OUTPUT
+          echo "| Platform | Download | Size |" >> $GITHUB_OUTPUT
+          echo "|----------|----------|------|" >> $GITHUB_OUTPUT
+          echo "| **Windows** | [JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
+          echo "| **macOS** | [JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
+          echo "| **Linux** | [JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 🛠️ Installation" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "1. **Download** the appropriate package for your operating system" >> $GITHUB_OUTPUT
+          echo "2. **Extract** the ZIP file to a folder" >> $GITHUB_OUTPUT
+          echo "3. **Configure** `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
+          echo "4. **Run** the executable or launcher script" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 📚 Quick Start" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "\`\`\`bash" >> $GITHUB_OUTPUT
+          echo "# Windows" >> $GITHUB_OUTPUT
+          echo "JiraUtil.exe --help" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "# macOS/Linux" >> $GITHUB_OUTPUT
+          echo "./JiraUtil --help" >> $GITHUB_OUTPUT
+          echo "\`\`\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 🔗 Links" >> $GITHUB_OUTPUT
+          echo "- [Documentation](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/README.md)" >> $GITHUB_OUTPUT
+          echo "- [User Guide](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/user-guide.md)" >> $GITHUB_OUTPUT
+          echo "- [Issues](https://github.com/costa-amore/JiraUtil/issues)" >> $GITHUB_OUTPUT
+          echo "- [Changelog](https://github.com/costa-amore/JiraUtil/releases)" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         else
           # Get commits since last tag
           COMMITS=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s (%h)" --no-merges)
           echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "# JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "# 🚀 JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## What's New" >> $GITHUB_OUTPUT
+          echo "A powerful command-line tool for Jira administrators and power users." >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## ✨ What's New" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## Downloads" >> $GITHUB_OUTPUT
+          echo "## 📦 Downloads" >> $GITHUB_OUTPUT
           echo "Download the appropriate package for your operating system:" >> $GITHUB_OUTPUT
-          echo "- **Windows**: JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
-          echo "- **macOS**: JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
-          echo "- **Linux**: JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## Installation" >> $GITHUB_OUTPUT
-          echo "1. Download the appropriate package for your operating system" >> $GITHUB_OUTPUT
-          echo "2. Extract the ZIP file to a folder" >> $GITHUB_OUTPUT
-          echo "3. Edit `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
-          echo "4. Run the executable or launcher script" >> $GITHUB_OUTPUT
+          echo "| Platform | Download | Size |" >> $GITHUB_OUTPUT
+          echo "|----------|----------|------|" >> $GITHUB_OUTPUT
+          echo "| **Windows** | [JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
+          echo "| **macOS** | [JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
+          echo "| **Linux** | [JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "## Full Changelog" >> $GITHUB_OUTPUT
+          echo "## 🛠️ Installation" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "1. **Download** the appropriate package for your operating system" >> $GITHUB_OUTPUT
+          echo "2. **Extract** the ZIP file to a folder" >> $GITHUB_OUTPUT
+          echo "3. **Configure** `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
+          echo "4. **Run** the executable or launcher script" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 📚 Quick Start" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "\`\`\`bash" >> $GITHUB_OUTPUT
+          echo "# Windows" >> $GITHUB_OUTPUT
+          echo "JiraUtil.exe --help" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "# macOS/Linux" >> $GITHUB_OUTPUT
+          echo "./JiraUtil --help" >> $GITHUB_OUTPUT
+          echo "\`\`\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 🔗 Links" >> $GITHUB_OUTPUT
+          echo "- [Documentation](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/README.md)" >> $GITHUB_OUTPUT
+          echo "- [User Guide](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/user-guide.md)" >> $GITHUB_OUTPUT
+          echo "- [Issues](https://github.com/costa-amore/JiraUtil/issues)" >> $GITHUB_OUTPUT
+          echo "- [Changelog](https://github.com/costa-amore/JiraUtil/releases)" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 📋 Full Changelog" >> $GITHUB_OUTPUT
           echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LAST_TAG...v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         fi

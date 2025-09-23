@@ -1,0 +1,121 @@
+#!/usr/bin/env pwsh
+<#
+.SYNOPSIS
+    Create a release by incrementing version, building, and pushing to CI
+
+.DESCRIPTION
+    This script creates a release by:
+    1. Incrementing the version number
+    2. Building the executables
+    3. Committing the version changes
+    4. Pushing to CI to create the release
+
+.PARAMETER Platform
+    Target platform: "windows", "macos", "linux", or "all"
+    
+.PARAMETER Clean
+    Clean build directories before building
+
+.PARAMETER Message
+    Custom commit message for the version increment
+
+.EXAMPLE
+    .\release.ps1 -Platform windows
+    .\release.ps1 -Platform all -Message "Release v1.0.32 with new features"
+#>
+
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("windows", "macos", "linux", "all")]
+    [string]$Platform,          # Target platform: "windows", "macos", "linux", or "all"
+    [switch]$Clean = $false,    # Clean build directories before building
+    [string]$Message = ""       # Custom commit message
+)
+
+$ErrorActionPreference = 'Stop'
+
+Write-Host "🚀 Creating JiraUtil Release" -ForegroundColor Cyan
+Write-Host "Platform: $Platform" -ForegroundColor Yellow
+
+# Check if we're in a git repository
+if (-not (Test-Path ".git")) {
+    Write-Host "[ERROR] Not in a git repository!" -ForegroundColor Red
+    exit 1
+}
+
+# Check if there are uncommitted changes
+$gitStatus = git status --porcelain
+if ($gitStatus) {
+    Write-Host "[ERROR] You have uncommitted changes. Please commit or stash them first." -ForegroundColor Red
+    Write-Host "Uncommitted files:" -ForegroundColor Yellow
+    Write-Host $gitStatus -ForegroundColor Gray
+    exit 1
+}
+
+# Get current version
+$currentVersion = python version_manager.py get
+Write-Host "[INFO] Current version: $currentVersion" -ForegroundColor Cyan
+
+# Build with version increment
+Write-Host "`n[BUILD] Building with version increment..." -ForegroundColor Yellow
+& .\build.ps1 -Platform $Platform -Clean:$Clean -IncrementVersion
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Build failed! Release aborted." -ForegroundColor Red
+    exit 1
+}
+
+# Get new version
+$newVersion = python version_manager.py get
+Write-Host "`n[VERSION] Version incremented: $currentVersion → $newVersion" -ForegroundColor Green
+
+# Check if version actually changed
+if ($currentVersion -eq $newVersion) {
+    Write-Host "[WARN] Version did not change. This might mean no code changes were detected." -ForegroundColor Yellow
+    Write-Host "Do you want to continue anyway? (y/N): " -ForegroundColor Yellow -NoNewline
+    $response = Read-Host
+    if ($response -ne "y" -and $response -ne "Y") {
+        Write-Host "[INFO] Release cancelled by user." -ForegroundColor Yellow
+        exit 0
+    }
+}
+
+# Create commit message
+if ($Message -eq "") {
+    $Message = "chore: bump version to $newVersion"
+}
+
+# Commit version changes
+Write-Host "`n[GIT] Committing version changes..." -ForegroundColor Yellow
+git add version.json README.md version_info.txt .code_hash
+git commit -m $Message
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Failed to commit version changes!" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "[OK] Version changes committed" -ForegroundColor Green
+
+# Push to CI
+Write-Host "`n[GIT] Pushing to CI to create release..." -ForegroundColor Yellow
+git push
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Failed to push to CI!" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "[OK] Pushed to CI successfully" -ForegroundColor Green
+
+# Summary
+Write-Host "`n🎉 Release Process Complete!" -ForegroundColor Green
+Write-Host "================================" -ForegroundColor Gray
+Write-Host "Version: $currentVersion → $newVersion" -ForegroundColor White
+Write-Host "Platform: $Platform" -ForegroundColor White
+Write-Host "Status: Pushed to CI" -ForegroundColor White
+Write-Host "`n[INFO] CI will now:" -ForegroundColor Cyan
+Write-Host "  - Build the executables" -ForegroundColor White
+Write-Host "  - Create GitHub release v$newVersion" -ForegroundColor White
+Write-Host "  - Upload artifacts" -ForegroundColor White
+Write-Host "`n[LINK] Check progress: https://github.com/costa-amore/JiraUtil/actions" -ForegroundColor Blue
