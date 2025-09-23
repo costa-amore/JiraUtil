@@ -90,7 +90,7 @@ jobs:
       run: |
         .venv\Scripts\Activate.ps1
         echo "Building on Windows..."
-        powershell -ExecutionPolicy Bypass -File build.ps1 -Platform all
+        powershell -ExecutionPolicy Bypass -File build.ps1 -Platform windows
         
     - name: Get version from version.json
       id: version
@@ -115,7 +115,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: executables-windows-v${{ steps.version.outputs.version }}
-        path: build-executables/
+        path: build-executables/*.zip
         retention-days: 30
         
   build-macos:
@@ -220,7 +220,7 @@ jobs:
       with:
 
         name: executables-macos-v${{ steps.version.outputs.version }}
-        path: build-executables/
+        path: build-executables/*.zip
         retention-days: 30
         
   build-linux:
@@ -325,7 +325,7 @@ jobs:
       with:
 
         name: executables-linux-v${{ steps.version.outputs.version }}
-        path: build-executables/
+        path: build-executables/*.zip
         retention-days: 30
 
 
