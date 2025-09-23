@@ -56,17 +56,26 @@ if ($versionResult -match "incremented") {
 # Create version info file
 python create-version-info.py
 
-# Check if PyInstaller is installed in virtual environment
+# Detect Python executable path
+$pythonExe = "python"
+if (Test-Path ".\.venv\Scripts\python.exe") {
+    $pythonExe = ".\.venv\Scripts\python.exe"
+    Write-Host "[INFO] Using virtual environment Python" -ForegroundColor Blue
+} else {
+    Write-Host "[INFO] Using system Python" -ForegroundColor Blue
+}
+
+# Check if PyInstaller is installed
 Write-Host "[PACKAGE] Checking PyInstaller installation..." -ForegroundColor Yellow
 try {
-    $pyinstallerVersion = .\.venv\Scripts\python.exe -m PyInstaller --version 2>$null
+    $pyinstallerVersion = & $pythonExe -m PyInstaller --version 2>$null
     if ($LASTEXITCODE -ne 0) {
         throw "PyInstaller not found"
     }
     Write-Host "[OK] PyInstaller version: $pyinstallerVersion" -ForegroundColor Green
 } catch {
     Write-Host "[FAIL] PyInstaller not found. Installing..." -ForegroundColor Red
-    .\.venv\Scripts\python.exe -m pip install pyinstaller
+    & $pythonExe -m pip install pyinstaller
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Failed to install PyInstaller" -ForegroundColor Red
         exit 1

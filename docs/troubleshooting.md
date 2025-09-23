@@ -218,6 +218,7 @@ chmod +x JiraUtil
 **Solutions:**
 
 1. **Edit the configuration file:**
+
    ```json
    # Edit .vscode/emoji-config.json
    {
@@ -232,6 +233,7 @@ chmod +x JiraUtil
    ```
 
 2. **Environment variable override:**
+
    ```bash
    # Disable emojis
    export USE_EMOJI=false
@@ -241,6 +243,7 @@ chmod +x JiraUtil
    ```
 
 3. **Windows-specific fixes:**
+
    ```powershell
    # Set UTF-8 encoding
    $env:PYTHONIOENCODING="utf-8"
@@ -250,6 +253,7 @@ chmod +x JiraUtil
    ```
 
 4. **Check current settings:**
+
    ```bash
    # Show emoji configuration
    .\run.ps1 src\config\emoji_config.py status
@@ -264,6 +268,7 @@ chmod +x JiraUtil
 **Fallback Behavior:**
 
 When emojis are disabled, the system automatically uses text alternatives:
+
 - `🔨` → `[BUILD]`
 - `🧪` → `[TEST]`
 - `❌` → `[FAIL]`

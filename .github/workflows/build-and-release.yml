@@ -25,14 +25,20 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
+    - name: Create virtual environment
+      run: |
+        python -m venv .venv
+        
     - name: Install dependencies
       run: |
+        .venv\Scripts\Activate.ps1
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
     - name: Check installed packages
       run: |
+        .venv\Scripts\Activate.ps1
         echo "Installed packages:"
         pip list
         echo "Checking for test dependencies..."
@@ -43,6 +49,7 @@ jobs:
         
     - name: Debug environment
       run: |
+        .venv\Scripts\Activate.ps1
         echo "Python version:"
         python --version
         echo "Current directory:"
@@ -52,12 +59,14 @@ jobs:
         
     - name: Check test imports
       run: |
+        .venv\Scripts\Activate.ps1
         echo "Testing imports..."
         python -c "import sys; sys.path.insert(0, '.'); import tests.run_tests; print('Test runner imports OK')"
         python -c "import sys; sys.path.insert(0, '.'); from src import *; print('Source modules import OK')"
         
     - name: Run tests separately
       run: |
+        .venv\Scripts\Activate.ps1
         echo "Running tests to identify issues..."
         echo "Python path:"
         where python

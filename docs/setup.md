@@ -100,13 +100,15 @@ If you encounter any issues with the environment or dependencies:
 
 For new terminal sessions, you have two options:
 
-**Option 1: Run the setup script again (recommended)**
+### Option 1: Run the setup script again (recommended)
+
 ```powershell
 # This will reactivate the environment and run tests
 .\setup-environment.ps1
 ```
 
-**Option 2: Use the run script for any command**
+### Option 2: Use the run script for any command
+
 ```powershell
 # This automatically uses the virtual environment
 .\run.ps1 tests\run_tests.py

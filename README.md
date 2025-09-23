@@ -4,7 +4,7 @@ A Python utility for supporting Jira admins.
 
 ## Version
 
-Version: 1.0.28
+Version: 1.0.30
 
 ## 🚀 Quick Start
 
@@ -15,21 +15,6 @@ Version: 1.0.28
 5. **Build**: Use `.\build-windows.ps1` to create executables (runs tests first, then versioning and building)
 
 **Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions.
-
-## 🔢 Version Management
-
-JiraUtil uses smart versioning that automatically increments build numbers only when code changes are detected.
-
-**Quick Commands:**
-
-```powershell
-.\run.ps1 set-version.py 1.0.0       # Set version to 1.0.0
-.\run.ps1 set-version.py --current   # Show current version
-```
-
-**⚠️ Never edit `version.json` manually!** Use `set-version.py` instead.
-
-📖 **[Complete Versioning Guide](docs/versioning.md)** - Detailed documentation on how versioning works
 
 ## 📋 Available Commands
 
@@ -53,7 +38,7 @@ JiraUtil uses smart versioning that automatically increments build numbers only 
 
 ### For Users
 
-- **[User Guide](docs/user-guide.md)** - Complete user guide for executable users
+- **[User Guide](user-guide.md)** - Complete user guide for executable users
 - **[Command Reference](docs/command-reference.md)** - Quick command reference
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
@@ -93,6 +78,21 @@ The project includes a comprehensive functional test suite covering all major fu
 - **Build Executables**: `.\build-windows.ps1` (Windows) or `.\build-unix.sh` (macOS/Linux)
 
 **Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions. After running the setup script, you can also use `python` commands directly in the same session.
+
+## 🔢 Version Management
+
+JiraUtil uses smart versioning that automatically increments build numbers only when code changes are detected.
+
+**Quick Commands:**
+
+```powershell
+.\run.ps1 set-version.py 1.0.0       # Set version to 1.0.0
+.\run.ps1 set-version.py --current   # Show current version
+```
+
+**⚠️ Never edit `version.json` manually!** Use `set-version.py` instead.
+
+📖 **[Complete Versioning Guide](docs/versioning.md)** - Detailed documentation on how versioning works
 
 ## 📁 Project Structure
 
