@@ -32,6 +32,7 @@ class VersionManager:
                 "major": 1,
                 "minor": 0,
                 "build": 0,
+                "local": 0,
                 "description": "JiraUtil - Jira Administration Tool"
             }
             self._save_version(default_version)
@@ -54,28 +55,51 @@ class VersionManager:
             sys.exit(1)
     
     def get_version_string(self) -> str:
-        """Get version string in M.m.bld format."""
-        return f"{self.version_data['major']}.{self.version_data['minor']}.{self.version_data['build']}"
+        """Get version string in M.m.b.l format."""
+        return f"{self.version_data['major']}.{self.version_data['minor']}.{self.version_data['build']}.{self.version_data.get('local', 0)}"
     
-    def get_version_info(self) -> Tuple[int, int, int]:
-        """Get version components as tuple (major, minor, build)."""
-        return (self.version_data['major'], self.version_data['minor'], self.version_data['build'])
+    def get_version_info(self) -> Tuple[int, int, int, int]:
+        """Get version components as tuple (major, minor, build, local)."""
+        return (self.version_data['major'], self.version_data['minor'], self.version_data['build'], self.version_data.get('local', 0))
     
     def increment_build(self) -> str:
-        """Increment build number and return new version string."""
+        """Increment build number and reset local build to 0 (for releases)."""
         self.version_data['build'] += 1
+        self.version_data['local'] = 0  # Reset local build for releases
         self._save_version(self.version_data)
         return self.get_version_string()
     
     def increment_build_if_changed(self) -> Tuple[str, bool]:
         """
         Increment build number only if code has changed.
+        Resets local build to 0 for releases.
         
         Returns:
             Tuple of (version_string, was_incremented)
         """
         if self.change_detector.has_code_changed():
             self.version_data['build'] += 1
+            self.version_data['local'] = 0  # Reset local build for releases
+            self._save_version(self.version_data)
+            return self.get_version_string(), True
+        else:
+            return self.get_version_string(), False
+    
+    def increment_local_build(self) -> str:
+        """Increment local build number and return new version string."""
+        self.version_data['local'] = self.version_data.get('local', 0) + 1
+        self._save_version(self.version_data)
+        return self.get_version_string()
+    
+    def increment_local_build_if_changed(self) -> Tuple[str, bool]:
+        """
+        Increment local build number only if code has changed.
+        
+        Returns:
+            Tuple of (version_string, was_incremented)
+        """
+        if self.change_detector.has_code_changed():
+            self.version_data['local'] = self.version_data.get('local', 0) + 1
             self._save_version(self.version_data)
             return self.get_version_string(), True
         else:
@@ -100,18 +124,19 @@ class VersionManager:
     def set_manual_version(self, major: int, minor: int) -> str:
         """
         Set major.minor version manually (for developer use).
-        Build number is always reset to 0 when manually setting version.
+        Build and local numbers are always reset to 0 when manually setting version.
         """
         self.version_data['major'] = major
         self.version_data['minor'] = minor
         self.version_data['build'] = 0  # Always reset build to 0 for manual setting
+        self.version_data['local'] = 0  # Always reset local to 0 for manual setting
         
         self._save_version(self.version_data)
         return self.get_version_string()
     
     def get_file_version_info(self) -> dict:
         """Get version info formatted for Windows executable attributes."""
-        major, minor, build = self.get_version_info()
+        major, minor, build, local = self.get_version_info()
         return {
             "FileVersion": self.get_version_string(),
             "ProductVersion": self.get_version_string(),
@@ -132,7 +157,9 @@ def main():
         print("  python version_manager.py get                    # Get current version")
         print("  python version_manager.py increment              # Increment build number")
         print("  python version_manager.py increment-if-changed   # Increment only if code changed")
-        print("  python version_manager.py set <major> <minor>    # Set major.minor version (build will be 0)")
+        print("  python version_manager.py increment-local        # Increment local build number")
+        print("  python version_manager.py increment-local-if-changed  # Increment local only if code changed")
+        print("  python version_manager.py set <major> <minor>    # Set major.minor version (build and local will be 0)")
         print("  --version-file <path>                            # Specify version file path")
         sys.exit(1)
     
@@ -167,6 +194,15 @@ def main():
             print(f"Version incremented to: {version}")
         else:
             print(f"Version unchanged: {version} (no code changes)")
+    elif command == "increment-local":
+        new_version = manager.increment_local_build()
+        print(f"Local build incremented to: {new_version}")
+    elif command == "increment-local-if-changed":
+        version, was_incremented = manager.increment_local_build_if_changed()
+        if was_incremented:
+            print(f"Local build incremented to: {version}")
+        else:
+            print(f"Version unchanged: {version} (no code changes)")
     elif command == "set":
         if len(command_args) < 3:
             print("Error: set command requires major and minor version")
@@ -176,7 +212,7 @@ def main():
             major = int(command_args[1])
             minor = int(command_args[2])
             new_version = manager.set_manual_version(major, minor)
-            print(f"Version set to: {new_version} (build number reset to 0)")
+            print(f"Version set to: {new_version} (build and local numbers reset to 0)")
         except ValueError:
             print("Error: Version numbers must be integers")
             sys.exit(1)

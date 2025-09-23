@@ -90,7 +90,7 @@ JiraUtil uses smart versioning that automatically increments build numbers only 
 **Quick Commands:**
 
 ```powershell
-.\run.ps1 tools\set-version.py 1.0         # Set version to 1.0.0 (build number will be 0)
+.\run.ps1 tools\set-version.py 1.0         # Set version to 1.0.0.0 (build and local will be 0)
 .\run.ps1 tools\set-version.py --current   # Show current version
 ```
 
@@ -98,7 +98,9 @@ JiraUtil uses smart versioning that automatically increments build numbers only 
 
 - Never edit `scripts/version.json` manually! Use `tools/set-version.py` instead.
 - Only major.minor versions can be set manually (e.g., `1.0`, `2.1`)
-- Build numbers are always auto-managed and reset to 0 when you set a version manually
+- Build and local numbers are always auto-managed and reset to 0 when you set a version manually
+- Local builds increment the 4th component (local build number)
+- Releases increment the 3rd component (build number) and reset local to 0
 
 📖 **[Complete Release and Versioning Guide](docs/release-and-versioning.md)** - Detailed documentation on versioning and release workflow
 

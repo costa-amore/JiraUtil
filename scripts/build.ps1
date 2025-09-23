@@ -65,13 +65,24 @@ if ($shouldIncrement) {
         Write-Host "[INFO] Version unchanged: $version (no code changes)" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "[INFO] Local build - using current version without incrementing" -ForegroundColor Yellow
+    Write-Host "[INFO] Local build - incrementing local build number" -ForegroundColor Yellow
+    # For local builds, increment the local build number
+    $versionResult = python tools\version_manager.py increment-local-if-changed --version-file scripts/version.json
     $version = python tools\version_manager.py get --version-file scripts/version.json
-    Write-Host "[INFO] Current version: $version" -ForegroundColor Cyan
+    
+    if ($versionResult -match "incremented") {
+        Write-Host "[OK] Local build incremented: $version" -ForegroundColor Green
+        # Update all files to new version
+        python tools\update-dev-version.py
+        # Mark version update as complete to update hashes
+        python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
+    } else {
+        Write-Host "[INFO] Local build unchanged: $version (no code changes)" -ForegroundColor Yellow
+    }
 }
 
 # Create version info file
-python tools\create-version-info.py
+python tools\create-version-info.py scripts\version.json version_info.txt
 
 # Generate PyInstaller spec file
 Write-Host "[SPEC] Generating PyInstaller spec file..." -ForegroundColor Yellow

@@ -4,22 +4,41 @@ Create version_info.txt for PyInstaller with current version information.
 """
 
 import json
+import os
+import sys
 from pathlib import Path
 
 
-def create_version_info():
-    """Create version_info.txt file for PyInstaller."""
+def create_version_info(version_file_path=None, output_file_path=None):
+    """
+    Create version_info.txt file for PyInstaller.
     
-    # Load version information
-    version_file = Path("scripts/version.json")
+    Args:
+        version_file_path: Path to version.json file (default: scripts/version.json)
+        output_file_path: Path for output file (default: version_info.txt)
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    
+    # Use provided path or environment variable or default
+    if version_file_path is None:
+        version_file_path = os.environ.get("VERSION_FILE", "scripts/version.json")
+    
+    version_file = Path(version_file_path)
     if not version_file.exists():
-        print("Error: scripts/version.json not found. Run version_manager.py first.")
+        print(f"Error: {version_file} not found. Run version_manager.py first.")
         return False
+    
+    if output_file_path is None:
+        output_file_path = "version_info.txt"
     
     with open(version_file, 'r') as f:
         version_data = json.load(f)
     
+    # Use 4-component version for display but 3-component for Windows file version
     version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
+    local_build = version_data.get('local', 0)
     description = version_data.get('description', 'JiraUtil - Jira Administration Tool')
     
     # Create version info content
@@ -31,8 +50,8 @@ VSVersionInfo(
   ffi=FixedFileInfo(
     # filevers and prodvers should be always a tuple with four items: (1, 2, 3, 4)
     # Set not needed items to zero 0.
-    filevers=({version_data['major']},{version_data['minor']},{version_data['build']},0),
-    prodvers=({version_data['major']},{version_data['minor']},{version_data['build']},0),
+    filevers=({version_data['major']},{version_data['minor']},{version_data['build']},{local_build}),
+    prodvers=({version_data['major']},{version_data['minor']},{version_data['build']},{local_build}),
     # Contains a bitmask that specifies the valid bits 'flags'r
     mask=0x3f,
     # Contains a bitmask that specifies the Boolean attributes of the file.
@@ -69,12 +88,22 @@ VSVersionInfo(
 '''
     
     # Write version info file
-    with open('version_info.txt', 'w') as f:
+    with open(output_file_path, 'w') as f:
         f.write(version_info_content)
     
-    print(f"Created version_info.txt with version {version_string}")
+    print(f"Created {output_file_path} with version {version_string}")
     return True
 
 
 if __name__ == "__main__":
-    create_version_info()
+    # Support command line arguments for testing
+    version_file = None
+    output_file = None
+    
+    if len(sys.argv) > 1:
+        version_file = sys.argv[1]
+    if len(sys.argv) > 2:
+        output_file = sys.argv[2]
+    
+    success = create_version_info(version_file, output_file)
+    sys.exit(0 if success else 1)

@@ -61,6 +61,7 @@ def run_tests():
 	colored_print("  [PERF] Performance           - Large file processing, batch operations")
 	colored_print("  [FUNC] Functional Overview    - End-to-end functionality validation")
 	colored_print("  [COLOR] Color System Tests    - Text tag validation, color consistency")
+	colored_print("  [VERSION] Version Management  - 4-component versioning, build scripts, executables")
 	
 	colored_print("\n[RUN] Running tests...")
 	print("-" * 60)
@@ -91,6 +92,7 @@ def run_tests():
 		print(f"  {TextTag.OK} Performance                 - Working correctly")
 		print(f"  {TextTag.OK} Functional Overview         - Working correctly")
 		print(f"  {TextTag.OK} Color System Validation     - Working correctly")
+		print(f"  {TextTag.OK} Version Management          - Working correctly")
 		print(f"\n{TextTag.PERF} JiraUtil is ready for production use!")
 		return True
 	except subprocess.CalledProcessError as e:
@@ -115,6 +117,7 @@ def run_specific_test_category(category):
 		"cli": "test_cli_commands.py",
 		"overview": "test_functional_overview.py",
 		"color": "test_color_system.py",
+		"version": "test_version_manager.py",
 		"all": None
 	}
 	

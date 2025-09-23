@@ -8,15 +8,21 @@ JiraUtil uses a **smart versioning system** that automatically increments build 
 
 ## 📋 Version Format
 
-Versions follow **M.m.bld** format:
+Versions follow **M.m.b.l** format:
 
 - **M** = Major version (manually set)
 - **m** = Minor version (manually set)  
-- **bld** = Build number (automatically incremented by build system)
+- **b** = Build number (incremented on releases and CI builds)
+- **l** = Local build number (incremented on local builds)
 
-**Key Rule**: Only major.minor versions can be set manually. Build numbers are always auto-managed and reset to 0 when you manually set a version.
+**Key Rules**: 
 
-Examples: `1.0`, `1.2` (manual) → `1.0.1`, `1.2.3` (after builds)
+- Only major.minor versions can be set manually
+- Build and local numbers are always auto-managed and reset to 0 when you manually set a version
+- Local builds increment the local number (4th component)
+- Releases increment the build number (3rd component) and reset local to 0
+
+Examples: `1.0` (manual) → `1.0.0.0` → `1.0.0.1` (local build) → `1.0.1.0` (release)
 
 ## 🔧 Version Management
 
@@ -25,19 +31,23 @@ Examples: `1.0`, `1.2` (manual) → `1.0.1`, `1.2.3` (after builds)
 **⚠️ Never edit `scripts/version.json` manually!** Use the dev-friendly command:
 
 ```bash
-# Set version to 1.0 (build number will be 0)
+# Set version to 1.0 (build and local numbers will be 0)
 .\run.ps1 tools\set-version.py 1.0
 
-# Set version to 2.1 (build number will be 0)
+# Set version to 2.1 (build and local numbers will be 0)
 .\run.ps1 tools\set-version.py 2.1
 
 # Check current version
 .\run.ps1 tools\set-version.py --current
 ```
 
-### Automatic Build Incrementing
+### Automatic Version Incrementing
 
-Build numbers increment automatically when code changes are detected in:
+**Build numbers** (3rd component) increment on releases and CI builds when code changes are detected.
+
+**Local build numbers** (4th component) increment on local builds when code changes are detected.
+
+Both increment when changes are detected in:
 
 - `src/` directory files
 - `docs/` directory files  
@@ -45,7 +55,7 @@ Build numbers increment automatically when code changes are detected in:
 - Build scripts (`run.ps1`, `scripts/build-windows.ps1`, etc.)
 - Configuration files (`JiraUtil.spec`, etc.)
 
-Build numbers do NOT increment for:
+Neither increment for:
 
 - Version number updates only
 - Build output files
@@ -58,47 +68,47 @@ Build numbers do NOT increment for:
 
 - **Command**: `.\scripts\build-windows.ps1`
 - **Purpose**: Local development and testing
-- **Behavior**: Builds executables, runs tests, no version increment, no git changes
+- **Behavior**: Builds executables, runs tests, increments local build number, no git changes
 
 ### CI Testing Phase
 
 - **Command**: `git push`
 - **Purpose**: CI testing and build feedback
-- **Behavior**: Triggers build job only, no version increment, no release created
+- **Behavior**: Triggers build job only, increments build number, no release created
 
 ### Release Phase
 
 - **Command**: `.\scripts\release.ps1 -Platform windows`
 - **Purpose**: Create official release
-- **Behavior**: Increments version, commits changes, pushes to GitHub, creates release
+- **Behavior**: Increments build number, commits changes, pushes to GitHub, creates release
 
 ## 📝 Common Workflows
 
 ### Starting a New Major Version
 
 ```bash
-.\run.ps1 tools\set-version.py 2.0    # Set to 2.0.0
-.\scripts\build-windows.ps1           # Build with auto-increment
+.\run.ps1 tools\set-version.py 2.0    # Set to 2.0.0.0
+.\scripts\build-windows.ps1           # Build with local increment (2.0.0.1)
 ```
 
 ### Hotfix Release
 
 ```bash
-.\run.ps1 tools\set-version.py 1.0    # Set to 1.0.0
-.\scripts\build-windows.ps1           # Build with auto-increment
+.\run.ps1 tools\set-version.py 1.0    # Set to 1.0.0.0
+.\scripts\build-windows.ps1           # Build with local increment (1.0.0.1)
 ```
 
 ### Development Build
 
 ```bash
 # Make code changes, then:
-.\scripts\build-windows.ps1           # Will auto-increment if changes detected
+.\scripts\build-windows.ps1           # Will auto-increment local build if changes detected
 ```
 
 ### Creating a Release
 
 ```bash
-.\scripts\release.ps1 -Platform windows  # Increments version and publishes
+.\scripts\release.ps1 -Platform windows  # Increments build number and publishes
 ```
 
 ## 🔄 GitHub Actions
