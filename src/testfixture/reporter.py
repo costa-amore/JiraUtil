@@ -1,0 +1,65 @@
+"""
+Result reporting functionality for test fixture management.
+
+This module handles formatting and displaying results from test fixture
+operations including reset and assertion processes.
+"""
+
+from typing import Dict, List
+
+
+def report_reset_results(results: Dict) -> None:
+    """
+    Report results from the reset test fixture operation.
+    
+    Args:
+        results: Dictionary containing reset operation results
+    """
+    if results['success']:
+        print(f"\nRule-testing process completed:")
+        print(f"  Issues processed: {results['processed']}")
+        print(f"  Issues updated: {results['updated']}")
+        print(f"  Issues skipped: {results['skipped']}")
+        
+        if results.get('errors'):
+            print(f"  Errors: {len(results['errors'])}")
+            for error in results['errors']:
+                print(f"    - {error}")
+    else:
+        print(f"Rule-testing process failed: {results.get('error', 'Unknown error')}")
+
+
+def report_assertion_results(results: Dict) -> None:
+    """
+    Report results from the assertion test fixture operation.
+    
+    Args:
+        results: Dictionary containing assertion operation results
+    """
+    if results['success']:
+        print(f"\nAssertion process completed:")
+        print(f"  Issues processed: {results['processed']}")
+        print(f"  Assertions passed: {results['passed']}")
+        print(f"  Assertions failed: {results['failed']}")
+        print(f"  Not evaluated: {results['not_evaluated']}")
+        
+        if results.get('failures'):
+            print(f"  Failures:")
+            for failure in results['failures']:
+                print(f"    - {failure}")
+        
+        if results.get('not_evaluated_keys'):
+            keys_str = ", ".join(results['not_evaluated_keys'])
+            print(f"  Not evaluated: {keys_str}")
+        
+        # Clear success/failure summary
+        print(f"\n" + "="*60)
+        if results['failed'] == 0:
+            print(f"🎉 ALL ASSERTIONS PASSED! 🎉")
+            print(f"✅ All {results['passed']} evaluated issues are in their expected status")
+        else:
+            print(f"❌ ASSERTION FAILURES DETECTED! ❌")
+            print(f"⚠️  {results['failed']} out of {results['passed'] + results['failed']} evaluated issues are NOT in their expected status")
+        print(f"="*60)
+    else:
+        print(f"Assertion process failed: {results.get('error', 'Unknown error')}")

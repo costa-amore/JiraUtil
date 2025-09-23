@@ -5,8 +5,8 @@ from pathlib import Path
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from jira_field_extractor import (
-	find_field_index,
+from csv_utils.field_matcher import find_field_index
+from csv_utils.field_extractor import (
 	extract_field_values_from_rows,
 	format_field_values_text
 )
