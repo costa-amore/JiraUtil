@@ -43,13 +43,24 @@ if (-not (Test-Path ".git")) {
     exit 1
 }
 
-# Check if there are uncommitted changes
+# Check if there are uncommitted changes (allow local build files)
 $gitStatus = git status --porcelain
 if ($gitStatus) {
-    Write-Host "[ERROR] You have uncommitted changes. Please commit or stash them first." -ForegroundColor Red
-    Write-Host "Uncommitted files:" -ForegroundColor Yellow
-    Write-Host $gitStatus -ForegroundColor Gray
-    exit 1
+    # Filter out local build files that will be overridden
+    $localBuildFiles = @("scripts/version.json", "README.md", ".code_hash", "scripts/release.ps1")
+    $relevantChanges = $gitStatus | Where-Object { 
+        $file = ($_ -split '\s+')[1]
+        $localBuildFiles -notcontains $file
+    }
+    
+    if ($relevantChanges) {
+        Write-Host "[ERROR] You have uncommitted changes that are not local build files. Please commit or stash them first." -ForegroundColor Red
+        Write-Host "Uncommitted files:" -ForegroundColor Yellow
+        Write-Host $relevantChanges -ForegroundColor Gray
+        exit 1
+    } else {
+        Write-Host "[INFO] Found local build changes that will be overridden by release process" -ForegroundColor Yellow
+    }
 }
 
 # Get current version
