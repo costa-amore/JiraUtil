@@ -69,7 +69,7 @@ Write-Host "[INFO] Current version: $currentVersion" -ForegroundColor Cyan
 
 # Build with version increment
 Write-Host "`n[BUILD] Building with version increment..." -ForegroundColor Yellow
-& .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -IncrementVersion
+& .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -BuildForRelease
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Build failed! Release aborted." -ForegroundColor Red

@@ -4,7 +4,7 @@ A Python utility for supporting Jira admins.
 
 ## Version
 
-Version: 1.0.37.0
+Version: 1.0.37.1
 
 ## 🚀 Quick Start
 
@@ -84,6 +84,7 @@ The project includes a comprehensive functional test suite covering all major fu
 **Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions. After running the setup script, you can also use `python` commands directly in the same session.
 
 ## 🔢 Version Management
+<!-- Test comment for version increment -->
 
 JiraUtil uses smart versioning that automatically increments build numbers only when code changes are detected.
 

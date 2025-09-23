@@ -11,7 +11,7 @@ param(
     [ValidateSet("windows", "all")]
     [string]$Platform,          # Target platform: "windows" or "all" (Windows only for now)
     [switch]$Clean = $false,    # Clean build directories before building
-    [switch]$IncrementVersion = $false  # Increment version before building
+    [switch]$BuildForRelease = $false  # Build for release (increment build number)
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,33 +40,29 @@ try {
 # Handle versioning AFTER tests pass
 Write-Host "[VERSION] Managing version..." -ForegroundColor Yellow
 
-# Check if we're in CI environment or if version increment is requested
+# Determine build context automatically
 $isCI = $env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true"
-$shouldIncrement = $isCI -or $IncrementVersion
+$isRelease = $BuildForRelease -eq $true
 
-if ($shouldIncrement) {
-    if ($isCI) {
-        Write-Host "[INFO] Running in CI - handling version management" -ForegroundColor Cyan
-    } else {
-        Write-Host "[INFO] Version increment requested - handling version management" -ForegroundColor Cyan
-    }
-    
-    # Check if code has changed and increment if needed
-    $versionResult = python tools\version_manager.py increment-if-changed --version-file scripts/version.json
+if ($isRelease) {
+    # Release build: always increment build number
+    Write-Host "[INFO] Release build - incrementing build number" -ForegroundColor Cyan
+    $versionResult = python tools\version_manager.py increment-build --version-file scripts/version.json
     $version = python tools\version_manager.py get --version-file scripts/version.json
-
-    if ($versionResult -match "incremented") {
-        Write-Host "[OK] Version incremented: $version" -ForegroundColor Green
-        # Update all files to new version
-        python tools\update-dev-version.py
-        # Mark version update as complete to update hashes
-        python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
-    } else {
-        Write-Host "[INFO] Version unchanged: $version (no code changes)" -ForegroundColor Yellow
-    }
+    Write-Host "[OK] Release build incremented: $version" -ForegroundColor Green
+    
+    # Update all files to new version
+    python tools\update-dev-version.py
+    # Mark version update as complete to update hashes
+    python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
+} elseif ($isCI) {
+    # CI build: use version as-is (release script already incremented it)
+    Write-Host "[INFO] CI build - using existing version" -ForegroundColor Cyan
+    $version = python tools\version_manager.py get --version-file scripts/version.json
+    Write-Host "[INFO] CI build using version: $version" -ForegroundColor Cyan
 } else {
-    Write-Host "[INFO] Local build - incrementing local build number" -ForegroundColor Yellow
-    # For local builds, increment the local build number
+    # Local build: increment local build number if code changed
+    Write-Host "[INFO] Local build - incrementing local build number if code changed" -ForegroundColor Yellow
     $versionResult = python tools\version_manager.py increment-local-if-changed --version-file scripts/version.json
     $version = python tools\version_manager.py get --version-file scripts/version.json
     
