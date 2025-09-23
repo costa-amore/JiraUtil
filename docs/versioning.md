@@ -26,13 +26,13 @@ Use the dev-friendly command instead:
 
 ```bash
 # Set version to 1.0.0
-python set-version.py 1.0.0
+.\run.ps1 set-version.py 1.0.0
 
 # Set version to 2.1.0
-python set-version.py 2.1.0
+.\run.ps1 set-version.py 2.1.0
 
 # Check current version
-python set-version.py --current
+.\run.ps1 set-version.py --current
 ```
 
 ### Automatic Version Incrementing
@@ -76,7 +76,7 @@ The system calculates SHA256 hashes of all tracked files and compares them with 
 
 ```bash
 # 1. Check for code changes
-python version_manager.py increment-if-changed
+.\run.ps1 version_manager.py increment-if-changed
 
 # 2. If changes detected:
 #    - Increment build number
@@ -109,7 +109,7 @@ All files are kept in sync with the same version number:
 
 ```bash
 # Set new major version
-python set-version.py 2.0.0
+.\run.ps1 set-version.py 2.0.0
 
 # Build with new version
 .\build-windows.ps1
@@ -119,7 +119,7 @@ python set-version.py 2.0.0
 
 ```bash
 # Set hotfix version
-python set-version.py 1.0.1
+.\run.ps1 set-version.py 1.0.1
 
 # Build hotfix
 .\build-windows.ps1
@@ -139,10 +139,10 @@ python set-version.py 1.0.1
 
 ```bash
 # Show current version
-python set-version.py --current
+.\run.ps1 set-version.py --current
 
 # Or use version manager directly
-python version_manager.py get
+.\run.ps1 version_manager.py get
 ```
 
 ## 🔍 Troubleshooting
@@ -154,13 +154,13 @@ If the version isn't incrementing when you expect it to:
 1. **Check if files are tracked:**
 
    ```bash
-   python code_change_detector.py changed
+   .\run.ps1 code_change_detector.py changed
    ```
 
 2. **Check if changes are detected:**
 
    ```bash
-   python code_change_detector.py check
+   .\run.ps1 code_change_detector.py check
    ```
 
 3. **Force version update completion:**
@@ -176,7 +176,7 @@ If you manually edited `version.json` and caused issues:
 1. **Reset to a known good version:**
 
    ```bash
-   python set-version.py 1.0.0
+   .\run.ps1 set-version.py 1.0.0
    ```
 
 2. **Mark as complete:**
@@ -192,13 +192,13 @@ If files show different versions:
 1. **Check current version:**
 
    ```bash
-   python version_manager.py get
+   .\run.ps1 version_manager.py get
    ```
 
 2. **Update all files:**
 
    ```bash
-   python update-dev-version.py
+   .\run.ps1 update-dev-version.py
    ```
 
 ## 📁 Files Involved

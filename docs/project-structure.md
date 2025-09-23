@@ -6,7 +6,7 @@
 
 ```text
 Jira_csv_helper/
-├── src/                          # Source code
+├── src\                          # Source code
 │   ├── __init__.py
 │   ├── JiraUtil.py               # Main CLI entry point
 │   ├── jira_cleaner.py          # Newline removal functionality
@@ -52,8 +52,8 @@ Jira_csv_helper/
 
 ### Entry Points
 
-- **`JiraUtil.py`** - Root entry point that imports from `src/`
-- **`src/JiraUtil.py`** - Main CLI implementation with argument parsing
+- **`JiraUtil.py`** - Root entry point that imports from `src\`
+- **`src\JiraUtil.py`** - Main CLI implementation with argument parsing
 
 ### Core Modules
 
@@ -99,7 +99,7 @@ Jira_csv_helper/
 
 ```text
 JiraUtil.py (root)
-├── src/JiraUtil.py
+├── src\JiraUtil.py
     ├── jira_cleaner.py
     ├── jira_dates_eu.py
     ├── jira_field_extractor.py
@@ -109,20 +109,20 @@ JiraUtil.py (root)
 
 ## Development Workflow
 
-1. **Setup**: `./setup-environment.ps1`
-2. **Develop**: Edit files in `src/`
-3. **Test**: `python tests/run_tests.py`
-4. **Debug**: Use `debug-helper.py` for debugging any command
-5. **Build**: `./build-windows.ps1` (runs tests first, then builds executables)
-6. **Rebuild**: `./setup-environment.ps1` when dependencies change
+1. **Setup**: `.\setup-environment.ps1`
+2. **Develop**: Edit files in `src\`
+3. **Test**: `.\run.ps1 tests\run_tests.py`
+4. **Debug**: Use `.\run.ps1 debug-helper.py` for debugging any command
+5. **Build**: `.\build-windows.ps1` (runs tests first, then builds executables)
+6. **Rebuild**: `.\setup-environment.ps1` when dependencies change
 
 ## Adding New Features
 
-1. **New CSV command**: Add to `src/JiraUtil.py` CsvExport subparser
-2. **New Jira command**: Add to `src/JiraUtil.py` ResetTestFixture or AssertExpectations section
-3. **New functionality**: Create new module in `src/`
-4. **Tests**: Add test files to `tests/`
-5. **Documentation**: Update relevant files in `docs/`
+1. **New CSV command**: Add to `src\JiraUtil.py` CsvExport subparser
+2. **New Jira command**: Add to `src\JiraUtil.py` ResetTestFixture or AssertExpectations section
+3. **New functionality**: Create new module in `src\`
+4. **Tests**: Add test files to `tests\`
+5. **Documentation**: Update relevant files in `docs\`
 
 ---
 

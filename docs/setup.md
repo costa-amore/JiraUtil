@@ -23,15 +23,18 @@ cd Jira_csv_helper
 ### 2. Environment Setup
 
 ```powershell
-# Run the setup script (creates virtual environment and installs dependencies)
-./setup-environment.ps1
+# Run the setup script (creates virtual environment, installs dependencies, and activates it)
+.\setup-environment.ps1
 ```
 
 This script will:
 
 - Create a new virtual environment (`.venv`)
+- Upgrade pip to the latest version (eliminates pip warnings)
 - Install all required dependencies
 - Copy `jira_config_example.env` to `.venv\jira_config.env`
+- **Activate the virtual environment** in the current PowerShell session
+- Run tests to verify everything works correctly
 
 ### 3. Configuration
 
@@ -47,18 +50,22 @@ JIRA_PASSWORD=your_api_token_here
 
 ## Verification
 
-Test your setup:
+After running the setup script, you can use commands in two ways:
 
 ```powershell
-# 1. Check if everything works
-./run.ps1 .\JiraUtil.py --help
+# Option 1: Use run script (recommended - always uses venv)
+.\run.ps1 .\JiraUtil.py --help
+.\run.ps1 tests\run_tests.py
 
-# 2. Run comprehensive tests
-python tests/run_tests.py
+# Option 2: Direct python commands (only works in current session after setup)
+python .\JiraUtil.py --help
+.\run.ps1 tests\run_tests.py
 
 # 3. Build executables (includes testing and versioning)
-./build-windows.ps1
+.\build-windows.ps1
 ```
+
+**Note**: The run script automatically uses the virtual environment and works consistently across all terminal sessions. The setup script activates the venv in the current session, so you can also use `python` commands directly.
 
 ## Troubleshooting
 
@@ -67,8 +74,8 @@ python tests/run_tests.py
 If you encounter issues with the virtual environment:
 
 ```powershell
-# Rebuild everything
-./setup-environment.ps1
+# Rebuild everything (automatically activates the environment)
+.\setup-environment.ps1
 ```
 
 ### Dependencies Issues
@@ -76,8 +83,34 @@ If you encounter issues with the virtual environment:
 If you update `requirements.txt`:
 
 ```powershell
-# Rebuild with new dependencies
-./setup-environment.ps1
+# Rebuild with new dependencies (automatically activates the environment)
+.\setup-environment.ps1
+```
+
+### General Issues
+
+If you encounter any issues with the environment or dependencies:
+
+```powershell
+# Complete rebuild (fixes most issues and activates environment)
+.\setup-environment.ps1
+```
+
+### New Terminal Sessions
+
+For new terminal sessions, you have two options:
+
+**Option 1: Run the setup script again (recommended)**
+```powershell
+# This will reactivate the environment and run tests
+.\setup-environment.ps1
+```
+
+**Option 2: Use the run script for any command**
+```powershell
+# This automatically uses the virtual environment
+.\run.ps1 tests\run_tests.py
+.\run.ps1 .\JiraUtil.py --help
 ```
 
 ### Jira Connection Issues

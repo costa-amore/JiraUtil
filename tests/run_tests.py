@@ -11,37 +11,17 @@ import sys
 import os
 from pathlib import Path
 
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 # Fix Unicode encoding issues on Windows
 if sys.platform == "win32":
     import codecs
     sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
     sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
 
-def safe_print(text):
-    """Print text with emoji fallback for Windows compatibility."""
-    if sys.platform == "win32":
-        # Replace emojis with safe alternatives for Windows
-        replacements = {
-            "🧪": "[TEST]",
-            "📁": "[FILES]",
-            "🔍": "[SEARCH]",
-            "📊": "[CSV]",
-            "🧪": "[TEST]",
-            "🖥️": "[CLI]",
-            "🔐": "[AUTH]",
-            "🏗️": "[ARCH]",
-            "⚠️": "[WARN]",
-            "🚀": "[PERF]",
-            "📋": "[FUNC]",
-            "🏃": "[RUN]",
-            "🎉": "[SUCCESS]",
-            "✅": "[OK]",
-            "❌": "[FAIL]",
-            "🔧": "[FIX]"
-        }
-        for emoji, replacement in replacements.items():
-            text = text.replace(emoji, replacement)
-    print(text)
+from utils.colors import colored_print, TextTag
+
 
 
 def find_test_files():
@@ -58,30 +38,31 @@ def find_test_files():
 
 def run_tests():
 	"""Run all tests and display comprehensive results."""
-	safe_print("🧪 JiraUtil Comprehensive Test Suite")
+	colored_print("[TEST] JiraUtil Comprehensive Test Suite")
 	print("=" * 60)
 	
 	test_files = find_test_files()
 	
 	if not test_files:
-		print("ERROR: No test files found!")
+		colored_print("[ERROR] No test files found!")
 		return False
 	
-	safe_print(f"📁 Found {len(test_files)} test file(s):")
+	colored_print(f"[FILES] Found {len(test_files)} test file(s):")
 	for i, test_file in enumerate(test_files, 1):
 		print(f"  {i:2d}. {Path(test_file).name}")
 	
-	safe_print("\n🔍 Test Categories:")
-	safe_print("  📊 CSV Export Commands    - Field extraction, newline removal, date conversion")
-	safe_print("  🧪 Test Fixture Commands  - Pattern parsing, reset/assert operations")
-	safe_print("  🖥️  CLI Commands          - Command parsing, help, status, version")
-	safe_print("  🔐 Authentication         - Credential management, config validation")
-	safe_print("  🏗️  Modular Architecture  - Module imports, backward compatibility")
-	safe_print("  ⚠️  Error Handling        - File errors, invalid input, edge cases")
-	safe_print("  🚀 Performance           - Large file processing, batch operations")
-	safe_print("  📋 Functional Overview    - End-to-end functionality validation")
+	colored_print("\n[SEARCH] Test Categories:")
+	colored_print("  [CSV] CSV Export Commands    - Field extraction, newline removal, date conversion")
+	colored_print("  [TEST] Test Fixture Commands  - Pattern parsing, reset/assert operations")
+	colored_print("  [CLI]  CLI Commands          - Command parsing, help, status, version")
+	colored_print("  [AUTH] Authentication         - Credential management, config validation")
+	colored_print("  [ARCH]  Modular Architecture  - Module imports, backward compatibility")
+	colored_print("  [WARN]  Error Handling        - File errors, invalid input, edge cases")
+	colored_print("  [PERF] Performance           - Large file processing, batch operations")
+	colored_print("  [FUNC] Functional Overview    - End-to-end functionality validation")
+	colored_print("  [COLOR] Color System Tests    - Text tag validation, color consistency")
 	
-	safe_print("\n🏃 Running tests...")
+	colored_print("\n[RUN] Running tests...")
 	print("-" * 60)
 	
 	# Run pytest with comprehensive output
@@ -98,23 +79,28 @@ def run_tests():
 	try:
 		result = subprocess.run(cmd, check=True, capture_output=False)
 		print("\n" + "=" * 60)
-		safe_print("🎉 ALL TESTS PASSED! 🎉")
-		safe_print("\n📊 Test Summary:")
-		safe_print("  ✅ CSV Export Functionality    - Working correctly")
-		safe_print("  ✅ Test Fixture Management     - Working correctly") 
-		safe_print("  ✅ CLI Interface               - Working correctly")
-		safe_print("  ✅ Authentication System       - Working correctly")
-		safe_print("  ✅ Modular Architecture        - Working correctly")
-		safe_print("  ✅ Error Handling              - Working correctly")
-		safe_print("  ✅ Performance                 - Working correctly")
-		safe_print("  ✅ Functional Overview         - Working correctly")
-		safe_print("\n🚀 JiraUtil is ready for production use!")
+		# Demonstrate new enum usage patterns
+		print(TextTag.SUCCESS + "ALL TESTS PASSED!")
+		print(f"\n{TextTag.CSV} Test Summary:")
+		print(f"  {TextTag.OK} CSV Export Functionality    - Working correctly")
+		print(f"  {TextTag.OK} Test Fixture Management     - Working correctly")
+		print(f"  {TextTag.OK} CLI Interface               - Working correctly")
+		print(f"  {TextTag.OK} Authentication System       - Working correctly")
+		print(f"  {TextTag.OK} Modular Architecture        - Working correctly")
+		print(f"  {TextTag.OK} Error Handling              - Working correctly")
+		print(f"  {TextTag.OK} Performance                 - Working correctly")
+		print(f"  {TextTag.OK} Functional Overview         - Working correctly")
+		print(f"  {TextTag.OK} Color System Validation     - Working correctly")
+		print(f"\n{TextTag.PERF} JiraUtil is ready for production use!")
 		return True
 	except subprocess.CalledProcessError as e:
-		print(f"\nFAILED: Tests failed with exit code {e.returncode}")
+		print(f"\n\033[91m" + "="*60)
+		print("❌ TESTS FAILED! ❌")
+		print(f"Exit code: {e.returncode}")
+		print("="*60 + "\033[0m")
 		print("\nPlease review the test output above for details.")
 		print("Common issues:")
-		print("  - Virtual environment not set up (run: ./setup-environment.ps1)")
+		print("  - Virtual environment not set up (run: .\\setup-environment.ps1)")
 		print("  - Virtual environment not activated (run: .\\.venv\\Scripts\\Activate.ps1)")
 		print("  - Import path issues (check src/ directory structure)")
 		print("  - Test data issues (check test file paths)")
@@ -128,11 +114,12 @@ def run_specific_test_category(category):
 		"testfixture": "test_testfixture_commands.py", 
 		"cli": "test_cli_commands.py",
 		"overview": "test_functional_overview.py",
+		"color": "test_color_system.py",
 		"all": None
 	}
 	
 	if category not in category_mapping:
-		print(f"ERROR: Unknown category: {category}")
+		colored_print(f"[ERROR] Unknown category: {category}")
 		print(f"Available categories: {', '.join(category_mapping.keys())}")
 		return False
 	
@@ -141,10 +128,10 @@ def run_specific_test_category(category):
 	
 	test_file = f"tests/{category_mapping[category]}"
 	if not Path(test_file).exists():
-		print(f"ERROR: Test file not found: {test_file}")
+		colored_print(f"[ERROR] Test file not found: {test_file}")
 		return False
 	
-	safe_print(f"🧪 Running {category} tests...")
+	colored_print(f"[TEST] Running {category} tests...")
 	cmd = [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"]
 	
 	try:
@@ -156,8 +143,33 @@ def run_specific_test_category(category):
 		return False
 
 
+def check_python_environment():
+	"""Check if we're running in the correct Python environment."""
+	import sys
+	import os
+	
+	# Check if we're in a virtual environment
+	venv_python = os.path.join(os.getcwd(), '.venv', 'Scripts', 'python.exe')
+	if os.path.exists(venv_python):
+		# We're in a project with a virtual environment
+		if not sys.executable.endswith('.venv\\Scripts\\python.exe'):
+			print("\033[93m[WARN]  WARNING: You're not using the virtual environment Python!\033[0m")
+			print(f"   Current Python: {sys.executable}")
+			print(f"   Expected Python: {venv_python}")
+			print("")
+			print("[TIP] To fix this, use one of these methods:")
+			print("   1. Use the run script: .\\run.ps1 tests\\run_tests.py")
+			print("   2. Use venv Python directly: .\\.venv\\Scripts\\python.exe tests\\run_tests.py")
+			print("   3. Activate venv first: .\\.venv\\Scripts\\Activate.ps1")
+			print("")
+			print("[RETRY] Attempting to continue with current Python...")
+			print("   (This may fail if dependencies are missing)")
+			print("")
+
 def main():
 	"""Main entry point for the test runner."""
+	check_python_environment()
+	
 	if len(sys.argv) > 1:
 		category = sys.argv[1].lower()
 		success = run_specific_test_category(category)

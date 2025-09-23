@@ -4,15 +4,17 @@ A Python utility for supporting Jira admins.
 
 ## Version
 
-Version: 1.0.27
+Version: 1.0.28
 
 ## 🚀 Quick Start
 
-1. **Setup**: Run `./setup-environment.ps1` to create the environment and install dependencies
+1. **Setup**: Run `.\setup-environment.ps1` to create the environment, install dependencies, and activate the virtual environment
 2. **Configure**: Edit `.venv\jira_config.env` with your Jira credentials
-3. **Run**: Use `./run.ps1 .\JiraUtil.py --help` or `./run.ps1 .\ju.py --help` to see all available commands
-4. **Test**: Run `python tests/run_tests.py` to verify everything works correctly
-5. **Build**: Use `./build-windows.ps1` to create executables (runs tests first, then versioning and building)
+3. **Run**: Use `.\run.ps1 .\JiraUtil.py --help` or `.\run.ps1 .\ju.py --help` to see all available commands
+4. **Test**: Run `.\run.ps1 tests\run_tests.py` to verify everything works correctly
+5. **Build**: Use `.\build-windows.ps1` to create executables (runs tests first, then versioning and building)
+
+**Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions.
 
 ## 🔢 Version Management
 
@@ -20,9 +22,9 @@ JiraUtil uses smart versioning that automatically increments build numbers only 
 
 **Quick Commands:**
 
-```bash
-python set-version.py 1.0.0          # Set version to 1.0.0
-python set-version.py --current      # Show current version
+```powershell
+.\run.ps1 set-version.py 1.0.0       # Set version to 1.0.0
+.\run.ps1 set-version.py --current   # Show current version
 ```
 
 **⚠️ Never edit `version.json` manually!** Use `set-version.py` instead.
@@ -72,31 +74,25 @@ The project includes a comprehensive functional test suite covering all major fu
 
 ```powershell
 # Run all tests with detailed output
-python tests/run_tests.py
+.\run.ps1 tests\run_tests.py
 
 # Run specific test categories
-python tests/run_tests.py csv          # CSV export functionality
-python tests/run_tests.py testfixture  # Test fixture management
-python tests/run_tests.py cli          # CLI commands and parsing
-python tests/run_tests.py overview     # Functional overview tests
+.\run.ps1 tests\run_tests.py csv          # CSV export functionality
+.\run.ps1 tests\run_tests.py testfixture  # Test fixture management
+.\run.ps1 tests\run_tests.py cli          # CLI commands and parsing
+.\run.ps1 tests\run_tests.py overview     # Functional overview tests
 ```
 
-**Test Coverage:**
-
-- ✅ **CSV Export Commands** (10 tests) - Field extraction, newline removal, date conversion
-- ✅ **Test Fixture Commands** (20 tests) - Pattern parsing, reset/assert operations  
-- ✅ **CLI Commands** (20 tests) - Command parsing, help, status, version
-- ✅ **Core Functionality** (15 tests) - Field extraction and processing
-- ✅ **Functional Overview** (7 tests) - End-to-end functionality validation
-
-**Test Coverage:** Comprehensive functional testing with high pass rate
+**Test Coverage:** Comprehensive functional testing with 72 tests covering all major functionalities
 
 ### 🔧 **Development Tools**
 
-- **Tests**: `python tests/run_tests.py`
-- **Debug**: Use `python debug-helper.py` for debugging any command
-- **Rebuild**: `./setup-environment.ps1` to update dependencies
-- **Build Executables**: `./build-windows.ps1` (Windows) or `./build-unix.sh` (macOS/Linux)
+- **Tests**: `.\run.ps1 tests\run_tests.py` (always uses virtual environment)
+- **Debug**: Use `.\run.ps1 debug-helper.py` for debugging any command
+- **Rebuild**: `.\setup-environment.ps1` to update dependencies and reactivate environment
+- **Build Executables**: `.\build-windows.ps1` (Windows) or `.\build-unix.sh` (macOS/Linux)
+
+**Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions. After running the setup script, you can also use `python` commands directly in the same session.
 
 ## 📁 Project Structure
 
@@ -119,12 +115,12 @@ Jira_csv_helper/
 ├── JiraUtil.spec           # PyInstaller spec
 ├── 
 ├── # Source Code
-├── src/                    # Main source code
-├── tests/                  # Test files
-├── docs/                   # Documentation
-└── .venv/                  # Virtual environment
+├── src\                    # Main source code
+├── tests\                  # Test files
+├── docs\                   # Documentation
+└── .venv\                  # Virtual environment
 ```
 
 ---
 
-*For detailed information, see the [documentation](docs/) folder.*
+*For detailed information, see the [documentation](docs\) folder.*

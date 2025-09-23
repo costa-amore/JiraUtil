@@ -136,7 +136,7 @@ The build process automatically runs tests before building, but you can also ver
 
 ```bash
 # Run tests before building (good practice - although the build process runs the tests as well )
-python tests/run_tests.py
+.\run.ps1 tests\run_tests.py
 
 # Test the built executables
 # Windows

@@ -6,9 +6,21 @@
 
 ### Quick Start
 
+**After running the setup script** (which automatically activates the virtual environment):
+
 ```powershell
 # Run comprehensive test suite with detailed output
-python tests/run_tests.py
+.\run.ps1 tests\run_tests.py
+```
+
+**For new terminal sessions**, use one of these options:
+
+```powershell
+# Option 1: Run setup script again (recommended)
+.\setup-environment.ps1
+
+# Option 2: Use run script (automatically uses venv)
+.\run.ps1 tests\run_tests.py
 ```
 
 ### Test-First Build Process
@@ -17,10 +29,10 @@ The build system automatically runs tests before building executables:
 
 ```powershell
 # Build process (runs tests first, then builds if tests pass)
-./build-windows.ps1
+.\build-windows.ps1
 
 # Manual test run (optional - build process does this automatically)
-python tests/run_tests.py
+.\run.ps1 tests\run_tests.py
 ```
 
 **Important**: The build process will abort if any tests fail, ensuring only working code gets built into executables.
@@ -29,10 +41,10 @@ python tests/run_tests.py
 
 ```powershell
 # Run specific test categories
-python tests/run_tests.py csv          # CSV export functionality
-python tests/run_tests.py testfixture  # Test fixture management
-python tests/run_tests.py cli          # CLI commands and parsing
-python tests/run_tests.py overview     # Functional overview tests
+.\run.ps1 tests\run_tests.py csv          # CSV export functionality
+.\run.ps1 tests\run_tests.py testfixture  # Test fixture management
+.\run.ps1 tests\run_tests.py cli          # CLI commands and parsing
+.\run.ps1 tests\run_tests.py overview     # Functional overview tests
 ```
 
 ### Alternative Methods
@@ -50,62 +62,38 @@ python -m pytest tests/ -v -s
 
 ### Using Virtual Environment
 
-```powershell
-# Activate virtual environment first
-.\.venv\Scripts\Activate.ps1
+**The setup script automatically activates the virtual environment**, so after running `.\setup-environment.ps1`, you can use `python` commands directly:
 
-# Then run tests
-python tests/run_tests.py
+```powershell
+# After running setup script, virtual environment is already active
+.\run.ps1 tests\run_tests.py
+```
+
+**For new terminal sessions**, use one of these options:
+
+```powershell
+# Option 1: Run setup script again (recommended)
+.\setup-environment.ps1
+
+# Option 2: Use run script (automatically uses venv)
+.\run.ps1 tests\run_tests.py
 ```
 
 ## Test Structure
 
 ### Comprehensive Test Suite
 
-The project now includes a comprehensive functional test suite with **72 tests** covering all major functionalities:
+The project includes a comprehensive functional test suite with **72 tests** covering all major functionalities:
 
-#### **CSV Export Commands (10 tests)**
-
-- **`test_csv_export_commands.py`** - Complete CSV export functionality
-  - Remove newlines from CSV fields
-  - Extract field values to comma-separated lists
-  - Convert dates to European Excel format
-  - Case-insensitive field matching
-  - Error handling for missing fields
-
-#### **Test Fixture Commands (20 tests)**
-
-- **`test_testfixture_commands.py`** - Test fixture management
-  - Pattern parsing for test fixture summaries
-  - Reset functionality with mock Jira
-  - Assert functionality with mock Jira
-  - Workflow integration
-
-#### **CLI Commands (20 tests)**
-
-- **`test_cli_commands.py`** - Command-line interface
-  - Command parsing and routing
-  - Help and status commands
-  - Version detection
-  - Configuration validation
-
-#### **Core Functionality (15 tests)**
-
-- **`test_jira_field_extractor.py`** - Field extraction and processing
-  - Field matching and extraction
-  - Data formatting
-  - Error handling
-
-#### **Functional Overview (7 tests)**
-
-- **`test_functional_overview.py`** - End-to-end functionality validation
-  - Complete workflow testing
-  - Performance testing
-  - Error handling scenarios
+- **CSV Export Commands** - Field extraction, newline removal, date conversion
+- **Test Fixture Commands** - Pattern parsing, reset/assert operations
+- **CLI Commands** - Command parsing, help, status, version
+- **Core Functionality** - Field extraction and processing
+- **Functional Overview** - End-to-end functionality validation
 
 ### Test Runner
 
-- **`tests/run_tests.py`** - Comprehensive test runner with detailed output, categorized display, and rich formatting
+- **`tests\run_tests.py`** - Comprehensive test runner with detailed output, categorized display, and rich formatting
 
 ## Adding New Tests
 
@@ -130,7 +118,7 @@ The test runner automatically discovers files matching `test_*.py` pattern.
 
 ```powershell
 # Run all tests
-python tests/run_tests.py
+.\run.ps1 tests\run_tests.py
 
 # Run specific test file
 python -m pytest tests/test_my_module.py -v
@@ -154,7 +142,7 @@ The comprehensive test runner provides detailed output including:
 - **Error Details** - Clear failure information when tests fail
 - **Performance Metrics** - Test execution timing
 
-**Run `python tests/run_tests.py` to see the current test output.**
+**Run `.\run.ps1 tests\run_tests.py` to see the current test output.**
 
 ## Debugging Tests
 
@@ -180,10 +168,10 @@ python -m pytest tests/ -x
 
 ```powershell
 # Run only CSV export tests
-python tests/run_tests.py csv
+.\run.ps1 tests\run_tests.py csv
 
 # Run only test fixture tests
-python tests/run_tests.py testfixture
+.\run.ps1 tests\run_tests.py testfixture
 ```
 
 ## Debugging Commands
@@ -193,7 +181,7 @@ python tests/run_tests.py testfixture
 The project includes a comprehensive debug script for all commands:
 
 ```powershell
-python debug-helper.py
+.\run.ps1 debug-helper.py
 ```
 
 ### VS Code Debugging
@@ -226,30 +214,24 @@ debug_command(["JiraUtil.py", "CsvExport", "fix-dates-eu", "test.csv"])
 ### pytest Not Found
 
 ```powershell
-# Rebuild environment (this will install all dependencies including pytest)
-./setup-environment.ps1
+# Rebuild environment (installs all dependencies including pytest)
+.\setup-environment.ps1
 ```
 
 ### Import Errors
 
-Ensure you're running tests from the project root directory and the virtual environment is activated:
+If you get import errors, rebuild the environment:
 
 ```powershell
-# Activate virtual environment
-.\.venv\Scripts\Activate.ps1
-
-# Then run tests
-python tests/run_tests.py
+# Rebuild environment (fixes import issues and activates venv)
+.\setup-environment.ps1
 ```
 
 ### Virtual Environment Issues
 
 ```powershell
 # Rebuild environment (fixes most dependency issues)
-./setup-environment.ps1
-
-# Activate environment
-.\.venv\Scripts\Activate.ps1
+.\setup-environment.ps1
 ```
 
 ### General Setup Issues
@@ -257,56 +239,13 @@ python tests/run_tests.py
 If you encounter any issues with dependencies or the environment:
 
 ```powershell
-# Complete environment rebuild (recommended solution)
-./setup-environment.ps1
-
-# Activate the virtual environment
-.\.venv\Scripts\Activate.ps1
-
-# Run tests
-python tests/run_tests.py
+# Complete environment rebuild (fixes most issues and activates venv)
+.\setup-environment.ps1
 ```
 
 ## Test Coverage
 
-The project now has **comprehensive test coverage** with 72 tests covering all major functionalities:
-
-### ✅ **Fully Covered Areas:**
-
-- **CSV Export Commands** - Complete functionality testing
-- **Test Fixture Management** - Pattern parsing, reset/assert operations
-- **CLI Interface** - Command parsing, help, status, version
-- **Authentication System** - Credential management, config validation
-- **Modular Architecture** - Module imports, backward compatibility
-- **Error Handling** - File errors, invalid input, edge cases
-- **Performance** - Large file processing, batch operations
-- **Functional Overview** - End-to-end functionality validation
-
-### 📊 **Test Statistics:**
-
-- **Comprehensive Coverage** - All major functionalities tested
-- **High Pass Rate** - Tests are designed to pass consistently
-- **Zero Skipped** - All tests are actively maintained
-- **Real-time Results** - Run `python tests/run_tests.py` for current status
-
-### 🎯 **Test Quality:**
-
-- **Functional Tests** - Test complete user workflows
-- **Unit Tests** - Test individual functions and modules
-- **Integration Tests** - Test component interactions
-- **Error Handling** - Test failure scenarios and edge cases
-- **Performance Tests** - Test with large datasets
-- **Mock Usage** - Proper isolation from external dependencies
-
-### 📋 **Test Categories:**
-
-1. **CSV Export Commands** (10 tests) - Field extraction, newline removal, date conversion
-2. **Test Fixture Commands** (20 tests) - Pattern parsing, reset/assert operations
-3. **CLI Commands** (20 tests) - Command parsing, help, status, version
-4. **Core Functionality** (15 tests) - Field extraction and processing
-5. **Functional Overview** (7 tests) - End-to-end functionality validation
-
-The test suite serves as **living documentation** of the application's capabilities and provides confidence in the codebase's reliability.
+The project has comprehensive test coverage with 72 tests covering all major functionalities. Run `.\run.ps1 tests\run_tests.py` to see the current test status and detailed results.
 
 ---
 

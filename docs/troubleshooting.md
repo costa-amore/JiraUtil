@@ -252,7 +252,7 @@ chmod +x JiraUtil
 4. **Check current settings:**
    ```bash
    # Show emoji configuration
-   python src/config/emoji_config.py status
+   .\run.ps1 src\config\emoji_config.py status
    ```
 
 **Configuration Priority:**

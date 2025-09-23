@@ -8,6 +8,7 @@ issues, including status updates and expectation assertions.
 from typing import Dict, List
 from jira_manager import JiraInstanceManager
 from .patterns import parse_summary_pattern, parse_expectation_pattern
+from utils.colors import colored_print
 
 
 def process_issues_by_label(manager: JiraInstanceManager, label: str) -> Dict:
@@ -121,10 +122,10 @@ def assert_issues_expectations(manager: JiraInstanceManager, label: str) -> Dict
         
         # Assert that current status matches expected status
         if current_status.upper() == expected_status.upper():
-            print(f"  ✅ PASS - Current status matches expected status")
+            colored_print(f"  [OK] PASS - Current status matches expected status")
             results['passed'] += 1
         else:
-            print(f"  ❌ FAIL - Current status '{current_status}' does not match expected status '{expected_status}'")
+            colored_print(f"  [FAIL] FAIL - Current status '{current_status}' does not match expected status '{expected_status}'")
             results['failed'] += 1
             results['failures'].append(f"{key}: Expected '{expected_status}' but is '{current_status}'")
     

@@ -4,6 +4,7 @@ Command implementations for Jira utilities CLI.
 
 import sys
 from pathlib import Path
+from utils.colors import get_colored_text
 from version import get_version
 from config import get_config_file_status_message
 
@@ -45,14 +46,6 @@ def show_status() -> None:
     print(f"Version: {get_version()}")
     print("Status: Ready")
     
-    # Show emoji configuration
-    try:
-        from config.emoji_config import EmojiConfig
-        config = EmojiConfig()
-        emoji_status = "enabled" if config.get_use_emoji() else "disabled (using text fallbacks)"
-        print(f"Emoji display: {emoji_status}")
-    except ImportError:
-        print("Emoji display: unknown (emoji_config not available)")
     
     print()
     print("Configuration:")
@@ -67,7 +60,7 @@ def show_status() -> None:
         if config_path.exists():
             print(get_config_file_status_message(config_path))
         else:
-            print(f"  Jira credentials: ❌ {config_file} not found - needs to be created")
+            print(f"  Jira credentials: {get_colored_text(f'[MISSING] {config_file} not found - needs to be created')}")
         
         print("  Alternative: Set JIRA_URL, JIRA_USERNAME, JIRA_PASSWORD environment variables")
     else:

@@ -6,6 +6,7 @@ status messages for configuration state.
 """
 
 from pathlib import Path
+from utils.colors import get_colored_text
 from typing import Tuple
 
 
@@ -30,11 +31,11 @@ def check_config_file_for_template_values(config_path: Path) -> Tuple[bool, str]
         ])
         
         if has_template_values:
-            return True, f"⚠️  {config_path.name} contains template values - needs configuration"
+            return True, get_colored_text(f"[WARN]  {config_path.name} contains template values - needs configuration")
         else:
-            return False, f"✅ {config_path.name} appears to be configured"
+            return False, get_colored_text(f"[OK] {config_path.name} appears to be configured")
     except Exception:
-        return False, f"❌ Error reading {config_path.name}"
+        return False, get_colored_text(f"[ERROR] Error reading {config_path.name}")
 
 
 def get_config_file_status_message(config_path: Path, is_venv_config: bool = False) -> str:
@@ -51,6 +52,6 @@ def get_config_file_status_message(config_path: Path, is_venv_config: bool = Fal
         return f"  Jira credentials: {base_message}"
     else:
         if is_venv_config and config_path.name == 'jira_config.env':
-            return f"  Jira credentials: ✅ {config_path.name} appears to be correctly configured (in the .venv folder)"
+            return f"  Jira credentials: {get_colored_text(f'[OK] {config_path.name} appears to be correctly configured (in the .venv folder)')}"
         else:
             return f"  Jira credentials: {base_message}"

@@ -6,9 +6,11 @@ on:
   workflow_dispatch: # Allow manual triggering
 
 env:
+
   PYTHON_VERSION: '3.11'
 
 jobs:
+
   build-windows:
     name: Build Windows Executables
     runs-on: windows-latest
@@ -117,6 +119,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
+
         python-version: ${{ env.PYTHON_VERSION }}
           
     - name: Install dependencies
@@ -125,6 +128,7 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
+
     - name: Check installed packages
       run: |
         echo "Installed packages:"
@@ -203,6 +207,7 @@ jobs:
     - name: Upload macOS artifacts
       uses: actions/upload-artifact@v4
       with:
+
         name: executables-macos-v${{ steps.version.outputs.version }}
         path: build-executables/
         retention-days: 30
@@ -227,6 +232,7 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
+
     - name: Check installed packages
       run: |
         echo "Installed packages:"
@@ -293,6 +299,7 @@ jobs:
         
     - name: Check build output
       run: |
+
         echo "Checking build output..."
         if [ -d "build-executables" ]; then
           echo "Build directory exists:"
@@ -305,20 +312,24 @@ jobs:
     - name: Upload Linux artifacts
       uses: actions/upload-artifact@v4
       with:
+
         name: executables-linux-v${{ steps.version.outputs.version }}
         path: build-executables/
         retention-days: 30
+
 
   create-release:
     name: Create Release
     needs: [build-windows] # macOS and Linux temporarily disabled
     runs-on: ubuntu-latest
+
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
+
         fetch-depth: 0 # Fetch all history for release notes
         
     - name: Set up Python
@@ -334,6 +345,7 @@ jobs:
     - name: Get current version
       id: version
       run: |
+
         VERSION=$(python version_manager.py get)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
@@ -351,15 +363,20 @@ jobs:
         fi
         
     - name: Generate release notes
+
       id: release-notes
       if: steps.check-tag.outputs.exists == 'false'
       run: |
+
         # Get the last tag
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
         
         if [ -z "$LAST_TAG" ]; then
+
           # No previous tags, get all commits
           COMMITS=$(git log --oneline --pretty=format:"- %s (%h)" --no-merges)
+
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo "# JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
@@ -430,17 +447,21 @@ jobs:
       if: steps.check-tag.outputs.exists == 'false'
       uses: softprops/action-gh-release@v1
       with:
+
         tag_name: v${{ steps.version.outputs.version }}
         name: JiraUtil v${{ steps.version.outputs.version }}
         body: ${{ steps.release-notes.outputs.notes }}
         files: |
+
           artifacts/*/JiraUtil-*.zip
         draft: false
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
+
     - name: Skip release (tag exists)
       if: steps.check-tag.outputs.exists == 'true'
       run: |
+
         echo "Release v${{ steps.version.outputs.version }} already exists, skipping release creation"

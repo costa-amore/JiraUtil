@@ -194,7 +194,7 @@ Assertion process completed:
 Use the debug script for development:
 
 ```powershell
-python debug-helper.py
+.\run.ps1 debug-helper.py
 ```
 
 ---

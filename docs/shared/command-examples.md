@@ -139,10 +139,10 @@ JiraUtil ae rule-testing
 ./run.ps1 .\JiraUtil.py --help
 
 # 3. Run comprehensive tests
-python tests/run_tests.py
+.\run.ps1 tests\run_tests.py
 
 # 4. Debug specific command
-python debug-helper.py
+.\run.ps1 debug-helper.py
 
 # 5. Build executable (runs tests first, then builds)
 ./build-windows.ps1

@@ -6,6 +6,7 @@ operations including reset and assertion processes.
 """
 
 from typing import Dict, List
+from utils.colors import colored_print
 
 
 def report_reset_results(results: Dict) -> None:
@@ -55,11 +56,11 @@ def report_assertion_results(results: Dict) -> None:
         # Clear success/failure summary
         print(f"\n" + "="*60)
         if results['failed'] == 0:
-            print(f"🎉 ALL ASSERTIONS PASSED! 🎉")
-            print(f"✅ All {results['passed']} evaluated issues are in their expected status")
+            colored_print(f"[SUCCESS] ALL ASSERTIONS PASSED! [SUCCESS]")
+            colored_print(f"[OK] All {results['passed']} evaluated issues are in their expected status")
         else:
-            print(f"❌ ASSERTION FAILURES DETECTED! ❌")
-            print(f"⚠️  {results['failed']} out of {results['passed'] + results['failed']} evaluated issues are NOT in their expected status")
+            colored_print(f"[FAIL] ASSERTION FAILURES DETECTED! [FAIL]")
+            colored_print(f"[WARN]  {results['failed']} out of {results['passed'] + results['failed']} evaluated issues are NOT in their expected status")
         print(f"="*60)
     else:
         print(f"Assertion process failed: {results.get('error', 'Unknown error')}")

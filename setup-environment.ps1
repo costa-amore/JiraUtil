@@ -22,9 +22,13 @@ if (-not (Test-Path .venv)) {
         exit 1
     }
     
-    # Install dependencies
-    Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
-    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# Upgrade pip first to avoid warnings
+Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yellow
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+
+# Install dependencies
+Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
@@ -121,6 +125,10 @@ if (-not (Test-Path .venv\Scripts\python.exe)) {
     exit 1
 }
 
+# Upgrade pip first to avoid warnings
+Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yellow
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+
 # Install all dependencies
 Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -138,4 +146,28 @@ if (Test-Path .\jira_config_backup.env) {
 }
 
 Write-Host "[SUCCESS] Virtual environment rebuilt successfully!" -ForegroundColor Green
-Write-Host "[TIP] You can now run: ./run.ps1 .\JiraUtil.py --help" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "[ACTIVATION] Activating virtual environment..." -ForegroundColor Yellow
+
+# Activate the virtual environment in the current PowerShell session
+Write-Host "[INFO] Activating virtual environment for current session..." -ForegroundColor Cyan
+& .\.venv\Scripts\Activate.ps1
+
+Write-Host "[INFO] Virtual environment is now active!" -ForegroundColor Green
+Write-Host "[INFO] Python path: $(Get-Command python).Source" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "[TESTING] Running tests to verify setup..." -ForegroundColor Yellow
+python tests/run_tests.py
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "[SUCCESS] Tests passed! Setup is complete." -ForegroundColor Green
+} else {
+    Write-Host "[WARN] Some tests failed, but virtual environment is ready." -ForegroundColor Yellow
+}
+Write-Host ""
+Write-Host "[USAGE] You can now run:" -ForegroundColor Cyan
+Write-Host "  - Tests: python tests/run_tests.py" -ForegroundColor White
+Write-Host "  - Main app: python .\JiraUtil.py --help" -ForegroundColor White
+Write-Host "  - Or use run script: ./run.ps1 tests/run_tests.py" -ForegroundColor White
+Write-Host ""
+Write-Host "[NOTE] Virtual environment is now active in this PowerShell session!" -ForegroundColor Green
+Write-Host "[NOTE] To activate in new sessions, run: .\.venv\Scripts\Activate.ps1" -ForegroundColor Cyan
