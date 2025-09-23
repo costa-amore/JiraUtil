@@ -116,10 +116,10 @@ pip install -r requirements-build.txt
 
 1. **PyInstaller not found**
    - The build scripts will automatically install PyInstaller
-   - Or install manually: `pip install pyinstaller`
+   - Ensure virtual environment is set up: `./setup-environment.ps1`
 
 2. **Missing dependencies**
-   - Ensure all dependencies are installed: `pip install -r requirements.txt`
+   - Rebuild virtual environment: `./setup-environment.ps1`
    - Check `hiddenimports` in `JiraUtil.spec`
 
 3. **Large executable size**

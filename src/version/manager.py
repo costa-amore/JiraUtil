@@ -10,11 +10,16 @@ import sys
 from pathlib import Path
 
 
+def is_frozen() -> bool:
+    """Check if running as a frozen executable."""
+    return getattr(sys, 'frozen', False)
+
+
 def get_version() -> str:
     """Get the current version from executable file properties or version.json."""
     
     # If running as executable, try to get version from file properties
-    if getattr(sys, 'frozen', False):
+    if is_frozen():
         try:
             import win32api
             import win32file

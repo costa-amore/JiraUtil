@@ -31,7 +31,6 @@ Jira_csv_helper/
 ├── run.ps1                       # PowerShell runner
 ├── 
 ├── # Development & Testing
-├── test-runner.py                # Test runner
 ├── debug-helper.py               # Debug helper
 ├── 
 ├── # Environment Management
@@ -71,7 +70,7 @@ Jira_csv_helper/
 
 ### Development & Testing
 
-- **`test-runner.py`** - Test runner
+- **`tests/run_tests.py`** - Comprehensive test runner
 - **`debug-helper.py`** - Debug helper for all commands
 
 ### Environment Management
@@ -109,7 +108,7 @@ JiraUtil.py (root)
 
 1. **Setup**: `./setup-environment.ps1`
 2. **Develop**: Edit files in `src/`
-3. **Test**: `python test-runner.py`
+3. **Test**: `python tests/run_tests.py`
 4. **Debug**: Use `debug-helper.py` for debugging any command
 5. **Rebuild**: `./setup-environment.ps1` when dependencies change
 

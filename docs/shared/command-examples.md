@@ -136,7 +136,7 @@ JiraUtil ae rule-testing
 ./setup-environment.ps1
 
 # 2. Run tests
-python test-runner.py
+python tests/run_tests.py
 
 # 3. Debug specific command
 python debug-helper.py

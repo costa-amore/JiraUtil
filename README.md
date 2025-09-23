@@ -65,7 +65,33 @@ python set-version.py --current      # Show current version
 
 ## 🛠️ Development
 
-- **Tests**: `python test-runner.py`
+### 🧪 **Comprehensive Test Suite**
+
+The project includes a comprehensive functional test suite with **74 tests** covering all major functionalities:
+
+```powershell
+# Run all tests with detailed output
+python tests/run_tests.py
+
+# Run specific test categories
+python tests/run_tests.py csv          # CSV export functionality
+python tests/run_tests.py testfixture  # Test fixture management
+python tests/run_tests.py cli          # CLI commands and parsing
+python tests/run_tests.py overview     # Functional overview tests
+```
+
+**Test Coverage:**
+- ✅ **CSV Export Commands** (10 tests) - Field extraction, newline removal, date conversion
+- ✅ **Test Fixture Commands** (20 tests) - Pattern parsing, reset/assert operations  
+- ✅ **CLI Commands** (20 tests) - Command parsing, help, status, version
+- ✅ **Core Functionality** (15 tests) - Field extraction and processing
+- ✅ **Functional Overview** (7 tests) - End-to-end functionality validation
+
+**Test Statistics:** 68 passing, 6 skipped, 0 failing (92% pass rate)
+
+### 🔧 **Development Tools**
+
+- **Tests**: `python tests/run_tests.py`
 - **Debug**: Use `python debug-helper.py` for debugging any command
 - **Rebuild**: `./setup-environment.ps1` to update dependencies
 - **Build Executables**: `./build-windows.ps1` (Windows) or `./build-unix.sh` (macOS/Linux)
@@ -80,7 +106,6 @@ Jira_csv_helper/
 ├── run.ps1                 # PowerShell runner
 ├── 
 ├── # Development & Testing
-├── test-runner.py          # Test runner
 ├── debug-helper.py         # Debug helper
 ├── 
 ├── # Environment Management

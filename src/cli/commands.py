@@ -48,7 +48,8 @@ def show_status() -> None:
     print("Configuration:")
     
     # Check if running as executable to determine context
-    if getattr(sys, 'frozen', False):
+    from version.manager import is_frozen
+    if is_frozen():
         # Running as executable - user context
         config_file = "jira_config.env"
         config_path = Path(config_file)

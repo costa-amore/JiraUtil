@@ -31,7 +31,6 @@ Jira_csv_helper/
 ├── run.ps1               # PowerShell runner
 ├── 
 ├── # Development & Testing
-├── test-runner.py        # Test runner
 ├── debug-helper.py       # Debug helper
 ├── 
 ├── # Environment Management
@@ -59,7 +58,7 @@ Jira_csv_helper/
 
 ### Development & Testing
 
-- **`test-runner.py`** - Test runner
+- **`tests/run_tests.py`** - Comprehensive test runner
 - **`debug-helper.py`** - Debug helper for all commands
 
 ### Environment Management
@@ -82,6 +81,6 @@ Jira_csv_helper/
 ## File Naming Conventions
 
 - **Executables**: `JiraUtil.exe` (Windows), `JiraUtil` (Unix)
-- **Scripts**: `setup-environment.ps1`, `build-windows.ps1`, `test-runner.py`
+- **Scripts**: `setup-environment.ps1`, `build-windows.ps1`, `tests/run_tests.py`
 - **Configuration**: `jira_config.env`, `jira_config_example.env`
 - **Documentation**: `user-guide.md`, `command-reference.md`, `troubleshooting.md`
