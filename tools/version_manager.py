@@ -164,7 +164,7 @@ def main():
         sys.exit(1)
     
     # Parse command line arguments
-    version_file = "version.json"  # Default
+    version_file = "scripts/version.json"  # Default
     command_args = []
     
     i = 1

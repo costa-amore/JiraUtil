@@ -45,11 +45,11 @@ Examples: `1.0` (manual) → `1.0.0.0` → `1.0.0.1` (local build) → `1.0.1.0`
 
 ### Automatic Version Incrementing
 
-**Build numbers** (3rd component) increment on releases and CI builds when code changes are detected.
+**Build numbers** (3rd component) increment on releases and CI builds (always increments, regardless of code changes).
 
-**Local build numbers** (4th component) increment on local builds when code changes are detected.
+**Local build numbers** (4th component) increment on local builds only when code changes are detected.
 
-Both increment when changes are detected in:
+Local build numbers increment when changes are detected in:
 
 - `src/` directory files
 - `docs/` directory files  
@@ -57,12 +57,14 @@ Both increment when changes are detected in:
 - Build scripts (`run.ps1`, `scripts/build-windows.ps1`, etc.)
 - Configuration files (`JiraUtil.spec`, etc.)
 
-Neither increment for:
+Local build numbers don't increment for:
 
 - Version number updates only
 - Build output files
 - Cache files
 - No actual code changes
+
+**Note**: Build numbers (3rd component) always increment on releases, regardless of code changes.
 
 ## 🚀 Release Workflow
 
@@ -72,17 +74,18 @@ Neither increment for:
 - **Purpose**: Local development and testing
 - **Behavior**: Builds executables, runs tests, increments local build number, no git changes
 
-### CI Testing Phase
-
-- **Command**: `git push`
-- **Purpose**: CI testing and build feedback
-- **Behavior**: Triggers build job only, increments build number, no release created
-
 ### Release Phase
 
 - **Command**: `.\scripts\release.ps1 -Platform windows`
 - **Purpose**: Create official release
-- **Behavior**: Increments build number, commits changes, pushes to GitHub, creates release
+- **Behavior**: Increments build number, commits changes, pushes to git (including tags)
+- **Prerequisites**: All code changes must be committed first
+
+### CI Build & Release Phase
+
+- **Triggered by**: Git push and tag push (from release script)
+- **Purpose**: Build artifacts and create GitHub release
+- **Behavior**: CI automatically builds and creates GitHub release with artifacts
 
 ## 📝 Common Workflows
 
@@ -110,13 +113,21 @@ Neither increment for:
 ### Creating a Release
 
 ```bash
-.\scripts\release.ps1 -Platform windows  # Increments build number and publishes
+# 1. Commit all changes first
+git add .
+git commit -m "Your commit message"
+
+# 2. Create the release
+.\scripts\release.ps1 -Platform windows  # Increments build number, commits, pushes, and triggers CI
 ```
+
+**⚠️ Important**: The release script will fail if there are uncommitted changes. The release script will push all commits and trigger CI automatically.
 
 ## 🔄 GitHub Actions
 
-- **Build Job**: Triggers on every push, runs tests and builds, no release
+- **Build Job**: Triggers on push from release script (based on the tag it commits), runs tests and builds, creates GitHub release with artifacts
 - **Release Job**: Triggers on manual dispatch, creates GitHub release with artifacts
+- **Note**: CI never pushes to git - it only builds and creates GitHub releases
 
 ## 📁 Key Files
 
@@ -181,8 +192,13 @@ python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import 
 | Command | Purpose | Version Change | Git Changes | CI Trigger |
 |---------|---------|----------------|-------------|------------|
 | `.\scripts\build-windows.ps1` | Local development | ❌ No | ❌ No | ❌ No |
-| `git push` | CI testing | ❌ No | ❌ No | ✅ Build only |
+| `git add . && git commit` | Prepare for release | ❌ No | ✅ Yes | ❌ No |
 | `.\scripts\release.ps1` | Create release | ✅ Yes | ✅ Yes | ✅ Build + Release |
+
+**Notes**: 
+- The release script requires all changes to be committed first (but not pushed)
+- The release script handles the git push and triggers CI automatically
+- CI never pushes to git - it only builds and creates GitHub releases
 
 ---
 

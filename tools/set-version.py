@@ -42,7 +42,7 @@ automatically managed by the build system and will be reset to 0 when you set a 
     
     args = parser.parse_args()
     
-    manager = VersionManager()
+    manager = VersionManager("scripts/version.json")
     
     if args.current:
         current_version = manager.get_version_string()
