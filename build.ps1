@@ -138,13 +138,23 @@ function Build-Executable {
                $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
                
                $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
-               $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting", "# Troubleshooting`n`n## Version`n`nVersion: $version"
+               $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting Guide", "# Troubleshooting Guide`n`n## Version`n`nVersion: $version"
                # Fix navigation for user environment (remove references to dev-only files)
                $troubleshootReadme = $troubleshootReadme -replace "\[User Guide →\]\(\.\./user-guide\.md\)", "[End of User Documentation]"
                $troubleshootReadme | Out-File -FilePath "$outputDir\docs\troubleshooting.md" -Encoding UTF8
                
-               # Copy shared documentation folder contents
-               Copy-Item "docs\shared\*" "$outputDir\docs\shared\" -Recurse -ErrorAction SilentlyContinue
+               # Copy and version shared documentation folder contents
+               $sharedFiles = @("command-examples.md", "configuration.md", "file-structure.md", "test-fixture-pattern.md")
+               foreach ($file in $sharedFiles) {
+                   $sourceFile = "docs\shared\$file"
+                   $targetFile = "$outputDir\docs\shared\$file"
+                   if (Test-Path $sourceFile) {
+                       $content = Get-Content $sourceFile -Raw
+                       # Add version after the title (first # heading)
+                       $content = $content -replace "(# [^`n]+)", "`$1`n`n## Version`n`nVersion: $version"
+                       $content | Out-File -FilePath $targetFile -Encoding UTF8
+                   }
+               }
         
         # Create a simple launcher script for the platform
         if ($TargetOS -eq "windows") {
