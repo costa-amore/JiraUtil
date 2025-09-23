@@ -58,21 +58,15 @@ jobs:
       run: |
         echo "Running tests to identify issues..."
         echo "Python path:"
-        which python
+        where python
         echo "Python version:"
         python --version
         echo "Current directory:"
         pwd
         echo "Test files available:"
-        ls -la tests/
-        echo "Checking if pytest is available..."
-        if python -m pytest --version 2>/dev/null; then
-          echo "Using pytest with verbose output..."
-          python -m pytest tests/ -v --tb=short
-        else
-          echo "Using custom test runner..."
-          python tests/run_tests.py
-        fi
+        dir tests\
+        echo "Running custom test runner..."
+        python tests/run_tests.py
       
     - name: Check test results
       run: |
@@ -169,14 +163,8 @@ jobs:
         pwd
         echo "Test files available:"
         ls -la tests/
-        echo "Checking if pytest is available..."
-        if python -m pytest --version 2>/dev/null; then
-          echo "Using pytest with verbose output..."
-          python -m pytest tests/ -v --tb=short
-        else
-          echo "Using custom test runner..."
-          python tests/run_tests.py
-        fi
+        echo "Running custom test runner..."
+        python tests/run_tests.py
       
     - name: Check test results
       run: |
@@ -275,14 +263,8 @@ jobs:
         pwd
         echo "Test files available:"
         ls -la tests/
-        echo "Checking if pytest is available..."
-        if python -m pytest --version 2>/dev/null; then
-          echo "Using pytest with verbose output..."
-          python -m pytest tests/ -v --tb=short
-        else
-          echo "Using custom test runner..."
-          python tests/run_tests.py
-        fi
+        echo "Running custom test runner..."
+        python tests/run_tests.py
       
     - name: Check test results
       run: |

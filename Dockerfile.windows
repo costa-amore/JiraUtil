@@ -1,0 +1,18 @@
+FROM python:3.11-windowsservercore
+
+# Set working directory
+WORKDIR C:\\app
+
+# Copy requirements first for better caching
+COPY requirements.txt requirements-build.txt ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-build.txt
+
+# Copy source code
+COPY . .
+
+# Default command
+CMD ["powershell", "-ExecutionPolicy", "Bypass", "-File", "build.ps1", "-Platform", "all"]
