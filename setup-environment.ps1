@@ -62,16 +62,54 @@ if ($env:VIRTUAL_ENV) {
 
 # Remove the old virtual environment
 Write-Host "[CLEAN] Removing old virtual environment..." -ForegroundColor Yellow
-# Kill any Python processes that might be using the virtual environment
-taskkill /f /im python.exe 2>$null
-Start-Sleep 2
-Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
 
-# Check if removal was successful
-if (Test-Path .venv) {
-    Write-Host "[FAIL] Failed to remove old virtual environment. Please close any Python processes and try again." -ForegroundColor Red
-    Write-Host "[TIP] You can also manually delete the .venv folder and run this script again." -ForegroundColor Yellow
-    exit 1
+# Kill any Python processes that might be using the virtual environment
+Write-Host "[INFO] Checking for running Python processes..." -ForegroundColor Yellow
+$pythonProcesses = Get-Process python -ErrorAction SilentlyContinue
+if ($pythonProcesses) {
+    Write-Host "[INFO] Found $($pythonProcesses.Count) Python process(es), terminating..." -ForegroundColor Yellow
+    taskkill /f /im python.exe 2>$null
+    Start-Sleep 3
+} else {
+    Write-Host "[INFO] No Python processes found" -ForegroundColor Green
+}
+
+# Try multiple removal strategies
+Write-Host "[INFO] Attempting to remove .venv folder..." -ForegroundColor Yellow
+
+# Strategy 1: Standard removal
+try {
+    Remove-Item -Recurse -Force .venv -ErrorAction Stop
+    Write-Host "[OK] Successfully removed .venv folder" -ForegroundColor Green
+} catch {
+    Write-Host "[WARN] Standard removal failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    
+    # Strategy 2: Use robocopy to empty the folder first
+    Write-Host "[INFO] Trying alternative removal method..." -ForegroundColor Yellow
+    try {
+        # Create empty temp folder
+        $tempFolder = "temp_empty_$(Get-Random)"
+        New-Item -ItemType Directory -Path $tempFolder -Force | Out-Null
+        
+        # Use robocopy to mirror empty folder (effectively deleting contents)
+        robocopy $tempFolder .venv /MIR /NFL /NDL /NJH /NJS /NC /NS /NP /Q 2>$null
+        
+        # Remove temp folder
+        Remove-Item -Recurse -Force $tempFolder -ErrorAction SilentlyContinue
+        
+        # Now try to remove .venv again
+        Remove-Item -Recurse -Force .venv -ErrorAction Stop
+        Write-Host "[OK] Successfully removed .venv folder using alternative method" -ForegroundColor Green
+    } catch {
+        Write-Host "[FAIL] All removal methods failed: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "[TIP] Possible causes:" -ForegroundColor Yellow
+        Write-Host "  - Antivirus software is scanning the folder" -ForegroundColor Yellow
+        Write-Host "  - File handles are still open (try restarting your terminal)" -ForegroundColor Yellow
+        Write-Host "  - Permission issues (run as administrator)" -ForegroundColor Yellow
+        Write-Host "  - Windows file system delays (wait a few minutes and try again)" -ForegroundColor Yellow
+        Write-Host "[TIP] You can also manually delete the .venv folder and run this script again" -ForegroundColor Yellow
+        exit 1
+    }
 }
 
 # Recreate it
