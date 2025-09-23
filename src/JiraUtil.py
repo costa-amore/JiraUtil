@@ -10,7 +10,36 @@ from jira_testfixture import run_TestFixture_Reset, run_assert_expectations, get
 
 
 def get_version() -> str:
-    """Get the current version from version.json."""
+    """Get the current version from executable file properties or version.json."""
+    import sys
+    
+    # If running as executable, try to get version from file properties
+    if getattr(sys, 'frozen', False):
+        try:
+            import win32api
+            import win32file
+            
+            # Get the executable path
+            exe_path = sys.executable
+            
+            # Get file version info
+            version_info = win32api.GetFileVersionInfo(exe_path, "\\")
+            # Parse version correctly: MS contains major.minor, LS contains build.revision
+            major = version_info['FileVersionMS'] >> 16
+            minor = version_info['FileVersionMS'] & 0xFFFF
+            build = version_info['FileVersionLS'] >> 16
+            revision = version_info['FileVersionLS'] & 0xFFFF
+            
+            # Format as M.m.bld (ignore revision)
+            return f"{major}.{minor}.{build}"
+        except ImportError:
+            # pywin32 not available, fall back to version.json
+            pass
+        except Exception:
+            # Error reading file properties, fall back to version.json
+            pass
+    
+    # Fallback to version.json (for development or if file properties fail)
     try:
         version_file = Path("version.json")
         if version_file.exists():
@@ -118,13 +147,75 @@ def show_status() -> None:
     
     # Check if running as executable to determine context
     import sys
+    import os
     
     if getattr(sys, 'frozen', False):
         # Running as executable - user context
-        print("  Jira credentials: Check jira_config.env or environment variables")
+        config_file = "jira_config.env"
+        config_path = Path(config_file)
+        
+        if config_path.exists():
+            # Check if config file has template values
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Check for template/placeholder values (ignore comments)
+                lines = content.split('\n')
+                non_comment_lines = [line for line in lines if not line.strip().startswith('#')]
+                non_comment_content = '\n'.join(non_comment_lines)
+                
+                has_template_values = any(pattern in non_comment_content.lower() for pattern in [
+                    'yourcompany', 'your.email', 'your_api', 'token_here'
+                ])
+                
+                if has_template_values:
+                    print(f"  Jira credentials: ⚠️  {config_file} contains template values - needs configuration")
+                else:
+                    print(f"  Jira credentials: ✅ {config_file} appears to be configured")
+            except Exception:
+                print(f"  Jira credentials: ❌ Error reading {config_file}")
+        else:
+            print(f"  Jira credentials: ❌ {config_file} not found - needs to be created")
+        
+        print("  Alternative: Set JIRA_URL, JIRA_USERNAME, JIRA_PASSWORD environment variables")
     else:
         # Running as script - development context
-        print("  Jira credentials: Check .venv/jira_config.env or environment variables")
+        venv_config = Path('.venv') / 'jira_config.env'
+        local_config = Path('jira_config.env')
+        
+        config_file = None
+        if venv_config.exists():
+            config_file = venv_config
+        elif local_config.exists():
+            config_file = local_config
+        
+        if config_file:
+            # Check if config file has template values
+            try:
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Check for template/placeholder values (ignore comments)
+                lines = content.split('\n')
+                non_comment_lines = [line for line in lines if not line.strip().startswith('#')]
+                non_comment_content = '\n'.join(non_comment_lines)
+                
+                has_template_values = any(pattern in non_comment_content.lower() for pattern in [
+                    'yourcompany', 'your.email', 'your_api', 'token_here'
+                ])
+                
+                if has_template_values:
+                    print(f"  Jira credentials: ⚠️  {config_file.name} contains template values - needs configuration")
+                else:
+                    if config_file.name == 'jira_config.env' and '.venv' in str(config_file):
+                        print(f"  Jira credentials: ✅ {config_file.name} appears to be correctly configured (in the .venv folder)")
+                    else:
+                        print(f"  Jira credentials: ✅ {config_file.name} appears to be configured")
+            except Exception:
+                print(f"  Jira credentials: ❌ Error reading {config_file.name}")
+        else:
+            print("  Jira credentials: No config file found - check .venv/jira_config.env or environment variables")
     
     print("  Default test fixture label: rule-testing")
     print()
