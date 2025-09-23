@@ -164,8 +164,16 @@ function Build-Executable {
                $commandReadme = Get-Content "docs\command-reference.md" -Raw
                $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
                # Fix navigation for user environment (remove references to dev-only files)
-               # No specific fixes needed for command-reference.md
+               $commandReadme = $commandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← Building Executables](building-executables.md)"
                $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
+               
+               # Copy building-executables.md for user reference
+               $buildingReadme = Get-Content "docs\building-executables.md" -Raw
+               $buildingReadme = $buildingReadme -replace "# Building Executables", "# Building Executables`n`n## Version`n`nVersion: $version"
+               # Fix navigation for user environment (remove references to dev-only files)
+               $buildingReadme = $buildingReadme -replace "\[← Testing\]\(testing\.md\)", "[← User Guide](../README.md)"
+               $buildingReadme = $buildingReadme -replace "\[Release and Versioning →\]\(release-and-versioning\.md\)", "[Command Reference →](command-reference.md)"
+               $buildingReadme | Out-File -FilePath "$outputDir\docs\building-executables.md" -Encoding UTF8
                
                $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
                $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting Guide", "# Troubleshooting Guide`n`n## Version`n`nVersion: $version"

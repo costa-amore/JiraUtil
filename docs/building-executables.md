@@ -197,4 +197,4 @@ Sizes may vary depending on included dependencies and compression settings.
 
 ---
 
-[🏠 Home](../README.md) | [← Testing](testing.md) | [Versioning →](versioning.md)
+[🏠 Home](../README.md) | [← Testing](testing.md) | [Release and Versioning →](release-and-versioning.md)

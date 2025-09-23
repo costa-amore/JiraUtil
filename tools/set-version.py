@@ -18,21 +18,21 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python set-version.py 1.0.0          # Set to version 1.0.0
-  python set-version.py 2.1.0          # Set to version 2.1.0
-  python set-version.py 1.5.10         # Set to version 1.5.10
+  python set-version.py 1.0            # Set to version 1.0.0 (build number will be 0)
+  python set-version.py 2.1            # Set to version 2.1.0 (build number will be 0)
+  python set-version.py 1.5            # Set to version 1.5.0 (build number will be 0)
   python set-version.py --current      # Show current version
   python set-version.py --help         # Show this help
 
-Note: After setting a version, the system will automatically mark the change
-as complete, so subsequent builds will use the exact version you set.
+Note: Only major.minor versions can be set manually. Build numbers are always
+automatically managed by the build system and will be reset to 0 when you set a version.
         """
     )
     
     parser.add_argument(
         'version',
         nargs='?',
-        help='Version to set in format M.m.b (e.g., 1.0.0)'
+        help='Version to set in format M.m (e.g., 1.0, 2.1) - build number will be set to 0'
     )
     parser.add_argument(
         '--current',
@@ -53,29 +53,30 @@ as complete, so subsequent builds will use the exact version you set.
         parser.print_help()
         return
     
-    # Parse version string
+    # Parse version string (M.m format only)
     try:
         version_parts = args.version.split('.')
-        if len(version_parts) != 3:
-            raise ValueError("Version must be in format M.m.b (e.g., 1.0.0)")
+        if len(version_parts) != 2:
+            raise ValueError("Version must be in format M.m (e.g., 1.0, 2.1)")
         
         major = int(version_parts[0])
         minor = int(version_parts[1])
-        build = int(version_parts[2])
+        build = 0  # Always set build number to 0 when manually setting version
         
-        if major < 0 or minor < 0 or build < 0:
+        if major < 0 or minor < 0:
             raise ValueError("Version numbers must be non-negative")
             
     except ValueError as e:
         print(f"Error: {e}")
-        print("Version must be in format M.m.b (e.g., 1.0.0)")
+        print("Version must be in format M.m (e.g., 1.0, 2.1)")
+        print("Build numbers are automatically managed and will be set to 0")
         sys.exit(1)
     
     # Get current version for comparison
     old_version = manager.get_version_string()
     
-    # Set the new version
-    new_version = manager.set_version(major, minor, build)
+    # Set the new version using the dedicated manual version function
+    new_version = manager.set_manual_version(major, minor)
     
     print(f"Version changed: {old_version} → {new_version}")
     

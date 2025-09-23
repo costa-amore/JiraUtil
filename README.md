@@ -17,7 +17,7 @@ Version: 1.0.34
 
 **Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions.
 
-**Release Workflow**: See [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md) for detailed information about the development, testing, and release process.
+**Release Workflow**: See [Release and Versioning](docs/release-and-versioning.md) for detailed information about the development, testing, and release process.
 
 ## 📋 Available Commands
 
@@ -51,6 +51,7 @@ Version: 1.0.34
 - **[Project Structure](docs/project-structure.md)** - Code organization
 - **[Testing](docs/testing.md)** - Running tests and development
 - **[Building Executables](docs/building-executables.md)** - Creating standalone executables
+- **[Release and Versioning](docs/release-and-versioning.md)** - Version management and release workflow
 - **[Detailed Commands](docs/csv_export-commands.md)** - CSV processing details
 - **[Jira Integration](docs/jira-commands.md)** - Jira integration details
 
@@ -89,13 +90,17 @@ JiraUtil uses smart versioning that automatically increments build numbers only 
 **Quick Commands:**
 
 ```powershell
-.\run.ps1 set-version.py 1.0.0       # Set version to 1.0.0
-.\run.ps1 set-version.py --current   # Show current version
+.\run.ps1 tools\set-version.py 1.0         # Set version to 1.0.0 (build number will be 0)
+.\run.ps1 tools\set-version.py --current   # Show current version
 ```
 
-**⚠️ Never edit `version.json` manually!** Use `set-version.py` instead.
+**⚠️ Important:**
 
-📖 **[Complete Versioning Guide](docs/versioning.md)** - Detailed documentation on how versioning works
+- Never edit `scripts/version.json` manually! Use `tools/set-version.py` instead.
+- Only major.minor versions can be set manually (e.g., `1.0`, `2.1`)
+- Build numbers are always auto-managed and reset to 0 when you set a version manually
+
+📖 **[Complete Release and Versioning Guide](docs/release-and-versioning.md)** - Detailed documentation on versioning and release workflow
 
 ## 📁 Project Structure
 
@@ -113,9 +118,8 @@ Jira_csv_helper/
 ├── setup-environment.ps1   # Environment setup
 ├── 
 ├── # Build System
-├── build-windows.ps1       # Windows build script
-├── build-unix.sh           # Unix build script
-├── JiraUtil.spec           # PyInstaller spec
+├── scripts\                # Build and release scripts
+├── tools\                  # Development tools
 ├── 
 ├── # Source Code
 ├── src\                    # Main source code

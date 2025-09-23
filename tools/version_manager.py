@@ -97,6 +97,18 @@ class VersionManager:
         self._save_version(self.version_data)
         return self.get_version_string()
     
+    def set_manual_version(self, major: int, minor: int) -> str:
+        """
+        Set major.minor version manually (for developer use).
+        Build number is always reset to 0 when manually setting version.
+        """
+        self.version_data['major'] = major
+        self.version_data['minor'] = minor
+        self.version_data['build'] = 0  # Always reset build to 0 for manual setting
+        
+        self._save_version(self.version_data)
+        return self.get_version_string()
+    
     def get_file_version_info(self) -> dict:
         """Get version info formatted for Windows executable attributes."""
         major, minor, build = self.get_version_info()
@@ -120,8 +132,7 @@ def main():
         print("  python version_manager.py get                    # Get current version")
         print("  python version_manager.py increment              # Increment build number")
         print("  python version_manager.py increment-if-changed   # Increment only if code changed")
-        print("  python version_manager.py set <major> <minor>    # Set major.minor version")
-        print("  python version_manager.py set <major> <minor> <build>  # Set full version")
+        print("  python version_manager.py set <major> <minor>    # Set major.minor version (build will be 0)")
         print("  --version-file <path>                            # Specify version file path")
         sys.exit(1)
     
@@ -164,9 +175,8 @@ def main():
         try:
             major = int(command_args[1])
             minor = int(command_args[2])
-            build = int(command_args[3]) if len(command_args) > 3 else None
-            new_version = manager.set_version(major, minor, build)
-            print(f"Version set to: {new_version}")
+            new_version = manager.set_manual_version(major, minor)
+            print(f"Version set to: {new_version} (build number reset to 0)")
         except ValueError:
             print("Error: Version numbers must be integers")
             sys.exit(1)

@@ -242,4 +242,4 @@ See [Command Examples Reference](shared/command-examples.md) for comprehensive e
 
 ---
 
-[🏠 Home](../README.md) | [Troubleshooting →](troubleshooting.md)
+[🏠 Home](../README.md) | [← Release and Versioning](release-and-versioning.md) | [Troubleshooting →](troubleshooting.md)
