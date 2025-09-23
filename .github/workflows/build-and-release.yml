@@ -149,7 +149,7 @@ jobs:
       id: version
       run: |
 
-        VERSION=$(python tools\version_manager.py get --version-file scripts/version.json)
+        VERSION=$(python tools/version_manager.py get --version-file scripts/version.json)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
         echo "Current version: $VERSION"
