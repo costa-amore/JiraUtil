@@ -106,11 +106,6 @@ class TestCLIStatusCommand:
         assert "needs to be created" in printed_content
         assert "Set JIRA_URL, JIRA_USERNAME, JIRA_PASSWORD" in printed_content
     
-    def test_status_command_displays_config_status_development_mode(self):
-        """Test status command in development mode with config file."""
-        # Skip this test due to complex mocking requirements
-        # The functionality works correctly in production
-        pytest.skip("Skipping due to complex mocking requirements in test environment")
     
     def test_status_command_displays_no_config_development_mode(self):
         """Test status command in development mode without config file."""
@@ -129,11 +124,6 @@ class TestCLIStatusCommand:
 class TestCLIVersionCommand:
     """Test the version command functionality."""
     
-    def test_version_command_executable_mode(self):
-        """Test version command when running as executable."""
-        # This test is difficult to mock properly due to the complex version detection logic
-        # The actual functionality works correctly in production
-        pytest.skip("Skipping due to complex version detection logic in test environment")
     
     def test_version_command_development_mode(self):
         """Test version command when running in development mode."""
@@ -328,27 +318,96 @@ class TestCLIIntegration:
     
     def test_main_help_integration(self):
         """Test that main help command works end-to-end."""
-        # Skip this test due to circular import issues in test environment
-        # The main function works correctly when called from command line
-        pytest.skip("Skipping due to circular import in test environment")
+        from unittest.mock import patch
+        import sys
+        
+        # Test the extracted run_cli function with help arguments
+        with patch('sys.argv', ['JiraUtil.py', '--help']):
+            with patch('builtins.print') as mock_print:
+                from src.JiraUtil import run_cli
+                
+                # Help command causes argparse to call sys.exit(0), so we expect SystemExit
+                try:
+                    result = run_cli()
+                    # If we get here, help wasn't processed correctly
+                    assert False, "Expected SystemExit for help command"
+                except SystemExit as e:
+                    # SystemExit(0) is expected for help command
+                    assert e.code == 0, f"Expected exit code 0, got {e.code}"
+                    # Verify help was displayed (captured in stdout)
+                    # The help output is captured by pytest, so we just verify the exception
     
     def test_main_list_integration(self):
         """Test that main list command works end-to-end."""
-        # Skip this test due to circular import issues in test environment
-        # The main function works correctly when called from command line
-        pytest.skip("Skipping due to circular import in test environment")
+        from unittest.mock import patch
+        import sys
+        
+        # Test the extracted run_cli function with list arguments
+        with patch('sys.argv', ['JiraUtil.py', 'list']):
+            with patch('builtins.print') as mock_print:
+                from src.JiraUtil import run_cli
+                result = run_cli()
+                
+                # Verify the result structure
+                assert result['command'] == 'list'
+                assert result['success'] == True
+                
+                # Verify list was displayed
+                printed_content = ' '.join([str(call) for call in mock_print.call_args_list])
+                assert "JiraUtil - Available Commands" in printed_content
     
     def test_main_status_integration(self):
         """Test that main status command works end-to-end."""
-        # Skip this test due to circular import issues in test environment
-        # The main function works correctly when called from command line
-        pytest.skip("Skipping due to circular import in test environment")
+        from unittest.mock import patch
+        import sys
+        
+        # Test the extracted run_cli function with status arguments
+        with patch('sys.argv', ['JiraUtil.py', 'status']):
+            with patch('builtins.print') as mock_print, \
+                 patch('version.manager.get_version', return_value="1.0.24"), \
+                 patch('version.manager.is_frozen', return_value=False), \
+                 patch('pathlib.Path.exists', return_value=False):
+                from src.JiraUtil import run_cli
+                result = run_cli()
+                
+                # Verify the result structure
+                assert result['command'] == 'status'
+                assert result['success'] == True
+                
+                # Verify status was displayed
+                printed_content = ' '.join([str(call) for call in mock_print.call_args_list])
+                assert "JiraUtil Status" in printed_content
     
     def test_main_csv_export_integration(self):
         """Test that main CSV export commands work end-to-end."""
-        # Skip this test due to circular import issues in test environment
-        # The main function works correctly when called from command line
-        pytest.skip("Skipping due to circular import in test environment")
+        from unittest.mock import patch
+        import sys
+        import tempfile
+        import os
+        
+        # Create a temporary CSV file for testing
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as temp_file:
+            temp_file.write("Name,Description\nTest,Line1\nLine2")
+            temp_file_path = temp_file.name
+        
+        try:
+            # Test the extracted run_cli function with CSV export arguments
+            with patch('sys.argv', ['JiraUtil.py', 'csv-export', 'remove-newlines', temp_file_path]):
+                with patch('builtins.print') as mock_print:
+                    from src.JiraUtil import run_cli
+                    result = run_cli()
+                    
+                    # Verify the result structure
+                    assert result['command'] == 'csv-export'
+                    assert result['subcommand'] == 'remove-newlines'
+                    assert result['success'] == True
+                    
+                    # Verify CSV processing was executed (no error means success)
+                    # The actual file processing is tested in the CSV export unit tests
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
 
 
 if __name__ == "__main__":
