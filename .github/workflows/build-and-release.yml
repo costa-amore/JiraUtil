@@ -35,7 +35,9 @@ jobs:
         pip list
         echo "Checking for test dependencies..."
         pip show pytest || echo "pytest not installed"
-        pip show unittest || echo "unittest not available"
+        echo "Checking built-in modules..."
+        python -c "import unittest; print('unittest available')" || echo "unittest not available"
+        python -c "import sys; print('Python path:', sys.path)"
         
     - name: Debug environment
       run: |
@@ -45,6 +47,12 @@ jobs:
         pwd
         echo "Directory contents:"
         dir
+        
+    - name: Check test imports
+      run: |
+        echo "Testing imports..."
+        python -c "import sys; sys.path.insert(0, '.'); import tests.run_tests; print('Test runner imports OK')"
+        python -c "import sys; sys.path.insert(0, '.'); from src import *; print('Source modules import OK')"
         
     - name: Run tests separately
       run: |
@@ -127,7 +135,9 @@ jobs:
         pip list
         echo "Checking for test dependencies..."
         pip show pytest || echo "pytest not installed"
-        pip show unittest || echo "unittest not available"
+        echo "Checking built-in modules..."
+        python -c "import unittest; print('unittest available')" || echo "unittest not available"
+        python -c "import sys; print('Python path:', sys.path)"
         
     - name: Debug environment
       run: |
@@ -141,6 +151,12 @@ jobs:
         ls -la
         echo "Test files:"
         ls -la tests/
+        
+    - name: Check test imports
+      run: |
+        echo "Testing imports..."
+        python -c "import sys; sys.path.insert(0, '.'); import tests.run_tests; print('Test runner imports OK')"
+        python -c "import sys; sys.path.insert(0, '.'); from src import *; print('Source modules import OK')"
         
     - name: Run tests separately
       run: |
@@ -225,7 +241,9 @@ jobs:
         pip list
         echo "Checking for test dependencies..."
         pip show pytest || echo "pytest not installed"
-        pip show unittest || echo "unittest not available"
+        echo "Checking built-in modules..."
+        python -c "import unittest; print('unittest available')" || echo "unittest not available"
+        python -c "import sys; print('Python path:', sys.path)"
         
     - name: Debug environment
       run: |
@@ -239,6 +257,12 @@ jobs:
         ls -la
         echo "Test files:"
         ls -la tests/
+        
+    - name: Check test imports
+      run: |
+        echo "Testing imports..."
+        python -c "import sys; sys.path.insert(0, '.'); import tests.run_tests; print('Test runner imports OK')"
+        python -c "import sys; sys.path.insert(0, '.'); from src import *; print('Source modules import OK')"
         
     - name: Run tests separately
       run: |
