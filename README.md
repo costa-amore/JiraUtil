@@ -4,7 +4,7 @@ A Python utility for supporting Jira admins.
 
 ## Version
 
-Version: 1.0.22
+Version: 1.0.23
 
 ## 🚀 Quick Start
 

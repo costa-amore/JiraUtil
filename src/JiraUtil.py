@@ -136,6 +136,53 @@ def show_list() -> None:
     print("  st                                     status")
 
 
+def check_config_file_for_template_values(config_path: Path) -> tuple[bool, str]:
+    """
+    Check if a config file contains template values.
+    
+    Returns:
+        Tuple of (has_template_values, status_message)
+    """
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Check for template/placeholder values (ignore comments)
+        lines = content.split('\n')
+        non_comment_lines = [line for line in lines if not line.strip().startswith('#')]
+        non_comment_content = '\n'.join(non_comment_lines)
+        
+        has_template_values = any(pattern in non_comment_content.lower() for pattern in [
+            'yourcompany', 'your.email', 'your_api', 'token_here'
+        ])
+        
+        if has_template_values:
+            return True, f"⚠️  {config_path.name} contains template values - needs configuration"
+        else:
+            return False, f"✅ {config_path.name} appears to be configured"
+    except Exception:
+        return False, f"❌ Error reading {config_path.name}"
+
+
+def get_config_file_status_message(config_path: Path, is_venv_config: bool = False) -> str:
+    """
+    Get the appropriate status message for a config file.
+    
+    Args:
+        config_path: Path to the config file
+        is_venv_config: Whether this is a .venv config file (for special messaging)
+    """
+    has_template_values, base_message = check_config_file_for_template_values(config_path)
+    
+    if has_template_values:
+        return f"  Jira credentials: {base_message}"
+    else:
+        if is_venv_config and config_path.name == 'jira_config.env':
+            return f"  Jira credentials: ✅ {config_path.name} appears to be correctly configured (in the .venv folder)"
+        else:
+            return f"  Jira credentials: {base_message}"
+
+
 def show_status() -> None:
     """Show tool status and information."""
     print("JiraUtil Status")
@@ -155,26 +202,7 @@ def show_status() -> None:
         config_path = Path(config_file)
         
         if config_path.exists():
-            # Check if config file has template values
-            try:
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Check for template/placeholder values (ignore comments)
-                lines = content.split('\n')
-                non_comment_lines = [line for line in lines if not line.strip().startswith('#')]
-                non_comment_content = '\n'.join(non_comment_lines)
-                
-                has_template_values = any(pattern in non_comment_content.lower() for pattern in [
-                    'yourcompany', 'your.email', 'your_api', 'token_here'
-                ])
-                
-                if has_template_values:
-                    print(f"  Jira credentials: ⚠️  {config_file} contains template values - needs configuration")
-                else:
-                    print(f"  Jira credentials: ✅ {config_file} appears to be configured")
-            except Exception:
-                print(f"  Jira credentials: ❌ Error reading {config_file}")
+            print(get_config_file_status_message(config_path))
         else:
             print(f"  Jira credentials: ❌ {config_file} not found - needs to be created")
         
@@ -185,35 +213,15 @@ def show_status() -> None:
         local_config = Path('jira_config.env')
         
         config_file = None
+        is_venv_config = False
         if venv_config.exists():
             config_file = venv_config
+            is_venv_config = True
         elif local_config.exists():
             config_file = local_config
         
         if config_file:
-            # Check if config file has template values
-            try:
-                with open(config_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # Check for template/placeholder values (ignore comments)
-                lines = content.split('\n')
-                non_comment_lines = [line for line in lines if not line.strip().startswith('#')]
-                non_comment_content = '\n'.join(non_comment_lines)
-                
-                has_template_values = any(pattern in non_comment_content.lower() for pattern in [
-                    'yourcompany', 'your.email', 'your_api', 'token_here'
-                ])
-                
-                if has_template_values:
-                    print(f"  Jira credentials: ⚠️  {config_file.name} contains template values - needs configuration")
-                else:
-                    if config_file.name == 'jira_config.env' and '.venv' in str(config_file):
-                        print(f"  Jira credentials: ✅ {config_file.name} appears to be correctly configured (in the .venv folder)")
-                    else:
-                        print(f"  Jira credentials: ✅ {config_file.name} appears to be configured")
-            except Exception:
-                print(f"  Jira credentials: ❌ Error reading {config_file.name}")
+            print(get_config_file_status_message(config_file, is_venv_config))
         else:
             print("  Jira credentials: No config file found - check .venv/jira_config.env or environment variables")
     
