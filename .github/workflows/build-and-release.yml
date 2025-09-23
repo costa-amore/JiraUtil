@@ -1,0 +1,198 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build:
+    name: Build Executables
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master')
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-build.txt
+        
+    - name: Build executables (includes tests and versioning)
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          powershell -ExecutionPolicy Bypass -File build.ps1 -Platform all
+        else
+          chmod +x build-unix.sh
+          ./build-unix.sh --platform all
+        fi
+        
+    - name: Get version from version.json
+      id: version
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          $VERSION = python version_manager.py get
+          echo "version=$VERSION" >> $env:GITHUB_OUTPUT
+        else
+          VERSION=$(python version_manager.py get)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        fi
+        echo "Current version: $VERSION"
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: executables-${{ matrix.os }}-v${{ steps.version.outputs.version }}
+        path: build-executables/
+        retention-days: 30
+        
+  create-release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for release notes
+        
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Get current version
+      id: version
+      run: |
+        VERSION=$(python version_manager.py get)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        echo "Current version: $VERSION"
+        
+    - name: Check if tag exists
+      id: check-tag
+      run: |
+        if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Tag v${{ steps.version.outputs.version }} already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Tag v${{ steps.version.outputs.version }} does not exist"
+        fi
+        
+    - name: Generate release notes
+      id: release-notes
+      if: steps.check-tag.outputs.exists == 'false'
+      run: |
+        # Get the last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        if [ -z "$LAST_TAG" ]; then
+          # No previous tags, get all commits
+          COMMITS=$(git log --oneline --pretty=format:"- %s (%h)" --no-merges)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "# JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## What's New" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## Downloads" >> $GITHUB_OUTPUT
+          echo "Download the appropriate package for your operating system:" >> $GITHUB_OUTPUT
+          echo "- **Windows**: JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+          echo "- **macOS**: JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+          echo "- **Linux**: JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## Installation" >> $GITHUB_OUTPUT
+          echo "1. Download the appropriate package for your operating system" >> $GITHUB_OUTPUT
+          echo "2. Extract the ZIP file to a folder" >> $GITHUB_OUTPUT
+          echo "3. Edit `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
+          echo "4. Run the executable or launcher script" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          # Get commits since last tag
+          COMMITS=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s (%h)" --no-merges)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "# JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## What's New" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## Downloads" >> $GITHUB_OUTPUT
+          echo "Download the appropriate package for your operating system:" >> $GITHUB_OUTPUT
+          echo "- **Windows**: JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+          echo "- **macOS**: JiraUtil-macOS-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+          echo "- **Linux**: JiraUtil-Linux-v${{ steps.version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## Installation" >> $GITHUB_OUTPUT
+          echo "1. Download the appropriate package for your operating system" >> $GITHUB_OUTPUT
+          echo "2. Extract the ZIP file to a folder" >> $GITHUB_OUTPUT
+          echo "3. Edit `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
+          echo "4. Run the executable or launcher script" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## Full Changelog" >> $GITHUB_OUTPUT
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LAST_TAG...v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create Git Tag
+      if: steps.check-tag.outputs.exists == 'false'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
+        git push origin "v${{ steps.version.outputs.version }}"
+        
+    - name: Download all artifacts
+      if: steps.check-tag.outputs.exists == 'false'
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+        
+    - name: List downloaded artifacts
+      if: steps.check-tag.outputs.exists == 'false'
+      run: |
+        echo "Downloaded artifacts:"
+        find ./artifacts -name "*.zip" -type f | sort
+        
+    - name: Create release
+      if: steps.check-tag.outputs.exists == 'false'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: JiraUtil v${{ steps.version.outputs.version }}
+        body: ${{ steps.release-notes.outputs.notes }}
+        files: |
+          artifacts/*/JiraUtil-*.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Skip release (tag exists)
+      if: steps.check-tag.outputs.exists == 'true'
+      run: |
+        echo "Release v${{ steps.version.outputs.version }} already exists, skipping release creation"
