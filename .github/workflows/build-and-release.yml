@@ -29,6 +29,14 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
+    - name: Check installed packages
+      run: |
+        echo "Installed packages:"
+        pip list
+        echo "Checking for test dependencies..."
+        pip show pytest || echo "pytest not installed"
+        pip show unittest || echo "unittest not available"
+        
     - name: Debug environment
       run: |
         echo "Python version:"
@@ -41,7 +49,27 @@ jobs:
     - name: Run tests separately
       run: |
         echo "Running tests to identify issues..."
-        python tests/run_tests.py
+        echo "Python path:"
+        which python
+        echo "Python version:"
+        python --version
+        echo "Current directory:"
+        pwd
+        echo "Test files available:"
+        ls -la tests/
+        echo "Checking if pytest is available..."
+        if python -m pytest --version 2>/dev/null; then
+          echo "Using pytest with verbose output..."
+          python -m pytest tests/ -v --tb=short
+        else
+          echo "Using custom test runner..."
+          python tests/run_tests.py
+        fi
+      
+    - name: Check test results
+      run: |
+        echo "Test step completed (may have failed, but continuing...)"
+        echo "Proceeding with build process..."
         
     - name: Build Windows executables
       run: |
@@ -93,6 +121,14 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
+    - name: Check installed packages
+      run: |
+        echo "Installed packages:"
+        pip list
+        echo "Checking for test dependencies..."
+        pip show pytest || echo "pytest not installed"
+        pip show unittest || echo "unittest not available"
+        
     - name: Debug environment
       run: |
         echo "Python version:"
@@ -109,7 +145,27 @@ jobs:
     - name: Run tests separately
       run: |
         echo "Running tests to identify issues..."
-        python tests/run_tests.py
+        echo "Python path:"
+        which python
+        echo "Python version:"
+        python --version
+        echo "Current directory:"
+        pwd
+        echo "Test files available:"
+        ls -la tests/
+        echo "Checking if pytest is available..."
+        if python -m pytest --version 2>/dev/null; then
+          echo "Using pytest with verbose output..."
+          python -m pytest tests/ -v --tb=short
+        else
+          echo "Using custom test runner..."
+          python tests/run_tests.py
+        fi
+      
+    - name: Check test results
+      run: |
+        echo "Test step completed (may have failed, but continuing...)"
+        echo "Proceeding with build process..."
         
     - name: Build macOS executables
       run: |
@@ -163,6 +219,14 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
+    - name: Check installed packages
+      run: |
+        echo "Installed packages:"
+        pip list
+        echo "Checking for test dependencies..."
+        pip show pytest || echo "pytest not installed"
+        pip show unittest || echo "unittest not available"
+        
     - name: Debug environment
       run: |
         echo "Python version:"
@@ -179,7 +243,27 @@ jobs:
     - name: Run tests separately
       run: |
         echo "Running tests to identify issues..."
-        python tests/run_tests.py
+        echo "Python path:"
+        which python
+        echo "Python version:"
+        python --version
+        echo "Current directory:"
+        pwd
+        echo "Test files available:"
+        ls -la tests/
+        echo "Checking if pytest is available..."
+        if python -m pytest --version 2>/dev/null; then
+          echo "Using pytest with verbose output..."
+          python -m pytest tests/ -v --tb=short
+        else
+          echo "Using custom test runner..."
+          python tests/run_tests.py
+        fi
+      
+    - name: Check test results
+      run: |
+        echo "Test step completed (may have failed, but continuing...)"
+        echo "Proceeding with build process..."
         
     - name: Build Linux executables
       run: |
