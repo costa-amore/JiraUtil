@@ -97,16 +97,20 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[OK] Version changes committed" -ForegroundColor Green
 
-# Push to CI
-Write-Host "`n[GIT] Pushing to CI to create release..." -ForegroundColor Yellow
-git push
+# Create release tag
+Write-Host "`n[TAG] Creating release tag v$newVersion..." -ForegroundColor Yellow
+git tag -a "v$newVersion" -m "Release v$newVersion"
+
+# Push commit and tag together atomically
+Write-Host "`n[GIT] Pushing commit and tag to CI..." -ForegroundColor Yellow
+git push --follow-tags
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to push to CI!" -ForegroundColor Red
+    Write-Host "[ERROR] Failed to push commit and tag!" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "[OK] Pushed to CI successfully" -ForegroundColor Green
+Write-Host "[OK] Commit and tag v$newVersion pushed successfully" -ForegroundColor Green
 
 # Summary
 Write-Host "`n🎉 Release Process Complete!" -ForegroundColor Green
@@ -115,7 +119,7 @@ Write-Host "Version: $currentVersion → $newVersion" -ForegroundColor White
 Write-Host "Platform: $Platform" -ForegroundColor White
 Write-Host "Status: Pushed to CI" -ForegroundColor White
 Write-Host "`n[INFO] CI will now:" -ForegroundColor Cyan
-Write-Host "  - Build the executables" -ForegroundColor White
-Write-Host "  - Create GitHub release v$newVersion" -ForegroundColor White
+Write-Host "  - Build the executables (already done locally)" -ForegroundColor White
+Write-Host "  - Create GitHub release v$newVersion (triggered by tag)" -ForegroundColor White
 Write-Host "  - Upload artifacts" -ForegroundColor White
 Write-Host "`n[LINK] Check progress: https://github.com/costa-amore/JiraUtil/actions" -ForegroundColor Blue
