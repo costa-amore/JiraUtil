@@ -2,12 +2,9 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main ]
     tags: [ 'v*' ]
-  workflow_dispatch: # Allow manual triggering
 
 env:
-
   PYTHON_VERSION: '3.11'
 
 jobs:
@@ -15,7 +12,6 @@ jobs:
   build-windows:
     name: Build Windows Executables
     runs-on: windows-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
     steps:
     - name: Checkout code
@@ -37,50 +33,6 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
-    - name: Check installed packages
-      run: |
-        .venv\Scripts\Activate.ps1
-        echo "Installed packages:"
-        pip list
-        echo "Checking for test dependencies..."
-        pip show pytest || echo "pytest not installed"
-        echo "Checking built-in modules..."
-        python -c "import unittest; print('unittest available')" || echo "unittest not available"
-        python -c "import sys; print('Python path:', sys.path)"
-        
-    - name: Debug environment
-      run: |
-        .venv\Scripts\Activate.ps1
-        echo "Python version:"
-        python --version
-        echo "Current directory:"
-        pwd
-        echo "Directory contents:"
-        dir
-        
-    - name: Check test imports
-      run: |
-        .venv\Scripts\Activate.ps1
-        echo "Testing imports..."
-        python -c "import sys; sys.path.insert(0, '.'); import tests.run_tests; print('Test runner imports OK')"
-        python -c "import sys; sys.path.insert(0, '.'); from src import *; print('Source modules import OK')"
-        
-    - name: Verify test environment
-      run: |
-        .venv\Scripts\Activate.ps1
-        echo "Verifying test environment..."
-        echo "Python path:"
-        where python
-        echo "Python version:"
-        python --version
-        echo "Current directory:"
-        pwd
-        echo "Test files available:"
-        dir tests\
-        echo "Setting UTF-8 encoding..."
-        $env:PYTHONIOENCODING="utf-8"
-        echo "Test environment ready - tests will run during build process"
-        
     - name: Generate PyInstaller spec file
       run: |
         .venv\Scripts\Activate.ps1
@@ -93,46 +45,22 @@ jobs:
         echo "Building on Windows..."
         powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Platform windows
         
-    - name: Get version from version.json
-      id: version
-      run: |
-        .venv\Scripts\Activate.ps1
-        $VERSION = python tools\version_manager.py get --version-file scripts/version.json
-        echo "version=$VERSION" >> $env:GITHUB_OUTPUT
-        echo "Current version: $VERSION"
-        
-    - name: Check build output
-      run: |
-        echo "Checking build output..."
-        if (Test-Path "build-executables") {
-          echo "Build directory exists:"
-          dir build-executables
-        } else {
-          echo "❌ Build directory not found!"
-          exit 1
-        }
-        
-    - name: Upload Windows artifacts
+    - name: Upload Windows Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: executables-windows-v${{ steps.version.outputs.version }}
-        path: build-executables/*.zip
+        name: release-windows-executables
+        path: build-executables/
         retention-days: 30
-        
-
 
   create-release:
     name: Create Release
     needs: [build-windows]
     runs-on: ubuntu-latest
-
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-
         fetch-depth: 0 # Fetch all history for release notes
         
     - name: Set up Python
@@ -140,15 +68,21 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
+    - name: Create virtual environment
+      run: |
+        python -m venv .venv
+        
     - name: Install dependencies
       run: |
+        .venv/bin/activate
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install -r requirements-build.txt
         
     - name: Get current version
       id: version
       run: |
-
+        .venv/bin/activate
         VERSION=$(python tools/version_manager.py get --version-file scripts/version.json)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
@@ -157,150 +91,76 @@ jobs:
     - name: Check if tag exists
       id: check-tag
       run: |
-        if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+        if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
           echo "exists=true" >> $GITHUB_OUTPUT
-          echo "Tag v${{ steps.version.outputs.version }} already exists"
+          echo "Tag ${{ steps.version.outputs.tag }} exists"
         else
           echo "exists=false" >> $GITHUB_OUTPUT
-          echo "Tag v${{ steps.version.outputs.version }} does not exist"
+          echo "Tag ${{ steps.version.outputs.tag }} does not exist"
         fi
         
-    - name: Generate release notes
-
-      id: release-notes
-      if: steps.check-tag.outputs.exists == 'false'
-      run: |
-
-        # Get the last tag
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-        
-        if [ -z "$LAST_TAG" ]; then
-
-          # No previous tags, get all commits
-          COMMITS=$(git log --oneline --pretty=format:"- %s (%h)" --no-merges)
-
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "# 🚀 JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "A powerful command-line tool for Jira administrators and power users." >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## ✨ What's New" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "$COMMITS" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 📦 Downloads" >> $GITHUB_OUTPUT
-          echo "Download the appropriate package for your operating system:" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "| Platform | Download | Size |" >> $GITHUB_OUTPUT
-          echo "|----------|----------|------|" >> $GITHUB_OUTPUT
-          echo "| **Windows** | [JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 🛠️ Installation" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "1. **Download** the appropriate package for your operating system" >> $GITHUB_OUTPUT
-          echo "2. **Extract** the ZIP file to a folder" >> $GITHUB_OUTPUT
-          echo "3. **Configure** `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
-          echo "4. **Run** the executable or launcher script" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 📚 Quick Start" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "\`\`\`bash" >> $GITHUB_OUTPUT
-          echo "# Windows" >> $GITHUB_OUTPUT
-          echo "JiraUtil.exe --help" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "\`\`\`" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 🔗 Links" >> $GITHUB_OUTPUT
-          echo "- [Documentation](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/README.md)" >> $GITHUB_OUTPUT
-          echo "- [User Guide](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/user-guide.md)" >> $GITHUB_OUTPUT
-          echo "- [Issues](https://github.com/costa-amore/JiraUtil/issues)" >> $GITHUB_OUTPUT
-          echo "- [Changelog](https://github.com/costa-amore/JiraUtil/releases)" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        else
-          # Get commits since last tag
-          COMMITS=$(git log $LAST_TAG..HEAD --oneline --pretty=format:"- %s (%h)" --no-merges)
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "# 🚀 JiraUtil v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "A powerful command-line tool for Jira administrators and power users." >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## ✨ What's New" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "$COMMITS" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 📦 Downloads" >> $GITHUB_OUTPUT
-          echo "Download the appropriate package for your operating system:" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "| Platform | Download | Size |" >> $GITHUB_OUTPUT
-          echo "|----------|----------|------|" >> $GITHUB_OUTPUT
-          echo "| **Windows** | [JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/v${{ steps.version.outputs.version }}/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip) | ~10 MB |" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 🛠️ Installation" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "1. **Download** the appropriate package for your operating system" >> $GITHUB_OUTPUT
-          echo "2. **Extract** the ZIP file to a folder" >> $GITHUB_OUTPUT
-          echo "3. **Configure** `jira_config.env` with your Jira credentials" >> $GITHUB_OUTPUT
-          echo "4. **Run** the executable or launcher script" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 📚 Quick Start" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "\`\`\`bash" >> $GITHUB_OUTPUT
-          echo "# Windows" >> $GITHUB_OUTPUT
-          echo "JiraUtil.exe --help" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "\`\`\`" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 🔗 Links" >> $GITHUB_OUTPUT
-          echo "- [Documentation](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/README.md)" >> $GITHUB_OUTPUT
-          echo "- [User Guide](https://github.com/costa-amore/JiraUtil/blob/v${{ steps.version.outputs.version }}/user-guide.md)" >> $GITHUB_OUTPUT
-          echo "- [Issues](https://github.com/costa-amore/JiraUtil/issues)" >> $GITHUB_OUTPUT
-          echo "- [Changelog](https://github.com/costa-amore/JiraUtil/releases)" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "## 📋 Full Changelog" >> $GITHUB_OUTPUT
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LAST_TAG...v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        fi
-        
-    - name: Create Git Tag
-      if: steps.check-tag.outputs.exists == 'false'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git tag -a "v${{ steps.version.outputs.version }}" -m "Release v${{ steps.version.outputs.version }}"
-        git push origin "v${{ steps.version.outputs.version }}"
-        
-    - name: Download all artifacts
-      if: steps.check-tag.outputs.exists == 'false'
+    - name: Download Windows Artifacts
       uses: actions/download-artifact@v4
       with:
-        path: ./artifacts
+        name: release-windows-executables
+        path: ./build-executables/
         
-    - name: List downloaded artifacts
-      if: steps.check-tag.outputs.exists == 'false'
-      run: |
-        echo "Downloaded artifacts:"
-        find ./artifacts -name "*.zip" -type f | sort
-        
-    - name: Create release
-      if: steps.check-tag.outputs.exists == 'false'
-      uses: softprops/action-gh-release@v1
-      with:
-
-        tag_name: v${{ steps.version.outputs.version }}
-        name: JiraUtil v${{ steps.version.outputs.version }}
-        body: ${{ steps.release-notes.outputs.notes }}
-        files: |
-
-          artifacts/*/JiraUtil-*.zip
-        draft: false
-        prerelease: false
+    - name: Create Release
+      if: steps.check-tag.outputs.exists == 'true'
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        release_name: Release ${{ steps.version.outputs.tag }}
+        body: |
+          ## 🎉 JiraUtil ${{ steps.version.outputs.version }} Release
+          
+          ### 📦 Downloads
+          
+          | Platform | Download |
+          |----------|----------|
+          | Windows  | [JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip](https://github.com/costa-amore/JiraUtil/releases/download/${{ steps.version.outputs.tag }}/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip) |
+          
+          ### 🚀 Installation
+          
+          1. Download the ZIP file for your platform
+          2. Extract the ZIP file
+          3. Copy `jira_config.env.template` to `jira_config.env`
+          4. Edit `jira_config.env` with your Jira credentials
+          5. Run `JiraUtil.exe --help` to get started
+          
+          ### 📖 Documentation
+          
+          - [User Guide](https://github.com/costa-amore/JiraUtil/blob/${{ steps.version.outputs.tag }}/README.md)
+          - [Command Reference](https://github.com/costa-amore/JiraUtil/blob/${{ steps.version.outputs.tag }}/docs/command-reference.md)
+          
+          ### 🔧 Quick Start
+          
+          ```bash
+          # Check version
+          JiraUtil.exe --version
+          
+          # List available commands
+          JiraUtil.exe --help
+          
+          # Export CSV data
+          JiraUtil.exe csv export --help
+          ```
+          
+          ---
+          
+          **Full Changelog**: https://github.com/costa-amore/JiraUtil/compare/v1.0.36.0...${{ steps.version.outputs.tag }}
+        draft: false
+        prerelease: false
         
-
-    - name: Skip release (tag exists)
+    - name: Upload Windows Artifacts
       if: steps.check-tag.outputs.exists == 'true'
-      run: |
-
-        echo "Release v${{ steps.version.outputs.version }} already exists, skipping release creation"
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build-executables/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip
+        asset_name: JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip

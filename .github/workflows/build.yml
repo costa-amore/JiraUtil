@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+
+  build-windows:
+    name: Build Windows Executables
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Create virtual environment
+      run: |
+        python -m venv .venv
+        
+    - name: Install dependencies
+      run: |
+        .venv\Scripts\Activate.ps1
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-build.txt
+        
+        
+    - name: Generate PyInstaller spec file
+      run: |
+        .venv\Scripts\Activate.ps1
+        echo "Generating PyInstaller spec file..."
+        python tools\generate-spec.py
+        
+    - name: Build Windows executables
+      run: |
+        .venv\Scripts\Activate.ps1
+        echo "Building on Windows..."
+        powershell -ExecutionPolicy Bypass -File scripts/build.ps1 -Platform windows
+        
+    - name: Upload Windows Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-executables
+        path: build-executables/
+        retention-days: 30
