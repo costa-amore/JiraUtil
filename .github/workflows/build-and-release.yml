@@ -88,12 +88,14 @@ jobs:
         
     - name: Build Windows executables
       run: |
+        .venv\Scripts\Activate.ps1
         echo "Building on Windows..."
         powershell -ExecutionPolicy Bypass -File build.ps1 -Platform all
         
     - name: Get version from version.json
       id: version
       run: |
+        .venv\Scripts\Activate.ps1
         $VERSION = python version_manager.py get
         echo "version=$VERSION" >> $env:GITHUB_OUTPUT
         echo "Current version: $VERSION"
