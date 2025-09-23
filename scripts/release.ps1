@@ -82,7 +82,7 @@ if ($currentVersion -eq $newVersion) {
 
 # Create commit message
 if ($Message -eq "") {
-    $Message = "chore: bump version to $newVersion"
+    $Message = "chore: release version $newVersion"
 }
 
 # Commit version changes
