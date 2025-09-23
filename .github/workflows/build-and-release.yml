@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   workflow_dispatch: # Allow manual triggering
 
 env:
@@ -12,7 +12,7 @@ jobs:
   build:
     name: Build Executables
     runs-on: ${{ matrix.os }}
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
     strategy:
       matrix:
@@ -33,14 +33,34 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-build.txt
         
+    - name: Debug environment
+      run: |
+        echo "Python version:"
+        python --version
+        echo "Python path:"
+        which python
+        echo "Current directory:"
+        pwd
+        echo "Directory contents:"
+        ls -la
+        echo "Test files:"
+        ls -la tests/
+        
+    - name: Run tests separately
+      run: |
+        echo "Running tests to identify issues..."
+        python tests/run_tests.py
+        
     - name: Build executables (includes tests and versioning)
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           powershell -ExecutionPolicy Bypass -File build.ps1 -Platform all
         else
           chmod +x build-unix.sh
+          echo "Running build script with platform: all"
           ./build-unix.sh --platform all
         fi
+      continue-on-error: false
         
     - name: Get version from version.json
       id: version
@@ -65,7 +85,7 @@ jobs:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
     steps:
     - name: Checkout code
