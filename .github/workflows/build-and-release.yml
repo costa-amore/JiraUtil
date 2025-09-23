@@ -86,6 +86,12 @@ jobs:
         echo "Test step completed (may have failed, but continuing...)"
         echo "Proceeding with build process..."
         
+    - name: Generate PyInstaller spec file
+      run: |
+        .venv\Scripts\Activate.ps1
+        echo "Generating PyInstaller spec file..."
+        python generate-spec.py
+        
     - name: Build Windows executables
       run: |
         .venv\Scripts\Activate.ps1
