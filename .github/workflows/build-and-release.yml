@@ -108,7 +108,7 @@ jobs:
   build-macos:
     name: Build macOS Executables
     runs-on: macos-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: false # Disabled temporarily
     
     steps:
     - name: Checkout code
@@ -210,7 +210,7 @@ jobs:
   build-linux:
     name: Build Linux Executables
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    if: false # Disabled temporarily
     
     steps:
     - name: Checkout code
@@ -311,7 +311,7 @@ jobs:
         
   create-release:
     name: Create Release
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows] # macOS and Linux temporarily disabled
     runs-on: ubuntu-latest
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
