@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
 
 from version_manager import VersionManager
+from mock_code_change_detector import MockCodeChangeDetector
 
 
 class TestBuildVersioning(unittest.TestCase):
@@ -39,25 +40,73 @@ class TestBuildVersioning(unittest.TestCase):
     
     def test_local_build_increment_command(self):
         """Test that local build increment command works correctly."""
-        # Test increment-local-if-changed command
-        result = subprocess.run([
-            "python", "tools/version_manager.py", "increment-local-if-changed",
-            "--version-file", self.version_file
-        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        # Create a mock detector that reports code changes
+        mock_detector = MockCodeChangeDetector(has_changes=True)
         
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("Local build incremented to: 1.0.0.1", result.stdout)
+        # Test increment-local-if-changed with controlled test data
+        manager = VersionManager(self.version_file, change_detector=mock_detector)
+        version, was_incremented = manager.increment_local_build_if_changed()
+        
+        self.assertTrue(was_incremented)
+        self.assertEqual(version, "1.0.0.1")
+        
+        # Test that the version file was updated correctly
+        with open(self.version_file, 'r') as f:
+            version_data = json.load(f)
+        self.assertEqual(version_data['local'], 1)
     
     def test_release_build_increment_command(self):
         """Test that release build increment command works correctly."""
-        # Test increment-if-changed command
-        result = subprocess.run([
-            "python", "tools/version_manager.py", "increment-if-changed",
-            "--version-file", self.version_file
-        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        # Create a mock detector that reports code changes
+        mock_detector = MockCodeChangeDetector(has_changes=True)
         
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("Version incremented to: 1.0.1.0", result.stdout)
+        # Test increment-if-changed with controlled test data
+        manager = VersionManager(self.version_file, change_detector=mock_detector)
+        version, was_incremented = manager.increment_build_if_changed()
+        
+        self.assertTrue(was_incremented)
+        self.assertEqual(version, "1.0.1.0")
+        
+        # Test that the version file was updated correctly
+        with open(self.version_file, 'r') as f:
+            version_data = json.load(f)
+        self.assertEqual(version_data['build'], 1)
+        self.assertEqual(version_data['local'], 0)  # Should be reset for releases
+    
+    def test_local_build_no_changes_scenario(self):
+        """Test that local build increment does nothing when no code changes detected."""
+        # Create a mock detector that reports no changes
+        mock_detector = MockCodeChangeDetector(has_changes=False)
+        
+        # Test increment-local-if-changed with no changes
+        manager = VersionManager(self.version_file, change_detector=mock_detector)
+        version, was_incremented = manager.increment_local_build_if_changed()
+        
+        self.assertFalse(was_incremented)
+        self.assertEqual(version, "1.0.0.0")  # Should remain unchanged
+        
+        # Test that the version file was not updated
+        with open(self.version_file, 'r') as f:
+            version_data = json.load(f)
+        self.assertEqual(version_data['local'], 0)
+    
+    def test_release_build_no_changes_scenario(self):
+        """Test that release build increment does nothing when no code changes detected."""
+        # Create a mock detector that reports no changes
+        mock_detector = MockCodeChangeDetector(has_changes=False)
+        
+        # Test increment-if-changed with no changes
+        manager = VersionManager(self.version_file, change_detector=mock_detector)
+        version, was_incremented = manager.increment_build_if_changed()
+        
+        self.assertFalse(was_incremented)
+        self.assertEqual(version, "1.0.0.0")  # Should remain unchanged
+        
+        # Test that the version file was not updated
+        with open(self.version_file, 'r') as f:
+            version_data = json.load(f)
+        self.assertEqual(version_data['build'], 0)
+        self.assertEqual(version_data['local'], 0)
     
     def test_version_file_structure(self):
         """Test that version file has correct structure with 4 components."""

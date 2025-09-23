@@ -19,10 +19,10 @@ except ImportError:
 
 
 class VersionManager:
-    def __init__(self, version_file: str = "version.json"):
+    def __init__(self, version_file: str = "version.json", change_detector=None):
         self.version_file = Path(version_file)
         self.version_data = self._load_version()
-        self.change_detector = CodeChangeDetector()
+        self.change_detector = change_detector or CodeChangeDetector()
     
     def _load_version(self) -> dict:
         """Load version data from JSON file."""
