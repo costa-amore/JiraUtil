@@ -239,7 +239,7 @@ chmod +x JiraUtil
    ```bash
    # Disable emojis
    export USE_EMOJI=false
-   
+
    # Windows PowerShell
    $env:USE_EMOJI="false"
    ```
@@ -249,7 +249,7 @@ chmod +x JiraUtil
    ```powershell
    # Set UTF-8 encoding
    $env:PYTHONIOENCODING="utf-8"
-   
+
    # Use Windows Terminal (recommended)
    # Download from Microsoft Store
    ```

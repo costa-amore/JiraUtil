@@ -4,7 +4,7 @@ A Python utility for supporting Jira admins.
 
 ## Version
 
-Version: 1.0.44.0
+Version: 1.0.44.8
 
 ## 🚀 Quick Start
 
@@ -79,7 +79,7 @@ The project includes a comprehensive functional test suite covering all major fu
 - **Tests**: `.\run.ps1 tests\run_tests.py` (always uses virtual environment)
 - **Debug**: Use `.\run.ps1 debug-helper.py` for debugging any command
 - **Rebuild**: `.\setup-environment.ps1` to update dependencies and reactivate environment
-- **Build Executables**: `.\build-windows.ps1` (Windows) or `.\build-unix.sh` (macOS/Linux)
+- **Build Executables**: `.\build-windows.ps1` (Windows)
 
 **Note**: The run script automatically uses the virtual environment, so it works consistently across all terminal sessions. After running the setup script, you can also use `python` commands directly in the same session.
 
@@ -113,17 +113,17 @@ Jira_csv_helper/
 ├── JiraUtil.py             # Main CLI entry point
 ├── ju.py                   # Short alias
 ├── run.ps1                 # PowerShell runner
-├── 
+├──
 ├── # Development & Testing
 ├── debug-helper.py         # Debug helper
-├── 
+├──
 ├── # Environment Management
 ├── setup-environment.ps1   # Environment setup
-├── 
+├──
 ├── # Build System
 ├── scripts\                # Build and release scripts
 ├── tools\                  # Development tools
-├── 
+├──
 ├── # Source Code
 ├── src\                    # Main source code
 ├── tests\                  # Test files

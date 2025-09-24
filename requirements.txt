@@ -1,8 +1,15 @@
-# Add your Python dependencies here, e.g.:
-# requests==2.32.3
+# JiraUtil Development Requirements
+# This file contains all dependencies needed for development, testing, and building
 
+# Core application dependencies
 python-dateutil==2.9.0.post0
 pytest==8.0.0
 jira==3.10.5
 
+# Data processing
+pandas>=2.0.0
 
+# Build dependencies
+pyinstaller>=6.0.0
+
+# Documentation linting (custom script in tools/)

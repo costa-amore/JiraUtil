@@ -7,9 +7,7 @@
 ```text
 JiraUtil/
 ├── JiraUtil.exe          # Main executable (Windows)
-├── JiraUtil              # Main executable (macOS/Linux)
 ├── run.bat               # Windows launcher script
-├── run.sh                # Unix launcher script
 ├── jira_config.env       # Configuration file (ready to edit)
 ├── README.md             # User guide
 ├── command-reference.md  # Quick command reference
@@ -29,18 +27,18 @@ Jira_csv_helper/
 ├── JiraUtil.py           # Main CLI entry point
 ├── ju.py                 # Short alias
 ├── run.ps1               # PowerShell runner
-├── 
+├──
 ├── # Development & Testing
 ├── debug-helper.py       # Debug helper
-├── 
+├──
 ├── # Environment Management
 ├── setup-environment.ps1 # Environment setup
-├── 
+├──
 ├── # Build System
 ├── build-windows.ps1     # Windows build script
 ├── build-unix.sh         # Unix build script
 ├── JiraUtil.spec         # PyInstaller spec
-├── 
+├──
 ├── # Source Code
 ├── src/                  # Main source code
 ├── tests/                # Test files
@@ -75,8 +73,7 @@ Jira_csv_helper/
 
 - **`jira_config_example.env`** - Template for Jira credentials
 - **`.venv/jira_config.env`** - Actual credentials (created by setup)
-- **`requirements.txt`** - Python package dependencies
-- **`requirements-build.txt`** - Build-specific dependencies
+- **`requirements.txt`** - Python package dependencies (includes build deps)
 
 ## File Naming Conventions
 

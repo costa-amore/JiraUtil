@@ -22,17 +22,24 @@ if (-not (Test-Path .venv)) {
         exit 1
     }
     
-# Upgrade pip first to avoid warnings
-Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yellow
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
+    # Upgrade pip first to avoid warnings
+    Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yellow
+    .\.venv\Scripts\python.exe -m pip install --upgrade pip
 
-# Install dependencies
-Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+    # Install dependencies
+    Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
+    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
         exit 1
+    }
+    
+    # Store requirements hash for future change detection
+    if (Test-Path "requirements.txt") {
+        $requirementsHash = (Get-FileHash "requirements.txt" -Algorithm SHA256).Hash
+        $requirementsHash | Out-File ".venv\requirements.hash" -Encoding UTF8
+        Write-Host "[INFO] Stored requirements hash for change detection" -ForegroundColor Green
     }
     
     # Copy example config if no config exists
@@ -44,10 +51,70 @@ Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -Foregro
     
     Write-Host "[SUCCESS] Initial setup completed!" -ForegroundColor Green
     Write-Host "[TIP] You can now run: ./run.ps1 .\JiraUtil.py --help" -ForegroundColor Cyan
-    exit 0
+} else {
+    Write-Host "[INFO] Virtual environment already exists. Checking for requirement changes..." -ForegroundColor Green
+    
+    # Check if requirements.txt has changed since last install
+    $requirementsFile = "requirements.txt"
+    $requirementsHashFile = ".venv\requirements.hash"
+    
+    if (Test-Path $requirementsFile) {
+        $currentHash = (Get-FileHash $requirementsFile -Algorithm SHA256).Hash
+        
+        if (Test-Path $requirementsHashFile) {
+            $storedHash = Get-Content $requirementsHashFile
+            if ($currentHash -eq $storedHash) {
+                Write-Host "[INFO] Requirements unchanged. Skipping dependency installation." -ForegroundColor Green
+            } else {
+                Write-Host "[INFO] Requirements have changed. Updating dependencies..." -ForegroundColor Yellow
+                
+                # Upgrade pip first
+                Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yellow
+                .\.venv\Scripts\python.exe -m pip install --upgrade pip
+                
+                # Install/update dependencies
+                Write-Host "[PACKAGE] Installing/updating dependencies from requirements.txt..." -ForegroundColor Yellow
+                .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+                
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
+                    exit 1
+                }
+                
+                # Store the new hash
+                $currentHash | Out-File $requirementsHashFile -Encoding UTF8
+                Write-Host "[OK] Dependencies updated successfully!" -ForegroundColor Green
+            }
+        } else {
+            Write-Host "[INFO] No requirements hash found. Installing dependencies..." -ForegroundColor Yellow
+            
+            # Upgrade pip first
+            Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yellow
+            .\.venv\Scripts\python.exe -m pip install --upgrade pip
+            
+            # Install dependencies
+            Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
+            .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
+                exit 1
+            }
+            
+            # Store the hash
+            $currentHash | Out-File $requirementsHashFile -Encoding UTF8
+            Write-Host "[OK] Dependencies installed successfully!" -ForegroundColor Green
+        }
+    } else {
+        Write-Host "[WARN] requirements.txt not found. Skipping dependency management." -ForegroundColor Yellow
+    }
+    
+    Write-Host "[TIP] Use -Force to rebuild the virtual environment" -ForegroundColor Cyan
 }
 
-# Backup jira_config.env if it exists
+# Only rebuild if Force is specified
+if ($Force) {
+    # Backup jira_config.env if it exists
 if (Test-Path .venv\jira_config.env) {
     Copy-Item .venv\jira_config.env .\jira_config_backup.env
     Write-Host "[OK] Backed up jira_config.env to jira_config_backup.env" -ForegroundColor Green
@@ -145,7 +212,10 @@ if (Test-Path .\jira_config_backup.env) {
     Write-Host "[OK] Restored jira_config.env to .venv\jira_config.env" -ForegroundColor Green
 }
 
-Write-Host "[SUCCESS] Virtual environment rebuilt successfully!" -ForegroundColor Green
+    Write-Host "[SUCCESS] Virtual environment rebuilt successfully!" -ForegroundColor Green
+}
+
+# Always activate the virtual environment
 Write-Host ""
 Write-Host "[ACTIVATION] Activating virtual environment..." -ForegroundColor Yellow
 

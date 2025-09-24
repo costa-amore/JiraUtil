@@ -2,7 +2,7 @@
 
 🏠 [Home](../README.md)
 
-This guide explains how to build standalone executables for the JiraUtil project that can run on Windows, macOS, and Linux systems without requiring Python to be installed.
+This guide explains how to build standalone executables for the JiraUtil project that can run on Windows systems without requiring Python to be installed.
 
 ## Prerequisites
 
@@ -26,33 +26,16 @@ This guide explains how to build standalone executables for the JiraUtil project
 ./build-windows.ps1 -Clean
 ```
 
-### macOS/Linux
-
-```bash
-# Build for all platforms
-
-# Build for specific platform
-./build.sh --platform macos
-./build.sh --platform linux
-
-# Clean build before building
-./build.sh --clean
-```
-
 ## Build Options
 
 ### Platform Options
 
 - `windows` - Windows executable (.exe)
-- `macos` - macOS universal binary (Intel + Apple Silicon)
-- `linux` - Linux executable
-- `all` - Build for all platforms (default)
 
 ### Build Scripts
 
 1. **`build-windows.ps1`** - PowerShell script for Windows
-2. **`build-unix.sh`** - Bash script for macOS/Linux
-3. **`JiraUtil.spec`** - PyInstaller configuration file
+2. **`JiraUtil.spec`** - PyInstaller configuration file
 
 ## Output Structure
 
@@ -109,7 +92,7 @@ excludes=[
 Install build-specific dependencies:
 
 ```bash
-pip install -r requirements-build.txt
+pip install -r requirements.txt
 ```
 
 ## Troubleshooting
@@ -154,39 +137,11 @@ The build process automatically runs tests before building, but you can also ver
 - **UPX compression**: Enabled by default, can be disabled if causing issues
 - **Console window**: Kept for debugging, can be removed for GUI apps
 
-## Cross-Platform Building
-
-### Building on Different Platforms
-
-- **Windows**: Can build Windows and Linux executables
-- **macOS**: Can build macOS and Linux executables  
-- **Linux**: Can build Linux executables
-
-### Docker Build (Optional)
-
-For consistent builds across platforms, you can use Docker:
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY . .
-
-RUN pip install -r requirements.txt
-RUN pip install pyinstaller
-
-RUN python -m PyInstaller --onefile JiraUtil.py
-
-CMD ["cp", "dist/JiraUtil", "/output/"]
-```
-
 ## File Sizes
 
 Typical executable sizes:
 
 - **Windows**: ~15-25 MB
-- **macOS**: ~20-30 MB (universal binary)
-- **Linux**: ~15-25 MB
 
 Sizes may vary depending on included dependencies and compression settings.
 

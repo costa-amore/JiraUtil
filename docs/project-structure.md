@@ -29,22 +29,21 @@ Jira_csv_helper/
 ├── JiraUtil.py                   # Main CLI entry point
 ├── ju.py                         # Short alias
 ├── run.ps1                       # PowerShell runner
-├── 
+├──
 ├── # Development & Testing
 ├── debug-helper.py               # Debug helper
-├── 
+├──
 ├── # Environment Management
 ├── setup-environment.ps1         # Environment setup
-├── 
+├──
 ├── # Build System
 ├── build-windows.ps1             # Windows build script
 ├── build-unix.sh                 # Unix build script
 ├── JiraUtil.spec                 # PyInstaller spec
-├── 
+├──
 ├── # Configuration
 ├── jira_config_example.env      # Configuration template
-├── requirements.txt             # Python dependencies
-├── requirements-build.txt       # Build dependencies
+├── requirements.txt             # Python dependencies (includes build deps)
 └── README.md                    # Project documentation
 ```
 
@@ -80,9 +79,6 @@ Jira_csv_helper/
 ### Build System
 
 - **`build-windows.ps1`** - Windows build script (runs tests first)
-- **`build.sh`** - Generic Unix build script (runs tests first)
-- **`build-macos.ps1`** - macOS convenience script
-- **`build-linux.ps1`** - Linux convenience script
 - **`build-all.ps1`** - All platforms convenience script
 - **`JiraUtil.spec`** - PyInstaller configuration
 

@@ -32,10 +32,17 @@ try {
         Write-Host "Please fix all test failures before building executables." -ForegroundColor Red
         exit 1
     }
-    Write-Host "[OK] All unit tests passed! Proceeding with version management..." -ForegroundColor Green
+    Write-Host "[OK] All unit tests passed! Proceeding with markdown linting..." -ForegroundColor Green
 } catch {
     Write-Host "[FAIL] Failed to run unit tests: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "Please ensure the test environment is properly set up." -ForegroundColor Red
+    exit 1
+}
+
+# Run markdown linting on source docs
+Write-Host "[LINT] Running markdown linting on source documentation..." -ForegroundColor Yellow
+& "$PSScriptRoot\lint-markdown.ps1" -SourcePath "docs/" -ReadmePath "README.md" -Fix
+if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
@@ -121,7 +128,7 @@ if ($Clean) {
 }
 
 # Create build directory structure
-$buildDir = "build-executables"
+$script:buildDir = "build-executables"
 if (Test-Path $buildDir) {
     Remove-Item -Recurse -Force $buildDir
 }
@@ -137,7 +144,7 @@ function Build-Executable {
     
     Write-Host "`n[BUILD] Building for $PlatformName..." -ForegroundColor Cyan
     
-    $outputDir = "$buildDir\$PlatformName"
+    $outputDir = "$script:buildDir\$PlatformName"
     New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
     
     # Use the spec file for more control with virtual environment
@@ -180,6 +187,8 @@ function Build-Executable {
                }
                # Fix navigation for user environment (remove references to dev-only files)
                $commandReadme = $commandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← Building Executables](building-executables.md)"
+               # Remove trailing blank lines
+               $commandReadme = $commandReadme.TrimEnd()
                $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
                
                # Copy building-executables.md for user reference
@@ -191,6 +200,8 @@ function Build-Executable {
                # Fix navigation for user environment (remove references to dev-only files)
                $buildingReadme = $buildingReadme -replace "\[← Testing\]\(testing\.md\)", "[← User Guide](../README.md)"
                $buildingReadme = $buildingReadme -replace "\[Release and Versioning →\]\(release-and-versioning\.md\)", "[Command Reference →](command-reference.md)"
+               # Remove trailing blank lines
+               $buildingReadme = $buildingReadme.TrimEnd()
                $buildingReadme | Out-File -FilePath "$outputDir\docs\building-executables.md" -Encoding UTF8
                
                $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
@@ -200,6 +211,8 @@ function Build-Executable {
                }
                # Fix navigation for user environment (remove references to dev-only files)
                $troubleshootReadme = $troubleshootReadme -replace "\[User Guide →\]\(\.\./user-guide\.md\)", "[End of User Documentation]"
+               # Remove trailing blank lines
+               $troubleshootReadme = $troubleshootReadme.TrimEnd()
                $troubleshootReadme | Out-File -FilePath "$outputDir\docs\troubleshooting.md" -Encoding UTF8
                
                # Copy and version shared documentation folder contents
@@ -213,6 +226,8 @@ function Build-Executable {
                        if ($content -notmatch "## Version") {
                            $content = $content -replace "^# [^`n]+", "`$&`n`n## Version`n`nVersion: $version"
                        }
+                       # Remove trailing blank lines
+                       $content = $content.TrimEnd()
                        $content | Out-File -FilePath $targetFile -Encoding UTF8
                    }
                }
@@ -313,6 +328,14 @@ Get-ChildItem $buildDir -Directory | ForEach-Object {
     } else {
         Write-Host "[FAIL] Failed to create $zipPath" -ForegroundColor Red
     }
+}
+
+# Run markdown linting on generated docs
+Write-Host "`n[LINT] Running markdown linting on generated documentation..." -ForegroundColor Yellow
+$generatedDocsPath = "$script:buildDir\Windows"
+& "$PSScriptRoot\lint-markdown.ps1" -GeneratedPath "$generatedDocsPath/" -GeneratedReadmePath "$generatedDocsPath/README.md" -Fix
+if ($LASTEXITCODE -ne 0) {
+    exit 1
 }
 
 Write-Host "`n[SUCCESS] Build process completed!" -ForegroundColor Green

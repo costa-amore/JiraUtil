@@ -62,7 +62,7 @@ class TestBuildIntegration(unittest.TestCase):
         # Copy individual files
         files_to_copy = [
             "JiraUtil.py", "ju.py", "run.ps1", "setup-environment.ps1",
-            "requirements.txt", "requirements-build.txt"
+            "requirements.txt"
         ]
         
         for file in files_to_copy:

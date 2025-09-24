@@ -13,11 +13,11 @@ JiraUtil uses a **smart versioning system** that automatically increments build 
 Versions follow **M.m.b.l** format:
 
 - **M** = Major version (manually set)
-- **m** = Minor version (manually set)  
+- **m** = Minor version (manually set)
 - **b** = Build number (incremented on releases and CI builds)
 - **l** = Local build number (incremented on local builds)
 
-**Key Rules**: 
+**Key Rules**:
 
 - Only major.minor versions can be set manually
 - Build and local numbers are always auto-managed and reset to 0 when you manually set a version
@@ -52,7 +52,7 @@ Examples: `1.0` (manual) → `1.0.0.0` → `1.0.0.1` (local build) → `1.0.1.0`
 Local build numbers increment when changes are detected in:
 
 - `src/` directory files
-- `docs/` directory files  
+- `docs/` directory files
 - `README.md` (functional changes, not version updates)
 - Build scripts (`run.ps1`, `scripts/build-windows.ps1`, etc.)
 - Configuration files (`JiraUtil.spec`, etc.)
@@ -195,7 +195,8 @@ python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import 
 | `git add . && git commit` | Prepare for release | ❌ No | ✅ Yes | ❌ No |
 | `.\scripts\release.ps1` | Create release | ✅ Yes | ✅ Yes | ✅ Build + Release |
 
-**Notes**: 
+**Notes**:
+
 - The release script requires all changes to be committed first (but not pushed)
 - The release script handles the git push and triggers CI automatically
 - CI never pushes to git - it only builds and creates GitHub releases
