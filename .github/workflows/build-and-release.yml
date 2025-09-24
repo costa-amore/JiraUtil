@@ -107,14 +107,10 @@ jobs:
         
     - name: Create Release
       if: steps.check-tag.outputs.exists == 'true'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.version.outputs.tag }}
-        release_name: Release ${{ steps.version.outputs.tag }}
-        body: |
-          ## 🎉 JiraUtil ${{ steps.version.outputs.version }} Release
+      run: |
+        gh release create ${{ steps.version.outputs.tag }} \
+          --title "Release ${{ steps.version.outputs.tag }}" \
+          --notes "## 🎉 JiraUtil ${{ steps.version.outputs.version }} Release
           
           ### 📦 Downloads
           
@@ -126,9 +122,9 @@ jobs:
           
           1. Download the ZIP file for your platform
           2. Extract the ZIP file
-          3. Copy `jira_config.env.template` to `jira_config.env`
-          4. Edit `jira_config.env` with your Jira credentials
-          5. Run `JiraUtil.exe --help` to get started
+          3. Copy \`jira_config.env.template\` to \`jira_config.env\`
+          4. Edit \`jira_config.env\` with your Jira credentials
+          5. Run \`JiraUtil.exe --help\` to get started
           
           ### 📖 Documentation
           
@@ -137,7 +133,7 @@ jobs:
           
           ### 🔧 Quick Start
           
-          ```bash
+          \`\`\`bash
           # Check version
           JiraUtil.exe --version
           
@@ -146,21 +142,11 @@ jobs:
           
           # Export CSV data
           JiraUtil.exe csv export --help
-          ```
+          \`\`\`
           
           ---
           
-          **Full Changelog**: https://github.com/costa-amore/JiraUtil/compare/v1.0.36.0...${{ steps.version.outputs.tag }}
-        draft: false
-        prerelease: false
-        
-    - name: Upload Windows Artifacts
-      if: steps.check-tag.outputs.exists == 'true'
-      uses: actions/upload-release-asset@v1
+          **Full Changelog**: https://github.com/costa-amore/JiraUtil/compare/v1.0.36.0...${{ steps.version.outputs.tag }}" \
+          ./build-executables/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./build-executables/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip
-        asset_name: JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip
-        asset_content_type: application/zip
