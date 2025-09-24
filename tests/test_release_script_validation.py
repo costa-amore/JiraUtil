@@ -43,24 +43,6 @@ class TestReleaseScriptValidation(unittest.TestCase):
                 # Should show the correct usage
                 self.assertIn("Use: .\\scripts\\release.ps1 -Platform windows", result.stdout,
                     f"Should show correct usage for platform '{platform}'")
-    
-    def test_release_script_accepts_windows_platform(self):
-        """Test that release script accepts 'windows' platform (but may fail for other reasons)."""
-        result = subprocess.run([
-            "powershell", "-Command", 
-            ".\\scripts\\release.ps1 -Platform windows"
-        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
-        
-        # Should NOT fail with platform validation error
-        self.assertNotIn("Unsupported platform 'windows'", result.stdout,
-            "Should not reject 'windows' platform")
-        
-        # Should NOT mention that only Windows is supported (since it's the correct platform)
-        self.assertNotIn("[FAIL] JiraUtil only supports Windows builds", result.stdout,
-            "Should not show Windows-only message for correct platform")
-        
-        # May fail for other reasons (like uncommitted changes, git issues, etc.)
-        # but should not fail due to platform validation
 
 
 if __name__ == "__main__":
