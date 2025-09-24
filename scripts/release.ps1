@@ -11,7 +11,7 @@
     4. Pushing to CI to create the release
 
 .PARAMETER Platform
-    Target platform: "windows", "macos", "linux", or "all"
+    Target platform: "windows" (only Windows is supported)
     
 .PARAMETER Clean
     Clean build directories before building
@@ -21,116 +21,237 @@
 
 .EXAMPLE
     .\release.ps1 -Platform windows
-    .\release.ps1 -Platform all -Message "Release v1.0.32 with new features"
+    .\release.ps1 -Platform windows -Message "Release v1.0.32 with new features"
 #>
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("windows", "macos", "linux", "all")]
-    [string]$Platform,          # Target platform: "windows", "macos", "linux", or "all"
+    [string]$Platform,          # Target platform: "windows" (only Windows is supported)
     [switch]$Clean = $false,    # Clean build directories before building
     [string]$Message = ""       # Custom commit message
 )
 
 $ErrorActionPreference = 'Stop'
 
-Write-Host "🚀 Creating JiraUtil Release" -ForegroundColor Cyan
-Write-Host "Platform: $Platform" -ForegroundColor Yellow
+# =============================================================================
+# COLOR SYSTEM (Reusing Python color system)
+# =============================================================================
 
-# Check if we're in a git repository
-if (-not (Test-Path ".git")) {
-    Write-Host "[ERROR] Not in a git repository!" -ForegroundColor Red
-    exit 1
+# Import the centralized color utilities
+. "$PSScriptRoot\color_utils.ps1"
+
+# =============================================================================
+# VALIDATION FUNCTIONS
+# =============================================================================
+
+function Test-Platform {
+    param([string]$Platform)
+    
+    # Normalize platform to lowercase for case-insensitive comparison
+    $normalizedPlatform = $Platform.ToLower()
+    
+    if ($normalizedPlatform -ne "windows") {
+        Write-Fail "Unsupported platform '$Platform'"
+        Write-Host ""
+        Write-Fail "JiraUtil only supports Windows builds."
+        Write-Host "   Use: .\scripts\release.ps1 -Platform windows" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Info "Supported platforms:"
+        Write-Host "   - windows (only option)" -ForegroundColor White
+        Write-Host ""
+        Write-Fail "Aborting release process."
+        return $false
+    }
+    return $true
 }
 
-# Check if there are uncommitted changes (allow local build files)
-$gitStatus = git status --porcelain
-if ($gitStatus) {
-    # Filter out local build files that will be overridden
-    $localBuildFiles = @("scripts/version.json", "README.md", ".code_hash", "scripts/release.ps1")
-    $relevantChanges = $gitStatus | Where-Object { 
-        $file = ($_ -split '\s+')[1]
-        $localBuildFiles -notcontains $file
+function Test-GitRepository {
+    if (-not (Test-Path ".git")) {
+        Write-Fail "Not in a git repository!"
+        return $false
+    }
+    return $true
+}
+
+function Test-UncommittedChanges {
+    $gitStatus = git status --porcelain
+    if ($gitStatus) {
+        # Filter out local build files that will be overridden
+        $localBuildFiles = @("scripts/version.json", "README.md", ".code_hash", "scripts/release.ps1")
+        $relevantChanges = $gitStatus | Where-Object { 
+            $file = ($_ -split '\s+')[1]
+            $localBuildFiles -notcontains $file
+        }
+        
+        if ($relevantChanges) {
+            Write-Fail "You have uncommitted changes that are not local build files. Please commit or stash them first."
+            Write-Host "Uncommitted files:" -ForegroundColor Yellow
+            Write-Host $relevantChanges -ForegroundColor Gray
+            return $false
+        } else {
+            Write-Info "Found local build changes that will be overridden by release process"
+        }
+    }
+    return $true
+}
+
+# =============================================================================
+# VERSION FUNCTIONS
+# =============================================================================
+
+function Get-CurrentVersion {
+    return python tools\version_manager.py get --version-file scripts/version.json
+}
+
+function Get-NewVersion {
+    return python tools\version_manager.py get --version-file scripts/version.json
+}
+
+# =============================================================================
+# BUILD FUNCTIONS
+# =============================================================================
+
+function Invoke-ReleaseBuild {
+    param([string]$Platform, [bool]$Clean)
+    
+    Write-Build "`nBuilding with version increment..."
+    & .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -BuildForRelease
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "Build failed! Release aborted."
+        return $false
+    }
+    return $true
+}
+
+# =============================================================================
+# GIT FUNCTIONS
+# =============================================================================
+
+function Invoke-GitCommit {
+    param([string]$Message)
+    
+    Write-Git "`nCommitting version changes..."
+    git add scripts\version.json README.md build\version_info.txt .code_hash
+    git commit -m $Message
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "Failed to commit version changes!"
+        return $false
     }
     
-    if ($relevantChanges) {
-        Write-Host "[ERROR] You have uncommitted changes that are not local build files. Please commit or stash them first." -ForegroundColor Red
-        Write-Host "Uncommitted files:" -ForegroundColor Yellow
-        Write-Host $relevantChanges -ForegroundColor Gray
-        exit 1
-    } else {
-        Write-Host "[INFO] Found local build changes that will be overridden by release process" -ForegroundColor Yellow
+    Write-OK "Version changes committed"
+    return $true
+}
+
+function Invoke-GitTag {
+    param([string]$Version)
+    
+    Write-Tag "`nCreating release tag v$Version..."
+    git tag -a "v$Version" -m "Release v$Version"
+    return $true
+}
+
+function Invoke-GitPush {
+    Write-Git "`nPushing commit and tag to CI..."
+    git push --follow-tags
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "Failed to push commit and tag!"
+        return $false
     }
+    
+    Write-OK "Commit and tag pushed successfully"
+    return $true
 }
 
-# Get current version
-$currentVersion = python tools\version_manager.py get --version-file scripts/version.json
-Write-Host "[INFO] Current version: $currentVersion" -ForegroundColor Cyan
+# =============================================================================
+# MAIN RELEASE LOGIC
+# =============================================================================
 
-# Build with version increment
-Write-Host "`n[BUILD] Building with version increment..." -ForegroundColor Yellow
-& .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -BuildForRelease
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Build failed! Release aborted." -ForegroundColor Red
-    exit 1
-}
-
-# Get new version
-$newVersion = python tools\version_manager.py get --version-file scripts/version.json
-Write-Host "`n[VERSION] Version incremented: $currentVersion → $newVersion" -ForegroundColor Green
-
-# Check if version actually changed
-if ($currentVersion -eq $newVersion) {
-    Write-Host "[WARN] Version did not change. This might mean no code changes were detected." -ForegroundColor Yellow
-    Write-Host "Do you want to continue anyway? (y/N): " -ForegroundColor Yellow -NoNewline
-    $response = Read-Host
-    if ($response -ne "y" -and $response -ne "Y") {
-        Write-Host "[INFO] Release cancelled by user." -ForegroundColor Yellow
-        exit 0
+function Start-ReleaseProcess {
+    param([string]$Platform, [bool]$Clean, [string]$Message)
+    
+    # Validate platform
+    if (-not (Test-Platform $Platform)) {
+        return $false
     }
+    
+    # Validate git repository
+    if (-not (Test-GitRepository)) {
+        return $false
+    }
+    
+    # Validate uncommitted changes
+    if (-not (Test-UncommittedChanges)) {
+        return $false
+    }
+    
+    # Get current version
+    $currentVersion = Get-CurrentVersion
+    Write-Info "Current version: $currentVersion"
+    
+    # Build with version increment
+    if (-not (Invoke-ReleaseBuild $Platform $Clean)) {
+        return $false
+    }
+    
+    # Get new version
+    $newVersion = Get-NewVersion
+    Write-Version "`nVersion incremented: $currentVersion → $newVersion"
+    
+    # Check if version actually changed
+    if ($currentVersion -eq $newVersion) {
+        Write-Warn "Version did not change. This might mean no code changes were detected."
+        Write-Host "Do you want to continue anyway? (y/N): " -ForegroundColor Yellow -NoNewline
+        $response = Read-Host
+        if ($response -ne "y" -and $response -ne "Y") {
+            Write-Info "Release cancelled by user."
+            return $false
+        }
+    }
+    
+    # Create commit message
+    if ($Message -eq "") {
+        $Message = "chore: release version $newVersion"
+    }
+    
+    # Commit version changes
+    if (-not (Invoke-GitCommit $Message)) {
+        return $false
+    }
+    
+    # Create release tag
+    Invoke-GitTag $newVersion
+    
+    # Push commit and tag together atomically
+    if (-not (Invoke-GitPush)) {
+        return $false
+    }
+    
+    # Summary
+    Write-Success "`nRelease Process Complete!"
+    Write-Host "================================" -ForegroundColor Gray
+    Write-Host "Version: $currentVersion → $newVersion" -ForegroundColor White
+    Write-Host "Platform: $Platform" -ForegroundColor White
+    Write-Host "Status: Pushed to CI" -ForegroundColor White
+    Write-Info "`nCI will now:"
+    Write-Host "  - Build the executables (already done locally)" -ForegroundColor White
+    Write-Host "  - Create GitHub release v$newVersion (triggered by tag)" -ForegroundColor White
+    Write-Host "  - Upload artifacts" -ForegroundColor White
+    Write-Link "`nCheck progress: https://github.com/costa-amore/JiraUtil/actions"
+    
+    return $true
 }
 
-# Create commit message
-if ($Message -eq "") {
-    $Message = "chore: release version $newVersion"
-}
+# =============================================================================
+# SCRIPT ENTRY POINT
+# =============================================================================
 
-# Commit version changes
-Write-Host "`n[GIT] Committing version changes..." -ForegroundColor Yellow
-git add scripts\version.json README.md build\version_info.txt .code_hash
-git commit -m $Message
+Write-Info "Creating JiraUtil Release"
+Write-Host "Platform: $Platform" -ForegroundColor Yellow
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to commit version changes!" -ForegroundColor Red
+# Run the release process
+if (-not (Start-ReleaseProcess $Platform $Clean $Message)) {
     exit 1
 }
-
-Write-Host "[OK] Version changes committed" -ForegroundColor Green
-
-# Create release tag
-Write-Host "`n[TAG] Creating release tag v$newVersion..." -ForegroundColor Yellow
-git tag -a "v$newVersion" -m "Release v$newVersion"
-
-# Push commit and tag together atomically
-Write-Host "`n[GIT] Pushing commit and tag to CI..." -ForegroundColor Yellow
-git push --follow-tags
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to push commit and tag!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "[OK] Commit and tag v$newVersion pushed successfully" -ForegroundColor Green
-
-# Summary
-Write-Host "`n🎉 Release Process Complete!" -ForegroundColor Green
-Write-Host "================================" -ForegroundColor Gray
-Write-Host "Version: $currentVersion → $newVersion" -ForegroundColor White
-Write-Host "Platform: $Platform" -ForegroundColor White
-Write-Host "Status: Pushed to CI" -ForegroundColor White
-Write-Host "`n[INFO] CI will now:" -ForegroundColor Cyan
-Write-Host "  - Build the executables (already done locally)" -ForegroundColor White
-Write-Host "  - Create GitHub release v$newVersion (triggered by tag)" -ForegroundColor White
-Write-Host "  - Upload artifacts" -ForegroundColor White
-Write-Host "`n[LINK] Check progress: https://github.com/costa-amore/JiraUtil/actions" -ForegroundColor Blue
