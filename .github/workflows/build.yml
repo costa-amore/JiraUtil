@@ -13,6 +13,8 @@ jobs:
   build-windows:
     name: Build Windows Executables
     runs-on: windows-latest
+    # Skip this job if the commit is a release commit (handled by build-and-release.yml)
+    if: "${{ !contains(github.event.head_commit.message, 'chore: release version') }}"
     
     steps:
     - name: Checkout code
