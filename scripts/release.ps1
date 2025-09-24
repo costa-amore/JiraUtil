@@ -114,7 +114,7 @@ function Get-NewVersion {
 function Invoke-ReleaseBuild {
     param([string]$Platform, [bool]$Clean)
     
-    Write-Build "`nBuilding with version increment..."
+    Write-Build "Building with version increment..."
     & .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -BuildForRelease
     
     if ($LASTEXITCODE -ne 0) {
@@ -131,7 +131,7 @@ function Invoke-ReleaseBuild {
 function Invoke-GitCommit {
     param([string]$Message)
     
-    Write-Git "`nCommitting version changes..."
+    Write-Git "Committing version changes..."
     git add scripts\version.json README.md build\version_info.txt .code_hash
     git commit -m $Message
     
@@ -147,13 +147,13 @@ function Invoke-GitCommit {
 function Invoke-GitTag {
     param([string]$Version)
     
-    Write-Tag "`nCreating release tag v$Version..."
+    Write-Tag "Creating release tag v$Version..."
     git tag -a "v$Version" -m "Release v$Version"
     return $true
 }
 
 function Invoke-GitPush {
-    Write-Git "`nPushing commit and tag to CI..."
+    Write-Git "Pushing commit and tag to CI..."
     git push --follow-tags
     
     if ($LASTEXITCODE -ne 0) {
@@ -198,7 +198,7 @@ function Start-ReleaseProcess {
     
     # Get new version
     $newVersion = Get-NewVersion
-    Write-Version "`nVersion incremented: $currentVersion → $newVersion"
+    Write-Version "Version incremented: $currentVersion → $newVersion"
     
     # Check if version actually changed
     if ($currentVersion -eq $newVersion) {
@@ -230,16 +230,16 @@ function Start-ReleaseProcess {
     }
     
     # Summary
-    Write-Success "`nRelease Process Complete!"
+    Write-Success "Release Process Complete!"
     Write-Host "================================" -ForegroundColor Gray
     Write-Host "Version: $currentVersion → $newVersion" -ForegroundColor White
     Write-Host "Platform: $Platform" -ForegroundColor White
     Write-Host "Status: Pushed to CI" -ForegroundColor White
-    Write-Info "`nCI will now:"
+    Write-Info "CI will now:"
     Write-Host "  - Build the executables (already done locally)" -ForegroundColor White
     Write-Host "  - Create GitHub release v$newVersion (triggered by tag)" -ForegroundColor White
     Write-Host "  - Upload artifacts" -ForegroundColor White
-    Write-Link "`nCheck progress: https://github.com/costa-amore/JiraUtil/actions"
+    Write-Link "Check progress: https://github.com/costa-amore/JiraUtil/actions"
     
     return $true
 }
