@@ -78,7 +78,7 @@ automatically managed by the build system and will be reset to 0 when you set a 
     # Set the new version using the dedicated manual version function
     new_version = manager.set_manual_version(major, minor)
     
-    print(f"Version changed: {old_version} → {new_version}")
+    print(f"Version changed: {old_version} -> {new_version}")
     
     # Mark version update as complete to update file hashes
     manager.mark_version_update_complete()

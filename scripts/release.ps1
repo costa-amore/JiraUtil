@@ -198,7 +198,7 @@ function Start-ReleaseProcess {
     
     # Get new version
     $newVersion = Get-NewVersion
-    Write-Version "Version incremented: $currentVersion → $newVersion"
+    Write-Version "Version incremented: $currentVersion -> $newVersion"
     
     # Check if version actually changed
     if ($currentVersion -eq $newVersion) {
@@ -232,7 +232,7 @@ function Start-ReleaseProcess {
     # Summary
     Write-Success "Release Process Complete!"
     Write-Host "================================" -ForegroundColor Gray
-    Write-Host "Version: $currentVersion → $newVersion" -ForegroundColor White
+    Write-Host "Version: $currentVersion -> $newVersion" -ForegroundColor White
     Write-Host "Platform: $Platform" -ForegroundColor White
     Write-Host "Status: Pushed to CI" -ForegroundColor White
     Write-Info "CI will now:"
