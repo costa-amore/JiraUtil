@@ -43,7 +43,7 @@
   "JiraUtil.py": "f6bd4f5276980f8538421c78804aec842f722d5b0125ba03f09f9c695ba5cd18",
   "ju.py": "14557520f2f0d130d5f5bcad1ec867e00b794f35bd74a71106bb76506c5fff1e",
   "package.json": "51ad77b4d7d1e2ea8e3f08cc60912a30aa102ce694d04a731cb19aaa706273e1",
-  "README.md": "a2152b06f59d79e5cfd8346415c6532977d7179ebedeff25aa6698223d5493af",
+  "README.md": "2713c4ba30200e3c8b82a68487b5673e2dde2ad6c63caa921c43273aee8031f7",
   "run.ps1": "491fafaaa2d712a2d3d60d43b30ba48a221e93ea3d7d8d5face82212530554ae",
   "setup-environment.ps1": "831c09d18b8d93e4248283625d691efb02a2fb692f8e9bec8155c54e70ff1e39",
   ".pytest_cache\\README.md": "420e808d79a6c25d3cda0af33bc4782314a14949866682c68ce8149e89b66b70",
@@ -53,7 +53,7 @@
   "scripts\\build.ps1": "74279dcbe72cf62fd40996d6eb9e46f76a5f354352029a10098eb952e05c0fa0",
   "scripts\\color_utils.ps1": "11de58208f9ff33dadef26f79f76289d163c2a38b34d9bbb78563c21687417bf",
   "scripts\\lint-markdown.ps1": "99596e4bdbe1a8d1beb8398834913f3630fcf7463eefa4db5da9c4b54437477a",
-  "scripts\\release.ps1": "b05aed7b17e5a3f2566ab315371cb1fc56bf25045f76efa9a2fed72a289a2c68",
+  "scripts\\release.ps1": "e058335204b89d0b5824e6142a4aef0a44134d2128292ce3b5a03ddb8800b30c",
   "tests\\run_tests.py": "28756f5d5d98b291d45ecab865d287af5684944fa289cd96bf76ab37fe07ef38",
   "tests\\test_build_integration.py": "27e7416b0ff862b62c11a0283249322993383c73c2840a9513984ed05be2d579",
   "tests\\test_build_versioning.py": "2622e6c3b929b6ba00a708669605a0e6da34435dd65b4b38fd00b545755461c9",
@@ -72,7 +72,7 @@
   "tools\\generate-spec.py": "36d19c6b5b65651015307ba3653ad5365968eab368e212e57d15a8fd430c89ea",
   "tools\\markdown_linter.py": "ffbe4e615bee0444f16e5d1d42cd6170bc4f9df1d01935158ae9991e1e974427",
   "tools\\mock_code_change_detector.py": "d7cec3e179fda58116a8fc394d2eb86900b0c7da82cd9f171bbee2269452c84a",
-  "tools\\set-version.py": "b053efa83bd160bfd01ad652d86dc35c27816bc3e9cd0860f2a3e82d739bb5df",
+  "tools\\set-version.py": "60b7f3632dad1b13ce649f94800c66ca1f20057cc5b7bf73ed8c8c1c1500b3d5",
   "tools\\update-dev-version.py": "54e5dfc1f0f4ed2da0457b594b90a46e7a2f4686cea3d4d89d45aa10670964f2",
   "tools\\version_manager.py": "0b71490e696a8c9c9271773a03a9f53224fcc20247d57644bd8eb9a9e331d630"
 }
