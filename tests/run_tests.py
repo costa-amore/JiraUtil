@@ -78,7 +78,8 @@ def run_tests():
 	]
 	
 	try:
-		result = subprocess.run(cmd, check=True, capture_output=False)
+		# Use real-time output with unbuffered stdout
+		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0)
 		print("\n" + "=" * 60)
 		# Demonstrate new enum usage patterns
 		print(TextTag.SUCCESS + "ALL TESTS PASSED!")
@@ -138,7 +139,8 @@ def run_specific_test_category(category):
 	cmd = [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"]
 	
 	try:
-		result = subprocess.run(cmd, check=True, capture_output=False)
+		# Use real-time output with unbuffered stdout
+		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0)
 		print(f"SUCCESS: {category.title()} tests passed!")
 		return True
 	except subprocess.CalledProcessError as e:

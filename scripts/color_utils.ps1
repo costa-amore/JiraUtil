@@ -98,7 +98,7 @@ from utils.colors import get_colored_text
 print(get_colored_text("$Tag $Message"), end='')
 "@
     $pythonScript | Out-File -FilePath $tempFile -Encoding UTF8
-    $coloredMessage = python $tempFile
+    $coloredMessage = python -u $tempFile
     Remove-Item $tempFile
     
     # Write the colored message
@@ -140,7 +140,7 @@ from utils.colors import get_colored_text
 print(get_colored_text("$Tag $Message"), end='')
 "@
     $pythonScript | Out-File -FilePath $tempFile -Encoding UTF8
-    $coloredMessage = python $tempFile
+    $coloredMessage = python -u $tempFile
     Remove-Item $tempFile
     
     # Write the colored message without newline

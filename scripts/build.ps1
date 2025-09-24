@@ -24,7 +24,8 @@ Write-Host "[TEST] Running unit tests..." -ForegroundColor Yellow
 Write-Host "All tests must pass before building executables" -ForegroundColor Cyan
 
 try {
-    python tests/run_tests.py
+    # Run tests directly with pytest for real-time output
+    python -m pytest tests/ -v --tb=short
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Unit tests failed! Build aborted." -ForegroundColor Red
         Write-Host "Please fix all test failures before building executables." -ForegroundColor Red
