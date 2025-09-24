@@ -31,7 +31,7 @@
   "docs\\csv_export-commands.md": "e98e46fd47e1d04eaf8f105588f3521405886e5e428cd35dc96c2a5a917bbedf",
   "docs\\jira-commands.md": "b3522051fffb83faf687caf2f4db69d3fed8e35c8a2a722298aed5bfb9876fe8",
   "docs\\project-structure.md": "fb79cf8ba95bc8d20cb6a9ecbb6b3af9aff910947b8e9c83053ba9bed76e1cc8",
-  "docs\\release-and-versioning.md": "3014c187238b207979f76fd6bf0c24e9d776c6f577cd54a6fac0c210de8910e9",
+  "docs\\release-and-versioning.md": "2187eef24b41d4e0559a8978664b490ede572c0dc348b9943262bda0ce4a4703",
   "docs\\setup.md": "6325bc6f0de25a4318eaceb16a442b281d51fc3e98a31b13b3f3d9bce37779ff",
   "docs\\testing.md": "17c8360058cd70ee98961602d8247b44f9ada4b1bb712c1410c4f3533e12f7ff",
   "docs\\troubleshooting.md": "6042cd02e9cda049533bdda84eec26a95d1d679189915d618395d2d5acff7e86",
@@ -57,7 +57,7 @@
   "scripts\\release.ps1": "a1fd92933dbe576b2e64b2a2678239d44dae3ee8fbce57fcb06cb832a97ef16d",
   "tests\\run_tests.py": "2d07d29e3dc4dd46de8d6f090b2822d6ddfe510a669f2cd2c81186d37e0ba979",
   "tests\\test_build_integration.py": "89ee35310b061fb87592a5f591c37150341741880eebc9162a1ed70519e57de3",
-  "tests\\test_build_versioning.py": "40c1cdb68a6d166fd3ba50dec6d2bac1788c2867aedf74be1315560307bff4e6",
+  "tests\\test_build_versioning.py": "5716dabbae749a594ec461c4ecda7e47f811bf78725ccb777a206b1dbe8389bb",
   "tests\\test_cli_commands.py": "d77435581180a4e2725f1e70c4df0cafa31276c4797df58e26b365428ac9ffc6",
   "tests\\test_color_system.py": "75ba3e75c6151e58c70ee8a44b423400f4e3a98dec78f18788daaae2e3d8894e",
   "tests\\test_csv_export_commands.py": "7c2daf91b9f2c85e03dc86dc1825111942ba0aaf3a8da2c20e7cda4e6cdc2fcb",
@@ -70,7 +70,8 @@
   "tools\\create-version-info.py": "28157064967d574fe64561038fe6d38d98490bc14220fa17b1a7ad3f791e51ca",
   "tools\\debug-helper.py": "c5713d4cc5fc7b9e46c386da9175075b435b28636ed18b893a59655da03164eb",
   "tools\\generate-spec.py": "36d19c6b5b65651015307ba3653ad5365968eab368e212e57d15a8fd430c89ea",
-  "tools\\set-version.py": "aadfb480b301e825066d85c69396adb05d35166064db85831b7c88f62883a937",
+  "tools\\mock_code_change_detector.py": "d7cec3e179fda58116a8fc394d2eb86900b0c7da82cd9f171bbee2269452c84a",
+  "tools\\set-version.py": "b053efa83bd160bfd01ad652d86dc35c27816bc3e9cd0860f2a3e82d739bb5df",
   "tools\\update-dev-version.py": "54e5dfc1f0f4ed2da0457b594b90a46e7a2f4686cea3d4d89d45aa10670964f2",
-  "tools\\version_manager.py": "c595ea5f82d7813aba470cad55a53f9d9902109091e50a791c6751b3248c2ef2"
+  "tools\\version_manager.py": "986c9b857a1348cc885a78cefedc19a69f327083fecbfe7a958fab1f9664e36d"
 }

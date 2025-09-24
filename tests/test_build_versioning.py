@@ -108,6 +108,34 @@ class TestBuildVersioning(unittest.TestCase):
         self.assertEqual(version_data['build'], 0)
         self.assertEqual(version_data['local'], 0)
     
+    def test_ci_build_should_not_increment_version(self):
+        """Test that CI build does NOT increment version - it should just use existing version."""
+        # First, set up a version that would be committed by release script
+        manager = VersionManager(self.version_file)
+        manager.set_manual_version(1, 0)
+        manager.increment_build()  # Simulate what release script does
+        self.assertEqual(manager.get_version_string(), "1.0.1.0")
+        
+        # Now test CI build command - it should NOT change the version
+        result = subprocess.run([
+            "python", "tools/version_manager.py", "build", "ci",
+            "--version-file", self.version_file
+        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        
+        # Should succeed
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("CI build using version: 1.0.1.0", result.stdout)
+        
+        # Version should remain unchanged
+        manager = VersionManager(self.version_file)
+        self.assertEqual(manager.get_version_string(), "1.0.1.0")
+        
+        # Version file should not be modified
+        with open(self.version_file, 'r') as f:
+            version_data = json.load(f)
+        self.assertEqual(version_data['build'], 1)
+        self.assertEqual(version_data['local'], 0)
+    
     def test_version_file_structure(self):
         """Test that version file has correct structure with 4 components."""
         with open(self.version_file, 'r') as f:

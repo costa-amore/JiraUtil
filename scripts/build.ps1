@@ -47,7 +47,7 @@ $isRelease = $BuildForRelease -eq $true
 if ($isRelease) {
     # Release build: always increment build number
     Write-Host "[INFO] Release build - incrementing build number" -ForegroundColor Cyan
-    $versionResult = python tools\version_manager.py increment-build --version-file scripts/version.json
+    $versionResult = python tools\version_manager.py build release --version-file scripts/version.json
     $version = python tools\version_manager.py get --version-file scripts/version.json
     Write-Host "[OK] Release build incremented: $version" -ForegroundColor Green
     

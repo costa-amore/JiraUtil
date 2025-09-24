@@ -155,12 +155,30 @@ def main():
     if len(sys.argv) < 2:
         print("Usage:")
         print("  python version_manager.py get                    # Get current version")
+        print("  python version_manager.py build <context>        # Build with context (release, local, ci)")
+        print("  python version_manager.py set <major> <minor>    # Set major.minor version (build and local will be 0)")
+        print("")
+        print("Build Contexts:")
+        print("  release  - Create release (always increment build, reset local)")
+        print("  local    - Local development (increment local if code changed)")
+        print("  ci       - CI build (use existing version, no changes)")
+        print("")
+        print("Legacy commands (use 'build <context>' instead):")
         print("  python version_manager.py increment              # Increment build number")
         print("  python version_manager.py increment-if-changed   # Increment only if code changed")
         print("  python version_manager.py increment-local        # Increment local build number")
         print("  python version_manager.py increment-local-if-changed  # Increment local only if code changed")
-        print("  python version_manager.py set <major> <minor>    # Set major.minor version (build and local will be 0)")
+        print("")
+        print("Options:")
         print("  --version-file <path>                            # Specify version file path")
+        print("")
+        print("Examples:")
+        print("  python version_manager.py get")
+        print("  python version_manager.py build release")
+        print("  python version_manager.py build local")
+        print("  python version_manager.py build ci")
+        print("  python version_manager.py set 2.0")
+        print("  python version_manager.py build local --version-file custom/version.json")
         sys.exit(1)
     
     # Parse command line arguments
@@ -185,6 +203,31 @@ def main():
     
     if command == "get":
         print(manager.get_version_string())
+    elif command == "build":
+        if len(command_args) < 2:
+            print("ERROR: build command requires a context")
+            print("Usage: python version_manager.py build <context>")
+            print("Contexts: release, local, ci")
+            sys.exit(1)
+        
+        context = command_args[1].lower()
+        
+        if context == "release":
+            new_version = manager.increment_build()
+            print(f"Release created: {new_version}")
+        elif context == "local":
+            version, was_incremented = manager.increment_local_build_if_changed()
+            if was_incremented:
+                print(f"Local build incremented to: {version}")
+            else:
+                print(f"Version unchanged: {version} (no code changes)")
+        elif context == "ci":
+            version = manager.get_version_string()
+            print(f"CI build using version: {version}")
+        else:
+            print(f"ERROR: Unknown build context '{context}'")
+            print("Supported contexts: release, local, ci")
+            sys.exit(1)
     elif command == "increment":
         new_version = manager.increment_build()
         print(f"Version incremented to: {new_version}")
@@ -217,7 +260,13 @@ def main():
             print("Error: Version numbers must be integers")
             sys.exit(1)
     else:
-        print(f"Unknown command: {command}")
+        print(f"ERROR: Unknown command '{command}'")
+        print("")
+        print("Supported commands:")
+        print("  get, build <context>, set")
+        print("  increment, increment-if-changed, increment-local, increment-local-if-changed (legacy)")
+        print("")
+        print("Run 'python version_manager.py' (without arguments) to see full usage information.")
         sys.exit(1)
 
 

@@ -92,25 +92,26 @@ class TestBuildIntegration(unittest.TestCase):
         self.assertEqual(new_version, "1.0.0.1")
     
     def test_release_build_version_increment(self):
-        """Test that release build script increments build number."""
-        # Get initial version
+        """Test that release build increments build number and resets local build."""
         manager = VersionManager(self.version_file)
-        initial_version = manager.get_version_string()
-        self.assertEqual(initial_version, "1.0.0.0")
+        self.assertEqual(manager.get_version_string(), "1.0.0.0")
         
-        # Simulate release build by running the version increment command
-        # that the release script would run
         result = subprocess.run([
-            "python", "tools/version_manager.py", "increment-if-changed",
+            "python", "tools/version_manager.py", "build", "release",
             "--version-file", self.version_file
         ], capture_output=True, text=True, cwd=self.test_project_dir)
         
         self.assertEqual(result.returncode, 0)
         
-        # Check that build number was incremented
         manager = VersionManager(self.version_file)
         new_version = manager.get_version_string()
         self.assertEqual(new_version, "1.0.1.0")
+        
+        major, minor, build, local = new_version.split('.')
+        self.assertEqual(major, "1")
+        self.assertEqual(minor, "0")
+        self.assertEqual(build, "1")
+        self.assertEqual(local, "0")
     
     def test_version_file_structure_after_operations(self):
         """Test that version file maintains correct structure after operations."""
