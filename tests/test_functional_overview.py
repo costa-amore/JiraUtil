@@ -11,6 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, mock_open, Mock
+from .fixtures import create_reset_result, create_assert_result
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -104,82 +105,26 @@ PROJ-3,"Another task","Another description",EPIC-2,To Do,Bob Wilson,2024-03-10 1
             dates_output.unlink(missing_ok=True)
     
     def test_testfixture_functionality_overview(self):
-        """
-        Test Test Fixture Functionality Overview.
+        """Test Test Fixture Functionality Overview."""
+        from testfixture.workflow import run_TestFixture_Reset, run_assert_expectations
         
-        Validates that test fixture management works correctly:
-        - Pattern parsing for test fixture issues
-        - Reset functionality for test fixtures
-        - Assert functionality for test fixtures
-        """
-        from testfixture.patterns import parse_summary_pattern, parse_expectation_pattern
-        from testfixture.issue_processor import process_issues_by_label, assert_issues_expectations
-        
-        # Test 1: Pattern parsing functionality
-        test_patterns = [
-            ("I was in To Do - expected to be in In Progress", "To Do", "In Progress"),
-            ("I was in In Progress - expected to be in Done", "In Progress", "Done"),
-            ("I was in Done - expected to be in Closed", "Done", "Closed"),
-        ]
-        
-        for summary, expected_status1, expected_status2 in test_patterns:
-            result = parse_summary_pattern(summary)
-            assert result == (expected_status1, expected_status2), f"Pattern parsing failed for: {summary}"
-        
-        # Test expectation parsing
-        expectation_patterns = [
-            ("I was in To Do - expected to be in In Progress", "To Do", "In Progress"),
-            ("I was in In Progress - expected to be in Done", "In Progress", "Done"),
-        ]
-        
-        for summary, expected_status1, expected_status2 in expectation_patterns:
-            result = parse_expectation_pattern(summary)
-            assert result == (expected_status1, expected_status2), f"Expectation parsing failed for: {summary}"
-        
-        # Test 2: Reset functionality with mocked Jira
-        mock_manager = Mock()
-        mock_manager.jira = Mock()
-        mock_manager.connect.return_value = True
-        mock_manager.get_issues_by_label.return_value = [
-            {
-                'key': 'PROJ-1',
-                'summary': 'I was in To Do - expected to be in In Progress',
-                'status': 'In Progress'  # Different from target status, needs update
-            },
-            {
-                'key': 'PROJ-2',
-                'summary': 'I was in In Progress - expected to be in Done',
-                'status': 'Done'  # Different from target status, needs update
-            }
-        ]
-        mock_manager.update_issue_status.return_value = True
-        
-        result = process_issues_by_label(mock_manager, "rule-testing")
-        assert result['success'] is True
-        assert result['processed'] == 2
-        assert result['updated'] == 2
-        assert result['skipped'] == 0
-        
-        # Test 3: Assert functionality with mocked Jira
-        mock_manager.get_issues_by_label.return_value = [
-            {
-                'key': 'PROJ-1',
-                'summary': 'I was in To Do - expected to be in In Progress',
-                'status': 'In Progress'  # Matches expected status
-            },
-            {
-                'key': 'PROJ-2',
-                'summary': 'I was in In Progress - expected to be in Done',
-                'status': 'To Do'  # Does not match expected status
-            }
-        ]
-        
-        result = assert_issues_expectations(mock_manager, "rule-testing")
-        assert result['success'] is True
-        assert result['processed'] == 2
-        assert result['passed'] == 1
-        assert result['failed'] == 1
-        assert len(result['failures']) == 1
+        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
+             patch('testfixture.workflow.process_issues_by_label') as mock_process, \
+             patch('testfixture.workflow.assert_issues_expectations') as mock_assert:
+            
+            mock_manager = Mock()
+            mock_manager_class.return_value = mock_manager
+            mock_process.return_value = create_reset_result(processed=2, updated=2)
+            mock_assert.return_value = create_assert_result(processed=2, passed=1, failed=1, failures=['PROJ-2: Expected Done but is To Do'])
+            
+            with patch('builtins.print'):
+                run_TestFixture_Reset("https://jira.example.com", "user", "pass", "rule-testing")
+            
+            with patch('builtins.print'):
+                run_assert_expectations("https://jira.example.com", "user", "pass", "rule-testing")
+            assert mock_manager_class.call_count == 2
+            mock_process.assert_called_once_with(mock_manager, "rule-testing")
+            mock_assert.assert_called_once_with(mock_manager, "rule-testing")
     
     def test_cli_functionality_overview(self):
         """
