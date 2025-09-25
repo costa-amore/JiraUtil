@@ -50,13 +50,13 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "[VERSION] Managing version..." -ForegroundColor Yellow
 
 # Determine build context automatically
-$isCI = $env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true"
-$isRelease = $BuildForRelease -eq $true
+$IsCI = $env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true"
+$IsRelease = $BuildForRelease -eq $true
 
-if ($isRelease) {
+if ($IsRelease) {
     # Release build: always increment build number
     Write-Host "[INFO] Release build - incrementing build number" -ForegroundColor Cyan
-    $versionResult = python tools\version_manager.py build release --version-file scripts/version.json
+    $VersionResult = python tools\version_manager.py build release --version-file scripts/version.json
     $version = python tools\version_manager.py get --version-file scripts/version.json
     Write-Host "[OK] Release build incremented: $version" -ForegroundColor Green
     
@@ -64,7 +64,7 @@ if ($isRelease) {
     python tools\update-dev-version.py
     # Mark version update as complete to update hashes
     python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
-} elseif ($isCI) {
+} elseif ($IsCI) {
     # CI build: use version as-is (release script already incremented it)
     Write-Host "[INFO] CI build - using existing version" -ForegroundColor Cyan
     $version = python tools\version_manager.py get --version-file scripts/version.json
@@ -72,10 +72,10 @@ if ($isRelease) {
 } else {
     # Local build: increment local build number if code changed
     Write-Host "[INFO] Local build - incrementing local build number if code changed" -ForegroundColor Yellow
-    $versionResult = python tools\version_manager.py increment-local-if-changed --version-file scripts/version.json
+    $VersionResult = python tools\version_manager.py increment-local-if-changed --version-file scripts/version.json
     $version = python tools\version_manager.py get --version-file scripts/version.json
     
-    if ($versionResult -match "incremented") {
+    if ($VersionResult -match "incremented") {
         Write-Host "[OK] Local build incremented: $version" -ForegroundColor Green
         # Update all files to new version
         python tools\update-dev-version.py
@@ -94,9 +94,9 @@ Write-Host "[SPEC] Generating PyInstaller spec file..." -ForegroundColor Yellow
 python tools\generate-spec.py
 
 # Detect Python executable path
-$pythonExe = "python"
+$PythonExe = "python"
 if (Test-Path ".\.venv\Scripts\python.exe") {
-    $pythonExe = ".\.venv\Scripts\python.exe"
+    $PythonExe = ".\.venv\Scripts\python.exe"
     Write-Host "[INFO] Using virtual environment Python" -ForegroundColor Blue
 } else {
     Write-Host "[INFO] Using system Python" -ForegroundColor Blue
@@ -105,14 +105,14 @@ if (Test-Path ".\.venv\Scripts\python.exe") {
 # Check if PyInstaller is installed
 Write-Host "[PACKAGE] Checking PyInstaller installation..." -ForegroundColor Yellow
 try {
-    $pyinstallerVersion = & $pythonExe -m PyInstaller --version 2>$null
+    $PyInstallerVersion = & $PythonExe -m PyInstaller --version 2>$null
     if ($LASTEXITCODE -ne 0) {
         throw "PyInstaller not found"
     }
-    Write-Host "[OK] PyInstaller version: $pyinstallerVersion" -ForegroundColor Green
+    Write-Host "[OK] PyInstaller version: $PyInstallerVersion" -ForegroundColor Green
 } catch {
     Write-Host "[FAIL] PyInstaller not found. Installing..." -ForegroundColor Red
-    & $pythonExe -m pip install pyinstaller
+    & $PythonExe -m pip install pyinstaller
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Failed to install PyInstaller" -ForegroundColor Red
         exit 1
@@ -128,11 +128,30 @@ if ($Clean) {
 }
 
 # Create build directory structure
-$script:buildDir = "build-executables"
-if (Test-Path $buildDir) {
-    Remove-Item -Recurse -Force $buildDir
+$script:BuildDir = "build-executables"
+if (Test-Path $BuildDir) {
+    Remove-Item -Recurse -Force $BuildDir
 }
-New-Item -ItemType Directory -Path $buildDir | Out-Null
+New-Item -ItemType Directory -Path $BuildDir | Out-Null
+
+# Function to convert relative links for built executable environment
+function Convert-LinksForBuiltExecutable {
+    param(
+        [string]$Content,
+        [string]$DocsFolderName = "docs"
+    )
+    
+    # Convert relative links to docs/ format for built executable
+    # (README.md is in root, so links need docs/ prefix)
+    $Content = $Content -replace "\[Configuration Reference\]\(shared/configuration\.md\)", "[Configuration Reference]($DocsFolderName/shared/configuration.md)"
+    $Content = $Content -replace "\[Command Examples Reference\]\(shared/command-examples\.md\)", "[Command Examples Reference]($DocsFolderName/shared/command-examples.md)"
+    $Content = $Content -replace "\[Test Fixture Pattern Reference\]\(shared/test-fixture-pattern\.md\)", "[Test Fixture Pattern Reference]($DocsFolderName/shared/test-fixture-pattern.md)"
+    $Content = $Content -replace "\[File Structure Reference\]\(shared/file-structure\.md\)", "[File Structure Reference]($DocsFolderName/shared/file-structure.md)"
+    $Content = $Content -replace "\[Command Reference\]\(command-reference\.md\)", "[Command Reference]($DocsFolderName/command-reference.md)"
+    $Content = $Content -replace "\[Troubleshooting Guide\]\(troubleshooting\.md\)", "[Troubleshooting Guide]($DocsFolderName/troubleshooting.md)"
+    
+    return $Content
+}
 
 # Function to build for a specific platform
 function Build-Executable {
@@ -144,97 +163,99 @@ function Build-Executable {
     
     Write-Host "`n[BUILD] Building for $PlatformName..." -ForegroundColor Cyan
     
-    $outputDir = "$script:buildDir\$PlatformName"
-    New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+    $OutputDir = "$script:BuildDir\$PlatformName"
+    New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
     
     # Use the spec file for more control with virtual environment
-    $pyinstallerCmd = @(
+    $PyInstallerCmd = @(
         ".\.venv\Scripts\python.exe", "-m", "PyInstaller"
         "JiraUtil.spec"
-        "--distpath", $outputDir       # Override output directory
+        "--distpath", $OutputDir       # Override output directory
         "--workpath", "build"          # Temporary build directory
         "--noconfirm"                  # Don't ask for confirmation
     )
     
     # Execute PyInstaller
-    Write-Host "Running: $($pyinstallerCmd -join ' ')" -ForegroundColor Gray
-    & $pyinstallerCmd[0] $pyinstallerCmd[1..($pyinstallerCmd.Length-1)]
+    Write-Host "Running: $($PyInstallerCmd -join ' ')" -ForegroundColor Gray
+    & $PyInstallerCmd[0] $PyInstallerCmd[1..($PyInstallerCmd.Length-1)]
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] $PlatformName build completed successfully" -ForegroundColor Green
         
                # Copy additional files
-               Copy-Item "jira_config_example.env" "$outputDir\jira_config.env" -ErrorAction SilentlyContinue
+               Copy-Item "jira_config_example.env" "$OutputDir\jira_config.env" -ErrorAction SilentlyContinue
                
                # Create docs folder structure
-               New-Item -ItemType Directory -Path "$outputDir\docs" -Force | Out-Null
-               New-Item -ItemType Directory -Path "$outputDir\docs\shared" -Force | Out-Null
+               New-Item -ItemType Directory -Path "$OutputDir\docs" -Force | Out-Null
+               New-Item -ItemType Directory -Path "$OutputDir\docs\shared" -Force | Out-Null
                
                # Create versioned README files
-               $userReadme = Get-Content "docs\user-guide.md" -Raw
+               $UserReadme = Get-Content "docs\user-guide.md" -Raw
                # Add version only if not already present
-               if ($userReadme -notmatch "## Version") {
-                   $userReadme = $userReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n## Version`n`nVersion: $version"
+               if ($UserReadme -notmatch "## Version") {
+                   $UserReadme = $UserReadme -replace "# JiraUtil - User Guide", "# JiraUtil - User Guide`n`n## Version`n`nVersion: $version"
                }
+               # Convert links for built executable environment
+               $UserReadme = Convert-LinksForBuiltExecutable -Content $UserReadme -DocsFolderName "docs"
                # Remove trailing blank lines
-               $userReadme = $userReadme.TrimEnd()
-               $userReadme | Out-File -FilePath "$outputDir\README.md" -Encoding UTF8
+               $UserReadme = $UserReadme.TrimEnd()
+               $UserReadme | Out-File -FilePath "$OutputDir\README.md" -Encoding UTF8
                
-               $commandReadme = Get-Content "docs\command-reference.md" -Raw
+               $CommandReadme = Get-Content "docs\command-reference.md" -Raw
                # Add version only if not already present (look for actual version chapter, not command descriptions)
-               if ($commandReadme -notmatch "## Version`n`nVersion:") {
-                   $commandReadme = $commandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
+               if ($CommandReadme -notmatch "## Version`n`nVersion:") {
+                   $CommandReadme = $CommandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
                }
                # Fix navigation for user environment (remove references to dev-only files)
-               $commandReadme = $commandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← Building Executables](building-executables.md)"
+               $CommandReadme = $CommandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← Building Executables](building-executables.md)"
                # Remove trailing blank lines
-               $commandReadme = $commandReadme.TrimEnd()
-               $commandReadme | Out-File -FilePath "$outputDir\docs\command-reference.md" -Encoding UTF8
+               $CommandReadme = $CommandReadme.TrimEnd()
+               $CommandReadme | Out-File -FilePath "$OutputDir\docs\command-reference.md" -Encoding UTF8
                
                # Copy building-executables.md for user reference
-               $buildingReadme = Get-Content "docs\building-executables.md" -Raw
+               $BuildingReadme = Get-Content "docs\building-executables.md" -Raw
                # Add version only if not already present
-               if ($buildingReadme -notmatch "## Version") {
-                   $buildingReadme = $buildingReadme -replace "# Building Executables", "# Building Executables`n`n## Version`n`nVersion: $version"
+               if ($BuildingReadme -notmatch "## Version") {
+                   $BuildingReadme = $BuildingReadme -replace "# Building Executables", "# Building Executables`n`n## Version`n`nVersion: $version"
                }
                # Fix navigation for user environment (remove references to dev-only files)
-               $buildingReadme = $buildingReadme -replace "\[← Testing\]\(testing\.md\)", "[← User Guide](../README.md)"
-               $buildingReadme = $buildingReadme -replace "\[Release and Versioning →\]\(release-and-versioning\.md\)", "[Command Reference →](command-reference.md)"
+               $BuildingReadme = $BuildingReadme -replace "\[← Testing\]\(testing\.md\)", "[← User Guide](../README.md)"
+               $BuildingReadme = $BuildingReadme -replace "\[Release and Versioning →\]\(release-and-versioning\.md\)", "[Command Reference →](command-reference.md)"
                # Remove trailing blank lines
-               $buildingReadme = $buildingReadme.TrimEnd()
-               $buildingReadme | Out-File -FilePath "$outputDir\docs\building-executables.md" -Encoding UTF8
+               $BuildingReadme = $BuildingReadme.TrimEnd()
+               $BuildingReadme | Out-File -FilePath "$OutputDir\docs\building-executables.md" -Encoding UTF8
                
-               $troubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
+               $TroubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
                # Add version only if not already present
-               if ($troubleshootReadme -notmatch "## Version") {
-                   $troubleshootReadme = $troubleshootReadme -replace "# Troubleshooting Guide", "# Troubleshooting Guide`n`n## Version`n`nVersion: $version"
+               if ($TroubleshootReadme -notmatch "## Version") {
+                   $TroubleshootReadme = $TroubleshootReadme -replace "# Troubleshooting Guide", "# Troubleshooting Guide`n`n## Version`n`nVersion: $version"
                }
                # Fix navigation for user environment (remove references to dev-only files)
-               $troubleshootReadme = $troubleshootReadme -replace "\[User Guide →\]\(\.\./user-guide\.md\)", "[End of User Documentation]"
+               $TroubleshootReadme = $TroubleshootReadme -replace "\[User Guide →\]\(\.\./user-guide\.md\)", "[End of User Documentation]"
                # Remove trailing blank lines
-               $troubleshootReadme = $troubleshootReadme.TrimEnd()
-               $troubleshootReadme | Out-File -FilePath "$outputDir\docs\troubleshooting.md" -Encoding UTF8
+               $TroubleshootReadme = $TroubleshootReadme.TrimEnd()
+               $TroubleshootReadme | Out-File -FilePath "$OutputDir\docs\troubleshooting.md" -Encoding UTF8
                
                # Copy and version shared documentation folder contents
-               $sharedFiles = @("command-examples.md", "configuration.md", "file-structure.md", "test-fixture-pattern.md")
-               foreach ($file in $sharedFiles) {
-                   $sourceFile = "docs\shared\$file"
-                   $targetFile = "$outputDir\docs\shared\$file"
-                   if (Test-Path $sourceFile) {
-                       $content = Get-Content $sourceFile -Raw
+               $SharedFiles = @("command-examples.md", "configuration.md", "file-structure.md", "test-fixture-pattern.md")
+               foreach ($file in $SharedFiles) {
+                   $SourceFile = "docs\shared\$file"
+                   $TargetFile = "$OutputDir\docs\shared\$file"
+                   if (Test-Path $SourceFile) {
+                       $content = Get-Content $SourceFile -Raw
                        # Add version after the title (first # heading) only if not already present
                        if ($content -notmatch "## Version") {
                            $content = $content -replace "^# [^`n]+", "`$&`n`n## Version`n`nVersion: $version"
                        }
                        # Remove trailing blank lines
                        $content = $content.TrimEnd()
-                       $content | Out-File -FilePath $targetFile -Encoding UTF8
+                       $content | Out-File -FilePath $TargetFile -Encoding UTF8
                    }
                }
         
         # Create a simple launcher script for the platform
         if ($TargetOS -eq "windows") {
-            $launcherContent = @"
+            $LauncherContent = @"
 @echo off
 echo JiraUtil - Jira Administration Tool
 echo ===================================
@@ -244,9 +265,9 @@ echo.
 pause
 JiraUtil.exe %*
 "@
-            $launcherContent | Out-File -FilePath "$outputDir\run.bat" -Encoding ASCII
+            $LauncherContent | Out-File -FilePath "$OutputDir\run.bat" -Encoding ASCII
         } elseif ($TargetOS -eq "macos" -or $TargetOS -eq "linux") {
-            $launcherContent = @"
+            $LauncherContent = @"
 #!/bin/bash
 echo "JiraUtil - Jira Administration Tool"
 echo "==================================="
@@ -256,15 +277,15 @@ echo ""
 read -p "Press Enter to continue..."
 ./JiraUtil "$@"
 "@
-            $launcherContent | Out-File -FilePath "$outputDir/run.sh" -Encoding UTF8
+            $LauncherContent | Out-File -FilePath "$OutputDir/run.sh" -Encoding UTF8
         }
         
         # Get executable size
-        $exePath = if ($TargetOS -eq "windows") { "$outputDir\JiraUtil.exe" } else { "$outputDir/JiraUtil" }
-        if (Test-Path $exePath) {
-            $size = (Get-Item $exePath).Length
-            $sizeMB = [math]::Round($size / 1MB, 2)
-            Write-Host "[PACKAGE] Executable size: $sizeMB MB" -ForegroundColor Cyan
+        $ExePath = if ($TargetOS -eq "windows") { "$OutputDir\JiraUtil.exe" } else { "$OutputDir/JiraUtil" }
+        if (Test-Path $ExePath) {
+            $Size = (Get-Item $ExePath).Length
+            $SizeMB = [math]::Round($Size / 1MB, 2)
+            Write-Host "[PACKAGE] Executable size: $SizeMB MB" -ForegroundColor Cyan
         }
         
     } else {
@@ -276,64 +297,64 @@ read -p "Press Enter to continue..."
 }
 
 # Build for requested platforms
-$buildResults = @{}
+$BuildResults = @{}
 
 if ($Platform -eq "all" -or $Platform -eq "windows") {
-    $buildResults["Windows"] = Build-Executable -PlatformName "Windows" -TargetOS "windows"
+    $BuildResults["Windows"] = Build-Executable -PlatformName "Windows" -TargetOS "windows"
 }
 
 # Note: macOS and Linux builds are temporarily disabled
 # if ($Platform -eq "all" -or $Platform -eq "macos") {
-#     $buildResults["macOS"] = Build-Executable -PlatformName "macOS" -TargetOS "macos"
+#     $BuildResults["macOS"] = Build-Executable -PlatformName "macOS" -TargetOS "macos"
 # }
 
 # if ($Platform -eq "all" -or $Platform -eq "linux") {
-#     $buildResults["Linux"] = Build-Executable -PlatformName "Linux" -TargetOS "linux"
+#     $BuildResults["Linux"] = Build-Executable -PlatformName "Linux" -TargetOS "linux"
 # }
 
 # Summary
 Write-Host "`n[SUMMARY] Build Summary" -ForegroundColor Cyan
 Write-Host "===============" -ForegroundColor Cyan
 
-foreach ($platform in $buildResults.Keys) {
-    $status = if ($buildResults[$platform]) { "[OK] Success" } else { "[FAIL] Failed" }
-    $color = if ($buildResults[$platform]) { "Green" } else { "Red" }
+foreach ($platform in $BuildResults.Keys) {
+    $status = if ($BuildResults[$platform]) { "[OK] Success" } else { "[FAIL] Failed" }
+    $color = if ($BuildResults[$platform]) { "Green" } else { "Red" }
     Write-Host "$platform`: $status" -ForegroundColor $color
 }
 
 # Show output directories
 Write-Host "`n[FILES] Output Directories:" -ForegroundColor Cyan
-Get-ChildItem $buildDir -Directory | ForEach-Object {
+Get-ChildItem $BuildDir -Directory | ForEach-Object {
     Write-Host "  - $($_.Name): $($_.FullName)" -ForegroundColor Yellow
 }
 
 # Create distribution package
 Write-Host "`n[PACKAGE] Creating distribution packages..." -ForegroundColor Cyan
 
-Get-ChildItem $buildDir -Directory | ForEach-Object {
-    $platformName = $_.Name
-    $platformDir = $_.FullName
+Get-ChildItem $BuildDir -Directory | ForEach-Object {
+    $PlatformName = $_.Name
+    $PlatformDir = $_.FullName
     
     # Create ZIP archive with version number
-    $zipPath = "$buildDir\JiraUtil-$platformName-v$version.zip"
-    Write-Host "Creating $zipPath..." -ForegroundColor Gray
+    $ZipPath = "$BuildDir\JiraUtil-$PlatformName-v$version.zip"
+    Write-Host "Creating $ZipPath..." -ForegroundColor Gray
     
     # Use PowerShell's Compress-Archive
-    Compress-Archive -Path "$platformDir\*" -DestinationPath $zipPath -Force
+    Compress-Archive -Path "$PlatformDir\*" -DestinationPath $ZipPath -Force
     
-    if (Test-Path $zipPath) {
-        $zipSize = (Get-Item $zipPath).Length
-        $zipSizeMB = [math]::Round($zipSize / 1MB, 2)
-        Write-Host "[OK] Created $zipPath ($zipSizeMB MB)" -ForegroundColor Green
+    if (Test-Path $ZipPath) {
+        $ZipSize = (Get-Item $ZipPath).Length
+        $ZipSizeMB = [math]::Round($ZipSize / 1MB, 2)
+        Write-Host "[OK] Created $ZipPath ($ZipSizeMB MB)" -ForegroundColor Green
     } else {
-        Write-Host "[FAIL] Failed to create $zipPath" -ForegroundColor Red
+        Write-Host "[FAIL] Failed to create $ZipPath" -ForegroundColor Red
     }
 }
 
 # Run markdown linting on generated docs
 Write-Host "`n[LINT] Running markdown linting on generated documentation..." -ForegroundColor Yellow
-$generatedDocsPath = "$script:buildDir\Windows"
-& "$PSScriptRoot\lint-markdown.ps1" -GeneratedPath "$generatedDocsPath/" -GeneratedReadmePath "$generatedDocsPath/README.md" -Fix
+$GeneratedDocsPath = "$script:buildDir\Windows"
+& "$PSScriptRoot\lint-markdown.ps1" -GeneratedPath "$GeneratedDocsPath/" -GeneratedReadmePath "$GeneratedDocsPath/README.md" -Fix
 if ($LASTEXITCODE -ne 0) {
     exit 1
 }
