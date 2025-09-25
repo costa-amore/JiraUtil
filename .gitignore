@@ -46,5 +46,7 @@ jira_config_backup.env
 # Version files (auto-generated)
 version_info.txt
 
+# Temporary files for development
+.temp/
 
 
