@@ -41,7 +41,7 @@ Version: 1.0.47.0
 
 ### For Users
 
-- **[User Guide](user-guide.md)** - Complete user guide for executable users
+- **[User Guide](docs/user-guide.md)** - Complete user guide for executable users
 - **[Command Reference](docs/command-reference.md)** - Quick command reference
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
