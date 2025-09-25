@@ -37,9 +37,11 @@ Jira_csv_helper/
 ├── setup-environment.ps1         # Environment setup
 ├──
 ├── # Build System
-├── build-windows.ps1             # Windows build script
-├── build-unix.sh                 # Unix build script
-├── JiraUtil.spec                 # PyInstaller spec
+├── scripts/                      # Build scripts
+│   ├── build.ps1                # Generic build script (defaults to Windows)
+│   ├── build-windows.ps1        # Windows-specific convenience script
+│   └── build-*.ps1              # Platform-specific helper scripts
+├── JiraUtil.spec                 # PyInstaller spec (auto-generated)
 ├──
 ├── # Configuration
 ├── jira_config_example.env      # Configuration template
@@ -78,9 +80,9 @@ Jira_csv_helper/
 
 ### Build System
 
-- **`build-windows.ps1`** - Windows build script (runs tests first)
-- **`build-all.ps1`** - All platforms convenience script
-- **`JiraUtil.spec`** - PyInstaller configuration
+- **`scripts/build.ps1`** - Generic build script (defaults to Windows)
+- **`scripts/build-windows.ps1`** - Windows-specific convenience script
+- **`JiraUtil.spec`** - PyInstaller configuration (auto-generated)
 
 ### Utilities
 
@@ -109,8 +111,9 @@ JiraUtil.py (root)
 2. **Develop**: Edit files in `src\`
 3. **Test**: `.\run.ps1 tests\run_tests.py`
 4. **Debug**: Use `.\run.ps1 debug-helper.py` for debugging any command
-5. **Build**: `.\build-windows.ps1` (runs tests first, then builds executables)
-6. **Rebuild**: `.\setup-environment.ps1` when dependencies change
+5. **Build**: `.\scripts\build.ps1` (runs tests first, then builds executables)
+6. **Platform-specific**: `.\scripts\build-windows.ps1` for Windows-specific builds
+7. **Rebuild**: `.\setup-environment.ps1` when dependencies change
 
 ## Adding New Features
 

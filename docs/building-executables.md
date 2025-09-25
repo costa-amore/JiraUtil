@@ -14,28 +14,39 @@ This guide explains how to build standalone executables for the JiraUtil project
 
 **Important**: The build process runs tests first and will abort if any tests fail. This ensures only working code gets built into executables.
 
-### Windows
+### Simple Build (Recommended)
 
 ```powershell
-# Build for all platforms
+# Build for Windows (default platform)
+.\scripts\build.ps1
 
-# Build for specific platform
-./build-windows.ps1 -Platform windows
+# Build with clean (removes previous build)
+.\scripts\build.ps1 -Clean
 
-# Clean build before building
-./build-windows.ps1 -Clean
+# Build for release (increments version)
+.\scripts\build.ps1 -BuildForRelease
 ```
 
-## Build Options
+### Platform-Specific Build Scripts
 
-### Platform Options
+```powershell
+# Windows-specific build script
+.\scripts\build-windows.ps1
+```
 
-- `windows` - Windows executable (.exe)
+## Build Strategy
+
+The project uses a **dedicated script per platform** approach:
+
+1. **Platform-specific scripts** (e.g., `build-windows.ps1`) - Handle platform-specific details
+2. **Generic build script** (`build.ps1`) - Contains the core build logic
+3. **Default behavior** - Running `build.ps1` without parameters defaults to Windows
 
 ### Build Scripts
 
-1. **`build-windows.ps1`** - PowerShell script for Windows
-2. **`JiraUtil.spec`** - PyInstaller configuration file
+- **`scripts/build.ps1`** - Generic build script (defaults to Windows)
+- **`scripts/build-windows.ps1`** - Windows-specific convenience script
+- **`JiraUtil.spec`** - PyInstaller configuration file (auto-generated)
 
 ## Output Structure
 
@@ -55,7 +66,6 @@ See [File Structure Reference](shared/file-structure.md) for complete file organ
 3. **Edit** `jira_config.env` with your Jira credentials (file is ready to use)
 4. **Run** the executable:
    - Windows: Double-click `JiraUtil.exe` or run `run.bat`
-   - macOS/Linux: Run `./JiraUtil` or `./run.sh`
 
 ### Configuration
 
@@ -119,16 +129,13 @@ pip install -r requirements.txt
 
 The build process automatically runs tests before building, but you can also verify manually:
 
-```bash
-# Run tests before building (good practice - although the build process runs the tests as well )
+```powershell
+# Run tests before building (good practice - although the build process runs the tests as well)
 .\run.ps1 tests\run_tests.py
 
 # Test the built executables
 # Windows
-.\JiraUtil.exe --help
-
-# macOS/Linux
-./JiraUtil --help
+.\build-executables\Windows\JiraUtil.exe --help
 ```
 
 ### Performance Considerations
@@ -141,7 +148,7 @@ The build process automatically runs tests before building, but you can also ver
 
 Typical executable sizes:
 
-- **Windows**: ~15-25 MB
+- **Windows**: ~32 MB (current build)
 
 Sizes may vary depending on included dependencies and compression settings.
 

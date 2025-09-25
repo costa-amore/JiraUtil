@@ -10,39 +10,61 @@ JiraUtil/
 ├── run.bat               # Windows launcher script
 ├── jira_config.env       # Configuration file (ready to edit)
 ├── README.md             # User guide
-├── command-reference.md  # Quick command reference
-├── troubleshooting.md    # Common issues and solutions
-└── shared/               # Shared documentation references
-    ├── configuration.md
-    ├── test-fixture-pattern.md
-    ├── file-structure.md
-    └── command-examples.md
+└── docs/                 # Documentation folder
+    ├── command-reference.md  # Quick command reference
+    ├── troubleshooting.md    # Common issues and solutions
+    └── shared/               # Shared documentation references
+        ├── configuration.md
+        ├── test-fixture-pattern.md
+        ├── file-structure.md
+        └── command-examples.md
 ```
 
 ## Development Structure
 
 ```text
-Jira_csv_helper/
+JiraUtil/
 ├── # Entry Points
 ├── JiraUtil.py           # Main CLI entry point
 ├── ju.py                 # Short alias
 ├── run.ps1               # PowerShell runner
+├── README.md             # Project documentation
+├── requirements.txt      # Python dependencies
+├── jira_config_example.env # Configuration template
 ├──
 ├── # Development & Testing
-├── debug-helper.py       # Debug helper
+├── tests/                # Test files
+├── tools/                # Development tools
+│   ├── debug-helper.py   # Debug helper
+│   ├── set-version.py    # Version management
+│   └── ...
 ├──
 ├── # Environment Management
 ├── setup-environment.ps1 # Environment setup
 ├──
 ├── # Build System
-├── build-windows.ps1     # Windows build script
-├── build-unix.sh         # Unix build script
-├── JiraUtil.spec         # PyInstaller spec
+├── scripts/              # Build and release scripts
+│   ├── build-windows.ps1 # Windows build script
+│   ├── build.ps1         # Generic build script
+│   ├── release.ps1       # Release script
+│   └── ...
+├── docker/               # Docker configuration
 ├──
 ├── # Source Code
 ├── src/                  # Main source code
-├── tests/                # Test files
+│   ├── cli/              # CLI components
+│   ├── auth/             # Authentication
+│   ├── config/           # Configuration
+│   ├── csv_utils/        # CSV processing
+│   ├── testfixture/      # Test fixture management
+│   └── ...
 ├── docs/                 # Documentation
+│   ├── shared/           # Shared documentation
+│   └── ...
+├──
+├── # Build Output
+├── build/                # PyInstaller build files
+├── build-executables/    # Generated executables
 └── .venv/                # Virtual environment
 ```
 
