@@ -168,6 +168,31 @@ class TestTestFixtureAPI:
             # Verify the label was added
             call_args = mock_issue.update.call_args
             assert "TransitionSprintItems" in call_args[1]["fields"]["labels"]
+    
+    def test_trigger_operation_removes_and_adds_label_when_present(self):
+        """Test that trigger operation removes existing label then adds it back."""
+        # Given: Test scenario with issue that already has the trigger label
+        from testfixture.workflow import run_trigger_operation
+        
+        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class:
+            mock_jira_manager = Mock()
+            mock_manager_class.return_value = mock_jira_manager
+            mock_jira_manager.connect.return_value = True
+            
+            # Mock issue with the label already present
+            mock_issue = Mock()
+            mock_issue.key = "TAPS-212"
+            mock_issue.fields.labels = ["TransitionSprintItems"]
+            mock_jira_manager.jira.issue.return_value = mock_issue
+            
+            # When: User runs trigger operation
+            with patch('builtins.print'):
+                run_trigger_operation("https://jira.example.com", "user", "pass", "TransitionSprintItems", "TAPS-212")
+            
+            # Then: Should remove the label first, then add it back
+            mock_jira_manager.connect.assert_called_once()
+            assert mock_jira_manager.jira.issue.call_count == 2  # Called twice: once to get, once after remove
+            assert mock_issue.update.call_count == 2  # Called twice: once to remove, once to add
 
 
 if __name__ == "__main__":

@@ -69,7 +69,18 @@ def run_trigger_operation(jira_url: str, username: str, password: str, label: st
     # Get the issue
     issue = manager.jira.issue(issue_key)
     
-    # Add the label
+    # Check if issue has the label
     current_labels = issue.fields.labels or []
+    
+    if label in current_labels:
+        # Remove the label
+        new_labels = [l for l in current_labels if l != label]
+        issue.update(fields={"labels": new_labels})
+        
+        # Re-fetch the issue to get updated state
+        issue = manager.jira.issue(issue_key)
+        current_labels = issue.fields.labels or []
+    
+    # Add the label
     new_labels = list(current_labels) + [label]
     issue.update(fields={"labels": new_labels})
