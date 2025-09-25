@@ -143,56 +143,59 @@ class TestTestFixtureAPI:
     
     def test_trigger_operation_adds_label_when_not_present(self):
         """Test that trigger operation adds label when issue doesn't have it."""
-        # Given: Test scenario with issue that doesn't have the trigger label
-        from testfixture.workflow import run_trigger_operation
+        # Given: Issue without the trigger label
+        issue_without_label = self._create_mock_issue_with_labels([])
+        mock_manager = self._create_mock_jira_manager(issue_without_label)
         
-        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class:
-            mock_jira_manager = Mock()
-            mock_manager_class.return_value = mock_jira_manager
-            mock_jira_manager.connect.return_value = True
-            
-            # Mock issue without the label
-            mock_issue = Mock()
-            mock_issue.key = "TAPS-212"
-            mock_issue.fields.labels = []
-            mock_jira_manager.jira.issue.return_value = mock_issue
-            
-            # When: User runs trigger operation
-            with patch('builtins.print'):
-                run_trigger_operation("https://jira.example.com", "user", "pass", "TransitionSprintItems", "TAPS-212")
-            
-            # Then: Should add the label to the issue
-            mock_jira_manager.connect.assert_called_once()
-            mock_jira_manager.jira.issue.assert_called_once_with("TAPS-212")
-            mock_issue.update.assert_called_once()
-            # Verify the label was added
-            call_args = mock_issue.update.call_args
-            assert "TransitionSprintItems" in call_args[1]["fields"]["labels"]
+        # When: Trigger operation is executed
+        self._execute_trigger_operation(mock_manager)
+        
+        # Then: Label should be added to the issue
+        self._assert_label_was_added(issue_without_label)
     
     def test_trigger_operation_removes_and_adds_label_when_present(self):
         """Test that trigger operation removes existing label then adds it back."""
-        # Given: Test scenario with issue that already has the trigger label
-        from testfixture.workflow import run_trigger_operation
+        # Given: Issue with the trigger label already present
+        issue_with_label = self._create_mock_issue_with_labels(["TransitionSprintItems"])
+        mock_manager = self._create_mock_jira_manager(issue_with_label)
         
+        # When: Trigger operation is executed
+        self._execute_trigger_operation(mock_manager)
+        
+        # Then: Label should be removed then added back
+        self._assert_label_was_removed_then_added(issue_with_label)
+    
+    def _create_mock_issue_with_labels(self, labels):
+        """Create a mock issue with specified labels."""
+        mock_issue = Mock()
+        mock_issue.key = "TAPS-212"
+        mock_issue.fields.labels = labels
+        return mock_issue
+    
+    def _create_mock_jira_manager(self, mock_issue):
+        """Create a mock Jira manager that returns the specified issue."""
+        mock_jira_manager = Mock()
+        mock_jira_manager.connect.return_value = True
+        mock_jira_manager.jira.issue.return_value = mock_issue
+        return mock_jira_manager
+    
+    def _execute_trigger_operation(self, mock_manager):
+        """Execute the trigger operation with mocked dependencies."""
+        from testfixture.workflow import run_trigger_operation
         with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class:
-            mock_jira_manager = Mock()
-            mock_manager_class.return_value = mock_jira_manager
-            mock_jira_manager.connect.return_value = True
-            
-            # Mock issue with the label already present
-            mock_issue = Mock()
-            mock_issue.key = "TAPS-212"
-            mock_issue.fields.labels = ["TransitionSprintItems"]
-            mock_jira_manager.jira.issue.return_value = mock_issue
-            
-            # When: User runs trigger operation
+            mock_manager_class.return_value = mock_manager
             with patch('builtins.print'):
                 run_trigger_operation("https://jira.example.com", "user", "pass", "TransitionSprintItems", "TAPS-212")
-            
-            # Then: Should remove the label first, then add it back
-            mock_jira_manager.connect.assert_called_once()
-            assert mock_jira_manager.jira.issue.call_count == 2  # Called twice: once to get, once after remove
-            assert mock_issue.update.call_count == 2  # Called twice: once to remove, once to add
+    
+    def _assert_label_was_added(self, mock_issue):
+        """Assert that the label was added to the issue."""
+        mock_issue.update.assert_called_once()
+        call_args = mock_issue.update.call_args
+        assert "TransitionSprintItems" in call_args[1]["fields"]["labels"]
+    
+    def _assert_label_was_removed_then_added(self, mock_issue):
+        """Assert that the label was removed then added back."""
+        assert mock_issue.update.call_count == 2  # Called twice: once to remove, once to add
 
 
 if __name__ == "__main__":
