@@ -110,9 +110,32 @@ def create_temp_env_file(url, username, password, comment_prefix="# Jira Configu
     return create_temp_config_file(content, suffix)
 
 # CLI test data - using functions from production code
-from config.validator import TEMPLATE_PATTERNS
-from auth.credentials import (CREDENTIAL_TEMPLATE_PATTERNS, JIRA_ENV_VARS, 
-                             generate_env_file_content, create_template_env_content)
+try:
+    from config.validator import TEMPLATE_PATTERNS
+    from auth.credentials import (CREDENTIAL_TEMPLATE_PATTERNS, JIRA_ENV_VARS, 
+                                 generate_env_file_content, create_template_env_content)
+except ImportError:
+    # Fallback for when these modules aren't available
+    TEMPLATE_PATTERNS = ['yourcompany', 'your.email', 'your_api', 'token_here']
+    CREDENTIAL_TEMPLATE_PATTERNS = {
+        'url': ['yourcompany', 'example', 'placeholder'],
+        'username': ['your.email', 'example', 'placeholder', 'user@'],
+        'password': ['your_api', 'example', 'placeholder', 'token_here']
+    }
+    JIRA_ENV_VARS = {
+        'url': 'JIRA_URL',
+        'username': 'JIRA_USERNAME', 
+        'password': 'JIRA_PASSWORD'
+    }
+    
+    def generate_env_file_content(url, username, password, comment_prefix="# Jira Configuration"):
+        return f"""{comment_prefix}
+{JIRA_ENV_VARS['url']}={url}
+{JIRA_ENV_VARS['username']}={username}
+{JIRA_ENV_VARS['password']}={password}"""
+    
+    def create_template_env_content():
+        return generate_env_file_content("", "", "")
 
 # Re-export production functions for convenience
 generate_env_content = generate_env_file_content
@@ -211,3 +234,37 @@ def create_field_extractor_rows(rows_data):
     header = ["Issue key", "Summary", "Parent key", "Status"]
     data_rows = [list(row) for row in rows_data]
     return [header] + data_rows
+
+# Version manager test helpers
+def create_temp_version_file():
+    """Create a temporary version file for testing."""
+    import tempfile
+    import os
+    from pathlib import Path
+    
+    temp_dir = tempfile.mkdtemp()
+    version_file = os.path.join(temp_dir, "test_version.json")
+    return Path(version_file), temp_dir
+
+def create_version_manager_with_version(major, minor, build=0, local=0):
+    """Create a VersionManager with a specific version."""
+    import sys
+    from pathlib import Path
+    
+    # Add tools directory to path for imports
+    sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
+    from version_manager import VersionManager
+    
+    version_file, temp_dir = create_temp_version_file()
+    manager = VersionManager(str(version_file))
+    manager.set_manual_version(major, minor)
+    
+    # Increment build if needed
+    for _ in range(build):
+        manager.increment_build()
+    
+    # Increment local if needed
+    for _ in range(local):
+        manager.increment_local_build()
+    
+    return manager, version_file, temp_dir
