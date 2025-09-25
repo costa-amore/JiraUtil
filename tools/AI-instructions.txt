@@ -10,6 +10,13 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
     Prove that the code doesn't support this behaviour yet by running the test and see it fail for the expected reason
     then make the test pass
     when green: ask for confirmation by preparing a commit with a message describing the use-case added
+
+**CRITICAL TDD STEP-BY-STEP PROCESS:**
+1. Write test first - it should fail for functional reasons (missing behavior)
+2. Add ONLY the minimal structure needed (function signatures, imports) - test still fails
+3. Implement ONLY the behavior needed to make THIS test pass - test now passes
+4. Commit this single use-case
+5. Move to next simplest example and repeat
   then continue defining the next simplest example, gradually building all use-cases for the functionality
   
   when the feature is complete 
@@ -33,6 +40,8 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
 
 **Test Failure Verification:**
 - Tests must fail for functional reasons (missing behavior), not technical reasons (imports, syntax, etc.)
+- Examples of functional failures: NotImplementedError, missing function, wrong behavior
+- Examples of technical failures: ImportError, SyntaxError, AttributeError on imports
 
 **Commit Message Prefixes:**
 - Use: feat, fix, cleanup, chore, refactor
@@ -54,4 +63,11 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
 **File Splitting Criteria:**
 - Large files: >100 lines
 - Split into files with single purpose
+
+**MINIMAL IMPLEMENTATION RULES:**
+- NEVER implement more than needed for the current test to pass
+- NEVER add CLI integration until you have a working function
+- NEVER add multiple features in one step
+- ALWAYS implement behavior only after structure is in place
+- ALWAYS verify test fails for functional reasons before implementing
 
