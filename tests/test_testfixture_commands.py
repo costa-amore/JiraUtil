@@ -26,32 +26,29 @@ class TestIssueSummaryPatternParsing:
     
     def test_issue_summary_pattern_parsing(self):
         """Test comprehensive issue summary pattern parsing for all supported formats."""
-        # Test all valid issue summary patterns with different scenarios
+        # Test all valid issue summary patterns
         issue_summary_test_cases = [
             # Format 1: "I was in <status1> - expected to be in <status2>"
-            ("I was in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),  # Already in target
-            ("I was in To Do - expected to be in In Progress", "In Progress", True, "To Do", "To Do", "In Progress"),  # Needs update
+            ("I was in To Do - expected to be in In Progress", "To Do", "In Progress"),
             
             # Format 2: "[<context> - ]starting in <status1> - expected to be in <status2>"
-            ("Bug fix - starting in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),  # With context, already in target
-            ("Bug fix - starting in To Do - expected to be in In Progress", "In Progress", True, "To Do", "To Do", "In Progress"),  # With context, needs update
-            ("starting in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),  # Without context, already in target
-            ("starting in To Do - expected to be in In Progress", "In Progress", True, "To Do", "To Do", "In Progress"),  # Without context, needs update
+            ("Bug fix - starting in To Do - expected to be in In Progress", "To Do", "In Progress"),  # With context
+            ("starting in To Do - expected to be in In Progress", "To Do", "In Progress"),  # Without context
             
             # Case insensitive
-            ("i was in to do - expected to be in in progress", "TO DO", False, "to do", "to do", "in progress"),
-            ("BUG FIX - STARTING IN TO DO - EXPECTED TO BE IN IN PROGRESS", "to do", False, "TO DO", "TO DO", "IN PROGRESS"),
+            ("i was in to do - expected to be in in progress", "to do", "in progress"),
+            ("BUG FIX - STARTING IN TO DO - EXPECTED TO BE IN IN PROGRESS", "TO DO", "IN PROGRESS"),
             
             # More permissive patterns (anything before key phrases is ignored)
-            ("Context starting in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),
-            ("Some random text before starting in Done - expected to be in Closed", "Done", False, "Done", "Done", "Closed"),
+            ("Context starting in To Do - expected to be in In Progress", "To Do", "In Progress"),
+            ("Some random text before starting in Done - expected to be in Closed", "Done", "Closed"),
         ]
         
-        for issue_summary, current_status, should_update, target_status, expected_status1, expected_status2 in issue_summary_test_cases:
+        for issue_summary, expected_status1, expected_status2 in issue_summary_test_cases:
             # Test summary pattern parsing (for reset operations)
-            summary_result = parse_summary_pattern(issue_summary, current_status)
+            summary_result = parse_summary_pattern(issue_summary)
             assert summary_result is not None, f"Should parse issue summary pattern: {issue_summary}"
-            assert summary_result == (should_update, target_status), f"Should return correct summary values for: {issue_summary}"
+            assert summary_result == (expected_status1, expected_status2), f"Should return correct summary values for: {issue_summary}"
             
             # Test expectation pattern parsing (for assert operations)
             expectation_result = parse_expectation_pattern(issue_summary)
@@ -76,7 +73,7 @@ class TestIssueSummaryPatternParsing:
         ]
         
         for invalid_issue_summary in invalid_issue_summary_patterns:
-            summary_result = parse_summary_pattern(invalid_issue_summary, "Some Status")
+            summary_result = parse_summary_pattern(invalid_issue_summary)
             expectation_result = parse_expectation_pattern(invalid_issue_summary)
             assert summary_result is None, f"Should not parse invalid issue summary pattern: '{invalid_issue_summary}'"
             assert expectation_result is None, f"Should not parse invalid expectation pattern: '{invalid_issue_summary}'"

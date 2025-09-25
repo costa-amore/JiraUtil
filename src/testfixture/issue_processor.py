@@ -48,22 +48,24 @@ def process_issues_by_label(manager: JiraInstanceManager, label: str) -> Dict:
         print(f"  Current status: {current_status}")
         
         # Parse summary pattern
-        parse_result = parse_summary_pattern(summary, current_status)
+        parse_result = parse_summary_pattern(summary)
         if not parse_result:
             print(f"  Skipping - summary doesn't match expected pattern")
             results['skipped'] += 1
             continue
         
-        should_update, target_status = parse_result
-        if not should_update:
-            print(f"  Skipping - no update needed")
+        starting_status, target_status = parse_result
+        
+        # Check if current status already matches starting status
+        if current_status.upper() == starting_status.upper():
+            print(f"  Skipping - current status '{current_status}' already matches starting status '{starting_status}'")
             results['skipped'] += 1
             continue
         
-        print(f"  Target status: {target_status}")
+        print(f"  Starting status: {starting_status}")
         
         # Update status using the manager
-        if manager.update_issue_status(key, target_status):
+        if manager.update_issue_status(key, starting_status):
             results['updated'] += 1
         else:
             results['errors'].append(f"Failed to update {key}")

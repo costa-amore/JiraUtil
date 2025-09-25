@@ -18,29 +18,22 @@ SUMMARY_PATTERN = r".*(?:I was in|starting in) (.+?) - expected to be in (.+)"
 DEFAULT_TEST_FIXTURE_LABEL = "rule-testing"
 
 
-def parse_summary_pattern(summary: str, current_status: str) -> Optional[Tuple[bool, str]]:
+def parse_summary_pattern(summary: str) -> Optional[Tuple[str, str]]:
     """
     Parse issue summary to extract status names for rule-testing pattern.
     
     Args:
         summary: Issue summary text
-        current_status: Current issue status
         
     Returns:
-        Tuple of (should_update, target_status) if pattern matches, None otherwise
+        Tuple of (status1, status2) if pattern matches, None otherwise
     """
     match = re.search(SUMMARY_PATTERN, summary, re.IGNORECASE)
     
     if match:
         status1 = match.group(1).strip()
         status2 = match.group(2).strip()
-        
-        # Check if current status already matches target status
-        if current_status.upper() == status1.upper():
-            print(f"  Skipping - current status '{current_status}' already matches target status '{status1}'")
-            return (False, status1)
-        
-        return (True, status1)
+        return (status1, status2)
     
     return None
 

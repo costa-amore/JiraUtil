@@ -117,14 +117,14 @@ PROJ-3,"Another task","Another description",EPIC-2,To Do,Bob Wilson,2024-03-10 1
         
         # Test 1: Pattern parsing functionality
         test_patterns = [
-            ("I was in To Do - expected to be in In Progress", "To Do", False, "To Do"),  # Already in target status
-            ("I was in In Progress - expected to be in Done", "In Progress", False, "In Progress"),  # Already in target status
-            ("I was in Done - expected to be in Closed", "Done", False, "Done"),  # Already in target status
+            ("I was in To Do - expected to be in In Progress", "To Do", "In Progress"),
+            ("I was in In Progress - expected to be in Done", "In Progress", "Done"),
+            ("I was in Done - expected to be in Closed", "Done", "Closed"),
         ]
         
-        for summary, current_status, should_update, target_status in test_patterns:
-            result = parse_summary_pattern(summary, current_status)
-            assert result == (should_update, target_status), f"Pattern parsing failed for: {summary}"
+        for summary, expected_status1, expected_status2 in test_patterns:
+            result = parse_summary_pattern(summary)
+            assert result == (expected_status1, expected_status2), f"Pattern parsing failed for: {summary}"
         
         # Test expectation parsing
         expectation_patterns = [
