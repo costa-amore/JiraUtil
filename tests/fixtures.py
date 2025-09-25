@@ -268,3 +268,100 @@ def create_version_manager_with_version(major, minor, build=0, local=0):
         manager.increment_local_build()
     
     return manager, version_file, temp_dir
+
+
+# Build test fixtures
+def create_test_project_structure(temp_dir, project_name="test_project"):
+    """Create a complete test project structure for build integration tests."""
+    import shutil
+    from pathlib import Path
+    
+    project_root = Path(__file__).parent.parent
+    test_project_dir = Path(temp_dir) / project_name
+    test_project_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Copy necessary directories
+    dirs_to_copy = ["tools", "scripts", "src", "tests"]
+    for dir_name in dirs_to_copy:
+        src_dir = project_root / dir_name
+        if src_dir.exists():
+            shutil.copytree(src_dir, test_project_dir / dir_name)
+    
+    # Copy individual files
+    files_to_copy = [
+        "JiraUtil.py", "ju.py", "run.ps1", "setup-environment.ps1",
+        "requirements.txt"
+    ]
+    
+    for file_name in files_to_copy:
+        src_file = project_root / file_name
+        if src_file.exists():
+            shutil.copy2(src_file, test_project_dir)
+    
+    return test_project_dir
+
+
+def create_version_file_with_version(temp_dir, major=1, minor=0, build=0, local=0):
+    """Create a version file with specific version components."""
+    import json
+    from pathlib import Path
+    
+    version_file = Path(temp_dir) / "test_version.json"
+    version_data = {
+        "major": major,
+        "minor": minor,
+        "build": build,
+        "local": local,
+        "description": "JiraUtil - Jira Administration Tool"
+    }
+    
+    with open(version_file, 'w') as f:
+        json.dump(version_data, f, indent=2)
+    
+    return version_file
+
+
+def create_mock_code_change_detector(has_changes=True):
+    """Create a mock code change detector for testing."""
+    from unittest.mock import Mock
+    
+    mock_detector = Mock()
+    mock_detector.has_code_changed.return_value = has_changes
+    return mock_detector
+
+
+def run_version_command(command, version_file, cwd=None):
+    """Run a version manager command and return the result."""
+    import subprocess
+    from pathlib import Path
+    
+    if cwd is None:
+        cwd = Path(__file__).parent.parent
+    
+    cmd = ["python", "tools/version_manager.py"] + command + ["--version-file", str(version_file)]
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+
+
+def get_version_from_file(version_file):
+    """Get version string from version file."""
+    import json
+    
+    with open(version_file, 'r') as f:
+        version_data = json.load(f)
+    
+    return f"{version_data['major']}.{version_data['minor']}.{version_data['build']}.{version_data['local']}"
+
+
+def get_version_components(version_file):
+    """Get version components from version file."""
+    import json
+    
+    with open(version_file, 'r') as f:
+        version_data = json.load(f)
+    
+    return {
+        'major': version_data['major'],
+        'minor': version_data['minor'],
+        'build': version_data['build'],
+        'local': version_data['local']
+    }
