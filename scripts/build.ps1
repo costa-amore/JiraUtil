@@ -207,23 +207,10 @@ function Build-Executable {
                    $CommandReadme = $CommandReadme -replace "# Command Reference", "# Command Reference`n`n## Version`n`nVersion: $version"
                }
                # Fix navigation for user environment (remove references to dev-only files)
-               $CommandReadme = $CommandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← Building Executables](building-executables.md)"
+               $CommandReadme = $CommandReadme -replace "\[← Release and Versioning\]\(release-and-versioning\.md\)", "[← User Guide](../README.md)"
                # Remove trailing blank lines
                $CommandReadme = $CommandReadme.TrimEnd()
                $CommandReadme | Out-File -FilePath "$OutputDir\docs\command-reference.md" -Encoding UTF8
-               
-               # Copy building-executables.md for user reference
-               $BuildingReadme = Get-Content "docs\building-executables.md" -Raw
-               # Add version only if not already present
-               if ($BuildingReadme -notmatch "## Version") {
-                   $BuildingReadme = $BuildingReadme -replace "# Building Executables", "# Building Executables`n`n## Version`n`nVersion: $version"
-               }
-               # Fix navigation for user environment (remove references to dev-only files)
-               $BuildingReadme = $BuildingReadme -replace "\[← Testing\]\(testing\.md\)", "[← User Guide](../README.md)"
-               $BuildingReadme = $BuildingReadme -replace "\[Release and Versioning →\]\(release-and-versioning\.md\)", "[Command Reference →](command-reference.md)"
-               # Remove trailing blank lines
-               $BuildingReadme = $BuildingReadme.TrimEnd()
-               $BuildingReadme | Out-File -FilePath "$OutputDir\docs\building-executables.md" -Encoding UTF8
                
                $TroubleshootReadme = Get-Content "docs\troubleshooting.md" -Raw
                # Add version only if not already present
