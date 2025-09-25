@@ -26,7 +26,7 @@ A powerful command-line tool for Jira administrators and power users.
 
 ## ⚙️ Configuration
 
-See [Configuration Reference](docs/shared/configuration.md) for detailed setup instructions.
+See [Configuration Reference](shared/configuration.md) for detailed setup instructions.
 
 **Quick Setup:**
 
@@ -36,7 +36,7 @@ See [Configuration Reference](docs/shared/configuration.md) for detailed setup i
 
 ## 📖 Command Examples
 
-See [Command Examples Reference](docs/shared/command-examples.md) for comprehensive examples and usage patterns.
+See [Command Examples Reference](shared/command-examples.md) for comprehensive examples and usage patterns.
 
 ## 🔧 Command Line Options
 
@@ -53,7 +53,7 @@ See [Command Examples Reference](docs/shared/command-examples.md) for comprehens
 
 ## 🎯 Test Fixture Pattern
 
-See [Test Fixture Pattern Reference](docs/shared/test-fixture-pattern.md) for detailed pattern requirements and behavior.
+See [Test Fixture Pattern Reference](shared/test-fixture-pattern.md) for detailed pattern requirements and behavior.
 
 ## 🚨 Troubleshooting
 
@@ -81,14 +81,14 @@ See [Test Fixture Pattern Reference](docs/shared/test-fixture-pattern.md) for de
 
 ## 📁 File Structure
 
-See [File Structure Reference](docs/shared/file-structure.md) for complete file organization details.
+See [File Structure Reference](shared/file-structure.md) for complete file organization details.
 
 ## 📚 Documentation
 
 For detailed information, see the complete documentation:
 
-- **[Command Reference](docs/command-reference.md)** - Complete command syntax and options
-- **[Troubleshooting Guide](docs/troubleshooting.md)** - Detailed troubleshooting and error solutions
+- **[Command Reference](command-reference.md)** - Complete command syntax and options
+- **[Troubleshooting Guide](troubleshooting.md)** - Detailed troubleshooting and error solutions
 
 ---
 
