@@ -92,3 +92,75 @@ def create_assert_result(processed=0, passed=0, failed=0, not_evaluated=0, failu
         'failures': failures or [],
         'not_evaluated_keys': not_evaluated_keys or []
     }
+
+# CLI test helpers
+def create_temp_config_file(content, suffix='.env'):
+    """Create a temporary config file for testing."""
+    import tempfile
+    from pathlib import Path
+    
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+    temp_file.write(content)
+    temp_file.close()
+    return Path(temp_file.name)
+
+def create_temp_env_file(url, username, password, comment_prefix="# Jira Configuration", suffix='.env'):
+    """Create a temporary environment file with given credentials."""
+    content = generate_env_content(url, username, password, comment_prefix)
+    return create_temp_config_file(content, suffix)
+
+# CLI test data - using functions from production code
+from config.validator import TEMPLATE_PATTERNS
+from auth.credentials import (CREDENTIAL_TEMPLATE_PATTERNS, JIRA_ENV_VARS, 
+                             generate_env_file_content, create_template_env_content)
+
+# Re-export production functions for convenience
+generate_env_content = generate_env_file_content
+create_template_config_content = create_template_env_content
+
+def create_configured_config_content():
+    """Create configured config content with real-looking values."""
+    return generate_env_file_content(
+        url="https://mycompany.atlassian.net",
+        username="john.doe@mycompany.com",
+        password="abc123def456ghi789"
+    )
+
+# Template generators for different scenarios using production function
+def create_empty_config_content():
+    """Create empty config content (no values)."""
+    return generate_env_file_content("", "", "")
+
+def create_partial_config_content():
+    """Create config content with only URL set."""
+    return generate_env_file_content("https://partial.atlassian.net", "", "")
+
+def create_invalid_config_content():
+    """Create config content with invalid values."""
+    return generate_env_file_content("not-a-url", "invalid-email", "short")
+
+# Pre-generated config content for convenience
+TEMPLATE_CONFIG_CONTENT = create_template_config_content()
+CONFIGURED_CONFIG_CONTENT = create_configured_config_content()
+
+# CLI command test cases
+CSV_EXPORT_COMMANDS = [
+    (['csv-export', 'remove-newlines', 'input.csv'], 'csv-export', 'remove-newlines', 'input.csv'),
+    (['ce', 'rn', 'input.csv'], 'ce', 'rn', 'input.csv'),
+    (['csv-export', 'extract-to-comma-separated-list', 'Status', 'input.csv'], 'csv-export', 'extract-to-comma-separated-list', 'input.csv'),
+    (['csv-export', 'fix-dates-eu', 'input.csv', '--output', 'output.csv'], 'csv-export', 'fix-dates-eu', 'input.csv'),
+]
+
+TEST_FIXTURE_COMMANDS = [
+    (['test-fixture', 'reset', 'custom-label'], 'test-fixture', 'reset', 'custom-label'),
+    (['tf', 'r'], 'tf', 'r', 'rule-testing'),
+    (['test-fixture', 'assert', 'custom-label'], 'test-fixture', 'assert', 'custom-label'),
+    (['tf', 'a'], 'tf', 'a', 'rule-testing'),
+]
+
+UTILITY_COMMANDS = [
+    (['list'], 'list'),
+    (['ls'], 'ls'),
+    (['status'], 'status'),
+    (['st'], 'st'),
+]

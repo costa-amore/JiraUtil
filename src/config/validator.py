@@ -9,6 +9,11 @@ from pathlib import Path
 from utils.colors import get_colored_text
 from typing import Tuple
 
+# Template patterns used for detecting placeholder values in config files
+TEMPLATE_PATTERNS = [
+    'yourcompany', 'your.email', 'your_api', 'token_here'
+]
+
 
 def check_config_file_for_template_values(config_path: Path) -> Tuple[bool, str]:
     """
@@ -26,9 +31,7 @@ def check_config_file_for_template_values(config_path: Path) -> Tuple[bool, str]
         non_comment_lines = [line for line in lines if not line.strip().startswith('#')]
         non_comment_content = '\n'.join(non_comment_lines)
         
-        has_template_values = any(pattern in non_comment_content.lower() for pattern in [
-            'yourcompany', 'your.email', 'your_api', 'token_here'
-        ])
+        has_template_values = any(pattern in non_comment_content.lower() for pattern in TEMPLATE_PATTERNS)
         
         if has_template_values:
             return True, get_colored_text(f"[WARN]  {config_path.name} contains template values - needs configuration")
