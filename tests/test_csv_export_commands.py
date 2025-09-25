@@ -16,8 +16,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from jira_cleaner import run_remove_newlines
 from csv_utils import run_extract_field_values
 from jira_dates_eu import run as run_jira_dates_eu
-from .fixtures import (create_temp_csv_file, CSV_WITH_NEWLINES, CSV_FIELD_EXTRACTION, 
-                       CSV_WITH_DATES, CSV_EMPTY)
+from .fixtures.csv_scenarios import (
+    create_csv_with_embedded_newlines,
+    create_csv_for_field_extraction, 
+    create_csv_with_iso_dates,
+    create_newlines_removal_scenario,
+    create_field_extraction_scenario,
+    create_date_conversion_scenario
+)
+from .fixtures.base_fixtures import create_temp_csv_file, CSV_EMPTY
 
 
 class TestCSVRemoveNewlinesCommand:
@@ -25,11 +32,11 @@ class TestCSVRemoveNewlinesCommand:
     
     def test_remove_newlines_functionality(self):
         """Test newline removal from CSV fields."""
-        # Test basic functionality
-        input_file = create_temp_csv_file(CSV_WITH_NEWLINES)
+        # Given: A CSV file containing fields with embedded newlines
+        csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
         try:
-            run_remove_newlines(input_file, None)
-            output_path = input_file.with_name(f"{input_file.stem}-no-newlines.csv")
+            run_remove_newlines(csv_with_embedded_newlines, None)
+            output_path = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-no-newlines.csv")
             assert output_path.exists(), "Output file should be created"
             
             with open(output_path, 'r', encoding='utf-8') as f:
@@ -40,31 +47,31 @@ class TestCSVRemoveNewlinesCommand:
                 assert "Mixed line endings" in content
                 assert "\n" not in content.split('\n')[1:], "Data rows should not contain newlines"
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_with_embedded_newlines.unlink(missing_ok=True)
             output_path.unlink(missing_ok=True)
         
         # Test custom output path
-        input_file = create_temp_csv_file(CSV_WITH_NEWLINES)
-        custom_output = input_file.parent / "custom_output.csv"
+        csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
+        custom_output = csv_with_embedded_newlines.parent / "custom_output.csv"
         try:
-            run_remove_newlines(input_file, str(custom_output))
+            run_remove_newlines(csv_with_embedded_newlines, str(custom_output))
             assert custom_output.exists(), "Custom output file should be created"
             
             with open(custom_output, 'r', encoding='utf-8') as f:
                 content = f.read()
                 assert "Task with newlines in summary" in content
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_with_embedded_newlines.unlink(missing_ok=True)
             custom_output.unlink(missing_ok=True)
         
         # Test empty file
-        input_file = create_temp_csv_file(CSV_EMPTY)
+        empty_csv_file = create_temp_csv_file(CSV_EMPTY)
         try:
-            run_remove_newlines(input_file, None)
-            output_path = input_file.with_name(f"{input_file.stem}-no-newlines.csv")
+            run_remove_newlines(empty_csv_file, None)
+            output_path = empty_csv_file.with_name(f"{empty_csv_file.stem}-no-newlines.csv")
             assert output_path.exists(), "Output file should be created even for empty input"
         finally:
-            input_file.unlink(missing_ok=True)
+            empty_csv_file.unlink(missing_ok=True)
             output_path.unlink(missing_ok=True)
 
 
@@ -73,11 +80,11 @@ class TestCSVExtractFieldValuesCommand:
     
     def test_extract_field_values_functionality(self):
         """Test field value extraction and file creation."""
-        # Test basic functionality
-        input_file = create_temp_csv_file(CSV_FIELD_EXTRACTION)
+        # Given: A CSV file with specific field data for extraction testing
+        csv_for_field_extraction = create_temp_csv_file(create_csv_for_field_extraction())
         try:
-            run_extract_field_values(input_file, "Parent key", None)
-            output_path = input_file.with_name(f"{input_file.stem}-parent-key.txt")
+            run_extract_field_values(csv_for_field_extraction, "Parent key", None)
+            output_path = csv_for_field_extraction.with_name(f"{csv_for_field_extraction.stem}-parent-key.txt")
             assert output_path.exists(), "Parent key output file should be created"
             
             with open(output_path, 'r', encoding='utf-8') as f:
@@ -85,21 +92,21 @@ class TestCSVExtractFieldValuesCommand:
                 assert "(EPIC-1,EPIC-2)" in content
                 assert "Parent key found=2" in content
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_for_field_extraction.unlink(missing_ok=True)
             output_path.unlink(missing_ok=True)
         
         # Test different field types
-        test_csv_content = '''Issue key,Summary,Status,Priority
+        csv_with_status_and_priority = '''Issue key,Summary,Status,Priority
 PROJ-1,Task 1,Done,High
 PROJ-2,Task 2,In Progress,Medium
 PROJ-3,Task 3,To Do,High
 PROJ-4,Task 4,Done,Low'''
         
-        input_file = create_temp_csv_file(test_csv_content)
+        csv_with_status_and_priority_file = create_temp_csv_file(csv_with_status_and_priority)
         try:
             # Test Status extraction
-            run_extract_field_values(input_file, "Status", None)
-            status_output = input_file.with_name(f"{input_file.stem}-status.txt")
+            run_extract_field_values(csv_with_status_and_priority_file, "Status", None)
+            status_output = csv_with_status_and_priority_file.with_name(f"{csv_with_status_and_priority_file.stem}-status.txt")
             assert status_output.exists()
             
             with open(status_output, 'r', encoding='utf-8') as f:
@@ -108,8 +115,8 @@ PROJ-4,Task 4,Done,Low'''
                 assert "Status found=3" in content
             
             # Test Priority extraction
-            run_extract_field_values(input_file, "Priority", None)
-            priority_output = input_file.with_name(f"{input_file.stem}-priority.txt")
+            run_extract_field_values(csv_with_status_and_priority_file, "Priority", None)
+            priority_output = csv_with_status_and_priority_file.with_name(f"{csv_with_status_and_priority_file.stem}-priority.txt")
             assert priority_output.exists()
             
             with open(priority_output, 'r', encoding='utf-8') as f:
@@ -117,49 +124,49 @@ PROJ-4,Task 4,Done,Low'''
                 assert "(High,Medium,Low)" in content
                 assert "Priority found=3" in content
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_with_status_and_priority_file.unlink(missing_ok=True)
             status_output.unlink(missing_ok=True)
             priority_output.unlink(missing_ok=True)
         
         # Test case insensitive matching
-        test_csv_content = '''Issue key,summary,parent key,STATUS
+        csv_with_mixed_case_headers = '''Issue key,summary,parent key,STATUS
 PROJ-1,Task 1,EPIC-1,Done
 PROJ-2,Task 2,EPIC-1,In Progress'''
         
-        input_file = create_temp_csv_file(test_csv_content)
+        csv_with_mixed_case_headers_file = create_temp_csv_file(csv_with_mixed_case_headers)
         try:
-            run_extract_field_values(input_file, "Summary", None)  # Matches 'summary'
-            run_extract_field_values(input_file, "Parent Key", None)  # Matches 'parent key'
-            run_extract_field_values(input_file, "status", None)  # Matches 'STATUS'
+            run_extract_field_values(csv_with_mixed_case_headers_file, "Summary", None)  # Matches 'summary'
+            run_extract_field_values(csv_with_mixed_case_headers_file, "Parent Key", None)  # Matches 'parent key'
+            run_extract_field_values(csv_with_mixed_case_headers_file, "status", None)  # Matches 'STATUS'
             
-            summary_output = input_file.with_name(f"{input_file.stem}-summary.txt")
-            parent_output = input_file.with_name(f"{input_file.stem}-parent-key.txt")
-            status_output = input_file.with_name(f"{input_file.stem}-status.txt")
+            summary_output = csv_with_mixed_case_headers_file.with_name(f"{csv_with_mixed_case_headers_file.stem}-summary.txt")
+            parent_output = csv_with_mixed_case_headers_file.with_name(f"{csv_with_mixed_case_headers_file.stem}-parent-key.txt")
+            status_output = csv_with_mixed_case_headers_file.with_name(f"{csv_with_mixed_case_headers_file.stem}-status.txt")
             
             assert summary_output.exists()
             assert parent_output.exists()
             assert status_output.exists()
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_with_mixed_case_headers_file.unlink(missing_ok=True)
             summary_output.unlink(missing_ok=True)
             parent_output.unlink(missing_ok=True)
             status_output.unlink(missing_ok=True)
         
         # Test nonexistent field
-        test_csv_content = '''Issue key,Summary,Status
+        csv_without_target_field = '''Issue key,Summary,Status
 PROJ-1,Task 1,Done
 PROJ-2,Task 2,In Progress'''
         
-        input_file = create_temp_csv_file(test_csv_content)
+        csv_without_target_field_file = create_temp_csv_file(csv_without_target_field)
         try:
             with patch('builtins.print') as mock_print:
-                run_extract_field_values(input_file, "Nonexistent Field", None)
+                run_extract_field_values(csv_without_target_field_file, "Nonexistent Field", None)
                 mock_print.assert_called_with("Warning: 'Nonexistent Field' column not found in header or no values found.")
             
-            output_path = input_file.with_name(f"{input_file.stem}-nonexistent-field.txt")
+            output_path = csv_without_target_field_file.with_name(f"{csv_without_target_field_file.stem}-nonexistent-field.txt")
             assert not output_path.exists()
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_without_target_field_file.unlink(missing_ok=True)
 
 
 class TestCSVFixDatesEUCommand:
@@ -167,11 +174,11 @@ class TestCSVFixDatesEUCommand:
     
     def test_fix_dates_eu_functionality(self):
         """Test date conversion for European Excel format."""
-        # Test basic functionality
-        input_file = create_temp_csv_file(CSV_WITH_DATES)
+        # Given: A CSV file containing date fields in ISO format
+        csv_with_iso_dates = create_temp_csv_file(create_csv_with_iso_dates())
         try:
-            run_jira_dates_eu(input_file, None)
-            output_path = input_file.with_name(f"{input_file.stem}-eu-dates.csv")
+            run_jira_dates_eu(csv_with_iso_dates, None)
+            output_path = csv_with_iso_dates.with_name(f"{csv_with_iso_dates.stem}-eu-dates.csv")
             assert output_path.exists(), "Output file should be created"
             
             with open(output_path, 'r', encoding='utf-8') as f:
@@ -181,7 +188,7 @@ class TestCSVFixDatesEUCommand:
                 assert "01/02/2024 09:15:00" in content
                 assert "10/03/2024 11:00:00" in content
         finally:
-            input_file.unlink(missing_ok=True)
+            csv_with_iso_dates.unlink(missing_ok=True)
             output_path.unlink(missing_ok=True)
         
         # Test custom output path

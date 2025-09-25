@@ -16,10 +16,9 @@ from .fixtures import (
     create_temp_csv_file,
     create_temp_env_file,
     create_temp_config_file,
-    create_template_config_content,
-    CSV_WITH_NEWLINES,
-    CSV_FIELD_EXTRACTION,
-    CSV_WITH_DATES
+    create_csv_with_embedded_newlines,
+    create_csv_for_field_extraction,
+    create_csv_with_iso_dates
 )
 
 # Add src directory to path for imports
@@ -31,8 +30,8 @@ class TestJiraUtilAPI:
     
     def test_user_can_process_csv_files(self):
         """Test that users can process CSV files through the API."""
-        # Given: CSV file with test data
-        input_file = create_temp_csv_file(CSV_WITH_NEWLINES)
+        # Given: A CSV file with formatting issues that need processing
+        csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
         
         try:
             # When: User processes CSV through API
@@ -41,18 +40,18 @@ class TestJiraUtilAPI:
             from jira_dates_eu import run as run_jira_dates_eu
             
             # Process newlines
-            run_remove_newlines(input_file, None)
-            newlines_output = input_file.with_name(f"{input_file.stem}-no-newlines.csv")
+            run_remove_newlines(csv_with_embedded_newlines, None)
+            newlines_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-no-newlines.csv")
             assert newlines_output.exists()
             
             # Process field extraction
-            run_extract_field_values(input_file, "Status", None)
-            status_output = input_file.with_name(f"{input_file.stem}-status.txt")
+            run_extract_field_values(csv_with_embedded_newlines, "Status", None)
+            status_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-status.txt")
             assert status_output.exists()
             
             # Process date conversion
-            run_jira_dates_eu(input_file, None)
-            dates_output = input_file.with_name(f"{input_file.stem}-eu-dates.csv")
+            run_jira_dates_eu(csv_with_embedded_newlines, None)
+            dates_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-eu-dates.csv")
             assert dates_output.exists()
             
             # Then: All operations should complete successfully
@@ -62,14 +61,14 @@ class TestJiraUtilAPI:
             
         finally:
             # Cleanup
-            input_file.unlink(missing_ok=True)
+            csv_with_embedded_newlines.unlink(missing_ok=True)
             newlines_output.unlink(missing_ok=True)
             status_output.unlink(missing_ok=True)
             dates_output.unlink(missing_ok=True)
     
     def test_user_can_manage_test_fixtures(self):
         """Test that users can manage test fixtures through the API."""
-        # Given: Test fixture workflow functions
+        # Given: Test fixture workflow functions and mock Jira instance
         from testfixture.workflow import run_TestFixture_Reset, run_assert_expectations
         
         # When: User runs test fixture operations
@@ -93,7 +92,10 @@ class TestJiraUtilAPI:
     
     def test_user_can_use_cli_commands(self):
         """Test that users can use CLI commands through the API."""
-        # Given: CLI parser and command functions
+        # Given: CLI parser and command functions with all required dependencies
+        # - Argument parser configured with all available commands
+        # - Command functions for listing, status, and version operations
+        # - Configuration validator for checking template values
         from cli.parser import build_parser
         from cli.commands import show_list, show_status
         from version.manager import get_version
@@ -147,7 +149,10 @@ class TestJiraUtilAPI:
     
     def test_user_can_validate_configuration(self):
         """Test that users can validate configuration through the API."""
-        # Given: Configuration validator and template config
+        # Given: Configuration validator and template configuration file
+        # - Template config contains placeholder values that need to be replaced
+        # - Validator function that can detect template patterns
+        # - Expected behavior: should identify template values and provide guidance
         from config.validator import check_config_file_for_template_values
         
         # When: User validates template configuration
@@ -165,7 +170,10 @@ class TestJiraUtilAPI:
     
     def test_user_can_manage_authentication(self):
         """Test that users can manage authentication through the API."""
-        # Given: Authentication functions
+        # Given: Authentication functions and test environment file
+        # - Environment file with valid Jira credentials for testing
+        # - Functions for loading environment files and getting credentials
+        # - Mock input functions to simulate user interaction
         from auth.credentials import load_env_file, get_jira_credentials
         
         # When: User loads environment file
@@ -193,7 +201,10 @@ class TestJiraUtilAPI:
     
     def test_user_can_access_all_modules(self):
         """Test that users can access all modules through the API."""
-        # Given: Modular architecture
+        # Given: Modular architecture with all required modules available
+        # - Core modules: auth, version, config, cli
+        # - Feature modules: testfixture, csv_utils
+        # - Backward compatibility modules: jira_field_extractor, jira_testfixture
         # When: User imports all modules
         import auth.credentials
         import version.manager
@@ -222,7 +233,10 @@ class TestJiraUtilAPI:
     
     def test_user_gets_appropriate_error_handling(self):
         """Test that users get appropriate error handling through the API."""
-        # Given: API functions
+        # Given: API functions and various error scenarios
+        # - Functions that can handle file operations and field extraction
+        # - Test cases for nonexistent files, missing fields, and empty files
+        # - Expected behavior: graceful error handling with appropriate messages
         from jira_cleaner import run_remove_newlines
         from csv_utils import run_extract_field_values
         from jira_dates_eu import run as run_jira_dates_eu
@@ -259,7 +273,12 @@ class TestJiraUtilAPI:
     
     def test_user_can_process_large_files(self):
         """Test that users can process large files through the API."""
-        # Given: Large CSV file
+        # Given: A large CSV file with 100 rows of test data
+        # - Each row contains: Issue key, Summary, Parent key, Status, Assignee
+        # - Data is structured to test performance with realistic volume
+        # - Parent keys are grouped (EPIC-0 to EPIC-9) to test field extraction
+        # - Status values cycle through 3 different states
+        # - Assignee values cycle through 5 different users
         large_csv_content = "Issue key,Summary,Parent key,Status,Assignee\n"
         for i in range(100):  # 100 rows of test data
             large_csv_content += f"PROJ-{i},Task {i},EPIC-{i//10},Status {i%3},User {i%5}\n"

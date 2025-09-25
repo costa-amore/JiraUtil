@@ -1,6 +1,14 @@
 """
-Shared test data fixtures to eliminate duplication across test files.
+Base fixtures and shared test data.
+
+This module contains the core test data and helper functions
+that are shared across different test contexts.
 """
+
+import tempfile
+from pathlib import Path
+from unittest.mock import Mock
+
 
 # Test fixture issue data
 TEST_FIXTURE_ISSUES = [
@@ -56,19 +64,62 @@ INVALID_PATTERNS = [
     "",
 ]
 
-# Mock manager setup helpers
+
 def create_mock_manager(issues=None, connect_success=True, update_success=True):
     """Create a mock JiraInstanceManager with standard configuration."""
-    from unittest.mock import Mock
-    from jira_manager import JiraInstanceManager
-    
-    mock_manager = Mock(spec=JiraInstanceManager)
+    # Create a mock without importing the actual class to avoid dependency issues
+    mock_manager = Mock()
     mock_manager.jira = None  # Always None so connect() will be called
     mock_manager.connect.return_value = connect_success
     mock_manager.get_issues_by_label.return_value = issues or []
     mock_manager.update_issue_status.return_value = update_success
     
     return mock_manager
+
+
+def create_mock_manager_with_expected_results(issues, expected_success=True, expected_processed=0, expected_updated=0, expected_skipped=0, expected_errors=None):
+    """Create a mock manager with both test data and expected results grouped together."""
+    # Setup: Create mock manager with test data
+    mock_manager = create_mock_manager(issues=issues, connect_success=expected_success)
+    
+    # Expectations: Store expected results for assertions
+    mock_manager.expected_success = expected_success
+    mock_manager.expected_processed = expected_processed
+    mock_manager.expected_updated = expected_updated
+    mock_manager.expected_skipped = expected_skipped
+    mock_manager.expected_errors = expected_errors or []
+    
+    return mock_manager
+
+
+def create_temp_csv_file(content, suffix='.csv'):
+    """Create a temporary CSV file for testing."""
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+    temp_file.write(content)
+    temp_file.close()
+    return Path(temp_file.name)
+
+
+# CSV test data constants
+CSV_EMPTY = ""
+
+
+def create_temp_config_file(content, suffix='.env'):
+    """Create a temporary config file for testing."""
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+    temp_file.write(content)
+    temp_file.close()
+    return Path(temp_file.name)
+
+
+def create_temp_env_file(url, username, password, comment_prefix="# Jira Configuration", suffix='.env'):
+    """Create a temporary environment file with given credentials."""
+    content = f"""{comment_prefix}
+JIRA_URL={url}
+JIRA_USERNAME={username}
+JIRA_PASSWORD={password}"""
+    return create_temp_config_file(content, suffix)
+
 
 # Test result helpers
 def create_reset_result(processed=0, updated=0, skipped=0, errors=None, success=True):
@@ -80,6 +131,7 @@ def create_reset_result(processed=0, updated=0, skipped=0, errors=None, success=
         'skipped': skipped,
         'errors': errors or []
     }
+
 
 def create_assert_result(processed=0, passed=0, failed=0, not_evaluated=0, failures=None, not_evaluated_keys=None, success=True):
     """Create a standard assert result dictionary."""
@@ -93,80 +145,55 @@ def create_assert_result(processed=0, passed=0, failed=0, not_evaluated=0, failu
         'not_evaluated_keys': not_evaluated_keys or []
     }
 
-# CLI test helpers
-def create_temp_config_file(content, suffix='.env'):
-    """Create a temporary config file for testing."""
-    import tempfile
+
+def create_field_extractor_rows(rows_data):
+    """
+    Create field extractor test rows with standard header.
+    
+    Args:
+        rows_data: List of tuples (issue_key, summary, parent_key, status)
+        
+    Returns:
+        List of rows with header + data rows
+    """
+    header = ["Issue key", "Summary", "Parent key", "Status"]
+    data_rows = [list(row) for row in rows_data]
+    return [header] + data_rows
+
+
+def create_temp_version_file():
+    """Create a temporary version file for testing."""
+    import os
+    temp_dir = tempfile.mkdtemp()
+    version_file = os.path.join(temp_dir, "test_version.json")
+    return Path(version_file), temp_dir
+
+
+def create_version_manager_with_version(major, minor, build=0, local=0):
+    """Create a VersionManager with a specific version."""
+    import sys
     from pathlib import Path
     
-    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
-    temp_file.write(content)
-    temp_file.close()
-    return Path(temp_file.name)
-
-def create_temp_env_file(url, username, password, comment_prefix="# Jira Configuration", suffix='.env'):
-    """Create a temporary environment file with given credentials."""
-    content = generate_env_content(url, username, password, comment_prefix)
-    return create_temp_config_file(content, suffix)
-
-# CLI test data - using functions from production code
-try:
-    from config.validator import TEMPLATE_PATTERNS
-    from auth.credentials import (CREDENTIAL_TEMPLATE_PATTERNS, JIRA_ENV_VARS, 
-                                 generate_env_file_content, create_template_env_content)
-except ImportError:
-    # Fallback for when these modules aren't available
-    TEMPLATE_PATTERNS = ['yourcompany', 'your.email', 'your_api', 'token_here']
-    CREDENTIAL_TEMPLATE_PATTERNS = {
-        'url': ['yourcompany', 'example', 'placeholder'],
-        'username': ['your.email', 'example', 'placeholder', 'user@'],
-        'password': ['your_api', 'example', 'placeholder', 'token_here']
-    }
-    JIRA_ENV_VARS = {
-        'url': 'JIRA_URL',
-        'username': 'JIRA_USERNAME', 
-        'password': 'JIRA_PASSWORD'
-    }
+    # Add tools directory to path for imports
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
+    from version_manager import VersionManager
     
-    def generate_env_file_content(url, username, password, comment_prefix="# Jira Configuration"):
-        return f"""{comment_prefix}
-{JIRA_ENV_VARS['url']}={url}
-{JIRA_ENV_VARS['username']}={username}
-{JIRA_ENV_VARS['password']}={password}"""
+    version_file, temp_dir = create_temp_version_file()
+    manager = VersionManager(str(version_file))
+    manager.set_manual_version(major, minor)
     
-    def create_template_env_content():
-        return generate_env_file_content("", "", "")
+    # Increment build if needed
+    for _ in range(build):
+        manager.increment_build()
+    
+    # Increment local if needed
+    for _ in range(local):
+        manager.increment_local_build()
+    
+    return manager, version_file, temp_dir
 
-# Re-export production functions for convenience
-generate_env_content = generate_env_file_content
-create_template_config_content = create_template_env_content
 
-def create_configured_config_content():
-    """Create configured config content with real-looking values."""
-    return generate_env_file_content(
-        url="https://mycompany.atlassian.net",
-        username="john.doe@mycompany.com",
-        password="abc123def456ghi789"
-    )
-
-# Template generators for different scenarios using production function
-def create_empty_config_content():
-    """Create empty config content (no values)."""
-    return generate_env_file_content("", "", "")
-
-def create_partial_config_content():
-    """Create config content with only URL set."""
-    return generate_env_file_content("https://partial.atlassian.net", "", "")
-
-def create_invalid_config_content():
-    """Create config content with invalid values."""
-    return generate_env_file_content("not-a-url", "invalid-email", "short")
-
-# Pre-generated config content for convenience
-TEMPLATE_CONFIG_CONTENT = create_template_config_content()
-CONFIGURED_CONFIG_CONTENT = create_configured_config_content()
-
-# CLI command test cases
+# CLI test data
 CSV_EXPORT_COMMANDS = [
     (['csv-export', 'remove-newlines', 'input.csv'], 'csv-export', 'remove-newlines', 'input.csv'),
     (['ce', 'rn', 'input.csv'], 'ce', 'rn', 'input.csv'),
@@ -188,86 +215,32 @@ UTILITY_COMMANDS = [
     (['st'], 'st'),
 ]
 
-# CSV test helpers and data
-def create_temp_csv_file(content, suffix='.csv'):
-    """Create a temporary CSV file for testing."""
-    import tempfile
-    from pathlib import Path
-    
-    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
-    temp_file.write(content)
-    temp_file.close()
-    return Path(temp_file.name)
 
-# CSV test data
-CSV_WITH_NEWLINES = '''Issue key,Summary,Description,Status
-PROJ-1,"Task with newlines
-in summary","Description with
-multiple lines",Done
-PROJ-2,"Normal task","Single line description",In Progress
-PROJ-3,"Task with\r\nWindows newlines","Mixed\r\nline endings",To Do'''
+def generate_env_content(url, username, password, comment_prefix="# Jira Configuration"):
+    """Generate environment file content."""
+    return f"""{comment_prefix}
+JIRA_URL={url}
+JIRA_USERNAME={username}
+JIRA_PASSWORD={password}"""
 
-CSV_FIELD_EXTRACTION = '''Issue key,Summary,Parent key,Status,Assignee
-PROJ-1,Task 1,EPIC-1,Done,John Doe
-PROJ-2,Task 2,EPIC-1,In Progress,Jane Smith
-PROJ-3,Task 3,EPIC-2,To Do,John Doe
-PROJ-4,Task 4,EPIC-1,Done,Bob Wilson'''
 
-CSV_WITH_DATES = '''Issue key,Summary,Created,Updated,Status
-PROJ-1,Task 1,2024-01-15 10:30:00,2024-01-20 14:45:00,Done
-PROJ-2,Task 2,2024-02-01 09:15:00,2024-02-05 16:20:00,In Progress
-PROJ-3,Task 3,2024-03-10 11:00:00,2024-03-10 11:00:00,To Do'''
+def create_template_config_content():
+    """Create template config content."""
+    return generate_env_content("", "", "")
 
-CSV_EMPTY = ""
 
-# Field extractor test data factory
-def create_field_extractor_rows(rows_data):
-    """
-    Create field extractor test rows with standard header.
-    
-    Args:
-        rows_data: List of tuples (issue_key, summary, parent_key, status)
-        
-    Returns:
-        List of rows with header + data rows
-    """
-    header = ["Issue key", "Summary", "Parent key", "Status"]
-    data_rows = [list(row) for row in rows_data]
-    return [header] + data_rows
+def create_configured_config_content():
+    """Create configured config content with real-looking values."""
+    return generate_env_content(
+        url="https://mycompany.atlassian.net",
+        username="john.doe@mycompany.com",
+        password="abc123def456ghi789"
+    )
 
-# Version manager test helpers
-def create_temp_version_file():
-    """Create a temporary version file for testing."""
-    import tempfile
-    import os
-    from pathlib import Path
-    
-    temp_dir = tempfile.mkdtemp()
-    version_file = os.path.join(temp_dir, "test_version.json")
-    return Path(version_file), temp_dir
 
-def create_version_manager_with_version(major, minor, build=0, local=0):
-    """Create a VersionManager with a specific version."""
-    import sys
-    from pathlib import Path
-    
-    # Add tools directory to path for imports
-    sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
-    from version_manager import VersionManager
-    
-    version_file, temp_dir = create_temp_version_file()
-    manager = VersionManager(str(version_file))
-    manager.set_manual_version(major, minor)
-    
-    # Increment build if needed
-    for _ in range(build):
-        manager.increment_build()
-    
-    # Increment local if needed
-    for _ in range(local):
-        manager.increment_local_build()
-    
-    return manager, version_file, temp_dir
+# Pre-generated config content for convenience
+TEMPLATE_CONFIG_CONTENT = create_template_config_content()
+CONFIGURED_CONFIG_CONTENT = create_configured_config_content()
 
 
 # Build test fixtures
@@ -276,7 +249,7 @@ def create_test_project_structure(temp_dir, project_name="test_project"):
     import shutil
     from pathlib import Path
     
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parent.parent.parent
     test_project_dir = Path(temp_dir) / project_name
     test_project_dir.mkdir(parents=True, exist_ok=True)
     
@@ -336,7 +309,7 @@ def run_version_command(command, version_file, cwd=None):
     from pathlib import Path
     
     if cwd is None:
-        cwd = Path(__file__).parent.parent
+        cwd = Path(__file__).parent.parent.parent
     
     cmd = ["python", "tools/version_manager.py"] + command + ["--version-file", str(version_file)]
     return subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
