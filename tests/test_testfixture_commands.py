@@ -107,9 +107,9 @@ class TestTestFixtureAPI:
         assert result['skipped'] == skip_scenario.expected_skipped
         skip_scenario.update_issue_status.assert_not_called()
     
-    def test_workflow_commands_orchestrate_complete_rule_testing_process(self):
-        """Test that workflow commands coordinate the complete rule testing process."""
-        # Given: High-level workflow commands that orchestrate rule testing
+    def test_reset_workflow_command_orchestrates_rule_testing_preparation(self):
+        """Test that reset workflow command coordinates the rule testing preparation process."""
+        # Given: High-level reset workflow command and mock dependencies
         with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
              patch('testfixture.workflow.process_issues_by_label') as mock_process:
             
@@ -124,8 +124,10 @@ class TestTestFixtureAPI:
             # Then: Should create Jira manager and call reset process
             mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
             mock_process.assert_called_once_with(mock_jira_manager, "rule-testing")
-        
-        # Given: High-level workflow commands for assertion
+    
+    def test_assert_workflow_command_orchestrates_rule_verification(self):
+        """Test that assert workflow command coordinates the rule verification process."""
+        # Given: High-level assert workflow command and mock dependencies
         with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
              patch('testfixture.workflow.assert_issues_expectations') as mock_assert:
             

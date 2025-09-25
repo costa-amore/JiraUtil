@@ -30,12 +30,16 @@ from .fixtures.base_fixtures import create_temp_csv_file, CSV_EMPTY
 class TestCSVRemoveNewlinesCommand:
     """Test the csv-export remove-newlines command functionality."""
     
-    def test_remove_newlines_functionality(self):
-        """Test newline removal from CSV fields."""
+    def test_remove_newlines_from_csv_with_embedded_newlines(self):
+        """Test newline removal from CSV fields with embedded newlines."""
         # Given: A CSV file containing fields with embedded newlines
         csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
+        
         try:
+            # When: User removes newlines from CSV
             run_remove_newlines(csv_with_embedded_newlines, None)
+            
+            # Then: Output file should be created with newlines removed
             output_path = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-no-newlines.csv")
             assert output_path.exists(), "Output file should be created"
             
@@ -49,12 +53,18 @@ class TestCSVRemoveNewlinesCommand:
         finally:
             csv_with_embedded_newlines.unlink(missing_ok=True)
             output_path.unlink(missing_ok=True)
-        
-        # Test custom output path
+    
+    def test_remove_newlines_with_custom_output_path(self):
+        """Test newline removal with custom output path."""
+        # Given: A CSV file and custom output path
         csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
         custom_output = csv_with_embedded_newlines.parent / "custom_output.csv"
+        
         try:
+            # When: User removes newlines with custom output path
             run_remove_newlines(csv_with_embedded_newlines, str(custom_output))
+            
+            # Then: Custom output file should be created
             assert custom_output.exists(), "Custom output file should be created"
             
             with open(custom_output, 'r', encoding='utf-8') as f:
@@ -63,11 +73,17 @@ class TestCSVRemoveNewlinesCommand:
         finally:
             csv_with_embedded_newlines.unlink(missing_ok=True)
             custom_output.unlink(missing_ok=True)
-        
-        # Test empty file
+    
+    def test_remove_newlines_from_empty_csv(self):
+        """Test newline removal from empty CSV file."""
+        # Given: An empty CSV file
         empty_csv_file = create_temp_csv_file(CSV_EMPTY)
+        
         try:
+            # When: User removes newlines from empty file
             run_remove_newlines(empty_csv_file, None)
+            
+            # Then: Output file should be created even for empty input
             output_path = empty_csv_file.with_name(f"{empty_csv_file.stem}-no-newlines.csv")
             assert output_path.exists(), "Output file should be created even for empty input"
         finally:

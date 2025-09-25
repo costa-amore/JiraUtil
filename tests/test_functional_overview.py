@@ -33,73 +33,113 @@ class TestJiraUtilAPI:
         # Given: A CSV file with formatting issues that need processing
         csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
         
+        # And: Import the required processing functions
+        from jira_cleaner import run_remove_newlines
+        from csv_utils import run_extract_field_values
+        from jira_dates_eu import run as run_jira_dates_eu
+        
         try:
             # When: User processes CSV through API
-            from jira_cleaner import run_remove_newlines
-            from csv_utils import run_extract_field_values
-            from jira_dates_eu import run as run_jira_dates_eu
-            
-            # Process newlines
             run_remove_newlines(csv_with_embedded_newlines, None)
+            
+            # Then: Newlines processing should complete successfully
             newlines_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-no-newlines.csv")
             assert newlines_output.exists()
-            
-            # Process field extraction
-            run_extract_field_values(csv_with_embedded_newlines, "Status", None)
-            status_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-status.txt")
-            assert status_output.exists()
-            
-            # Process date conversion
-            run_jira_dates_eu(csv_with_embedded_newlines, None)
-            dates_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-eu-dates.csv")
-            assert dates_output.exists()
-            
-            # Then: All operations should complete successfully
-            assert newlines_output.exists()
-            assert status_output.exists()
-            assert dates_output.exists()
             
         finally:
             # Cleanup
             csv_with_embedded_newlines.unlink(missing_ok=True)
-            newlines_output.unlink(missing_ok=True)
-            status_output.unlink(missing_ok=True)
-            dates_output.unlink(missing_ok=True)
+            if 'newlines_output' in locals():
+                newlines_output.unlink(missing_ok=True)
     
-    def test_user_can_manage_test_fixtures(self):
-        """Test that users can manage test fixtures through the API."""
-        # Given: Test fixture workflow functions and mock Jira instance
-        from testfixture.workflow import run_TestFixture_Reset, run_assert_expectations
+    def test_user_can_extract_field_values_from_csv(self):
+        """Test that users can extract field values from CSV files."""
+        # Given: A CSV file with structured data for field extraction
+        csv_for_field_extraction = create_temp_csv_file(create_csv_for_field_extraction())
         
-        # When: User runs test fixture operations
+        # And: Import the required processing function
+        from csv_utils import run_extract_field_values
+        
+        try:
+            # When: User extracts field values from CSV
+            run_extract_field_values(csv_for_field_extraction, "Status", None)
+            
+            # Then: Field extraction should complete successfully
+            status_output = csv_for_field_extraction.with_name(f"{csv_for_field_extraction.stem}-status.txt")
+            assert status_output.exists()
+            
+        finally:
+            # Cleanup
+            csv_for_field_extraction.unlink(missing_ok=True)
+            if 'status_output' in locals():
+                status_output.unlink(missing_ok=True)
+    
+    def test_user_can_convert_dates_in_csv(self):
+        """Test that users can convert date formats in CSV files."""
+        # Given: A CSV file with ISO date formats that need conversion
+        csv_with_iso_dates = create_temp_csv_file(create_csv_with_iso_dates())
+        
+        # And: Import the required processing function
+        from jira_dates_eu import run as run_jira_dates_eu
+        
+        try:
+            # When: User converts dates in CSV
+            run_jira_dates_eu(csv_with_iso_dates, None)
+            
+            # Then: Date conversion should complete successfully
+            dates_output = csv_with_iso_dates.with_name(f"{csv_with_iso_dates.stem}-eu-dates.csv")
+            assert dates_output.exists()
+            
+        finally:
+            # Cleanup
+            csv_with_iso_dates.unlink(missing_ok=True)
+            if 'dates_output' in locals():
+                dates_output.unlink(missing_ok=True)
+    
+    def test_user_can_reset_test_fixtures(self):
+        """Test that users can reset test fixtures through the API."""
+        # Given: Test fixture reset workflow function and mock Jira instance
+        from testfixture.workflow import run_TestFixture_Reset
+        
+        # When: User runs test fixture reset operation
         with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
-             patch('testfixture.workflow.process_issues_by_label') as mock_process, \
-             patch('testfixture.workflow.assert_issues_expectations') as mock_assert:
+             patch('testfixture.workflow.process_issues_by_label') as mock_process:
             
             mock_manager = Mock()
             mock_manager_class.return_value = mock_manager
             mock_process.return_value = create_reset_result(processed=2, updated=2)
-            mock_assert.return_value = create_assert_result(processed=2, passed=1, failed=1, failures=['PROJ-2: Expected Done but is To Do'])
             
             with patch('builtins.print'):
                 run_TestFixture_Reset("https://jira.example.com", "user", "pass", "rule-testing")
+            
+            # Then: Should call appropriate functions
+            mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
+            mock_process.assert_called_once_with(mock_manager, "rule-testing")
+    
+    def test_user_can_assert_test_fixtures(self):
+        """Test that users can assert test fixture expectations through the API."""
+        # Given: Test fixture assert workflow function and mock Jira instance
+        from testfixture.workflow import run_assert_expectations
+        
+        # When: User runs test fixture assert operation
+        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
+             patch('testfixture.workflow.assert_issues_expectations') as mock_assert:
+            
+            mock_manager = Mock()
+            mock_manager_class.return_value = mock_manager
+            mock_assert.return_value = create_assert_result(processed=2, passed=1, failed=1, failures=['PROJ-2: Expected Done but is To Do'])
+            
+            with patch('builtins.print'):
                 run_assert_expectations("https://jira.example.com", "user", "pass", "rule-testing")
             
             # Then: Should call appropriate functions
-            assert mock_manager_class.call_count == 2
-            mock_process.assert_called_once_with(mock_manager, "rule-testing")
+            mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
             mock_assert.assert_called_once_with(mock_manager, "rule-testing")
     
-    def test_user_can_use_cli_commands(self):
-        """Test that users can use CLI commands through the API."""
-        # Given: CLI parser and command functions with all required dependencies
-        # - Argument parser configured with all available commands
-        # - Command functions for listing, status, and version operations
-        # - Configuration validator for checking template values
+    def test_user_can_parse_cli_commands(self):
+        """Test that users can parse CLI commands through the API."""
+        # Given: CLI parser configured with all available commands
         from cli.parser import build_parser
-        from cli.commands import show_list, show_status
-        from version.manager import get_version
-        from config.validator import check_config_file_for_template_values
         
         # When: User parses various commands
         parser = build_parser()
@@ -116,6 +156,11 @@ class TestJiraUtilAPI:
         for cmd in test_commands:
             args = parser.parse_args(cmd)
             assert args.command is not None, f"Command parsing failed for: {cmd}"
+    
+    def test_user_can_run_list_command(self):
+        """Test that users can run the list command through the API."""
+        # Given: List command function
+        from cli.commands import show_list
         
         # When: User runs list command
         with patch('builtins.print') as mock_print:
@@ -127,6 +172,11 @@ class TestJiraUtilAPI:
         assert "Test Fixture Commands:" in printed_content
         assert "Utility Commands:" in printed_content
         assert "Short Aliases:" in printed_content
+    
+    def test_user_can_run_status_command(self):
+        """Test that users can run the status command through the API."""
+        # Given: Status command function
+        from cli.commands import show_status
         
         # When: User runs status command
         with patch('builtins.print') as mock_print:
@@ -139,6 +189,11 @@ class TestJiraUtilAPI:
         version_pattern = r"Version: \d+\.\d+\.\d+"
         assert re.search(version_pattern, printed_content)
         assert "Status: Ready" in printed_content
+    
+    def test_user_can_get_version(self):
+        """Test that users can get version information through the API."""
+        # Given: Version manager function
+        from version.manager import get_version
         
         # When: User checks version
         version = get_version()
