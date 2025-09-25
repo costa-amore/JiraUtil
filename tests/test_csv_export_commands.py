@@ -33,62 +33,62 @@ class TestCSVRemoveNewlinesCommand:
     def test_remove_newlines_from_csv_with_embedded_newlines(self):
         """Test newline removal from CSV fields with embedded newlines."""
         # Given: A CSV file containing fields with embedded newlines
-        csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
+        input_csv_file_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
         
         try:
-            # When: User removes newlines from CSV
-            run_remove_newlines(csv_with_embedded_newlines, None)
+            # When: User removes newlines from the input CSV file
+            run_remove_newlines(input_csv_file_with_embedded_newlines, None)
             
             # Then: Output file should be created with newlines removed
-            output_path = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-no-newlines.csv")
-            assert output_path.exists(), "Output file should be created"
+            newlines_removed_output_file = input_csv_file_with_embedded_newlines.with_name(f"{input_csv_file_with_embedded_newlines.stem}-no-newlines.csv")
+            assert newlines_removed_output_file.exists(), "Output file should be created"
             
-            with open(output_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-                assert "Task with newlines in summary" in content
-                assert "Description with multiple lines" in content
-                assert "Task with Windows newlines" in content
-                assert "Mixed line endings" in content
-                assert "\n" not in content.split('\n')[1:], "Data rows should not contain newlines"
+            with open(newlines_removed_output_file, 'r', encoding='utf-8') as f:
+                processed_content = f.read()
+                assert "Task with newlines in summary" in processed_content
+                assert "Description with multiple lines" in processed_content
+                assert "Task with Windows newlines" in processed_content
+                assert "Mixed line endings" in processed_content
+                assert "\n" not in processed_content.split('\n')[1:], "Data rows should not contain newlines"
         finally:
-            csv_with_embedded_newlines.unlink(missing_ok=True)
-            output_path.unlink(missing_ok=True)
+            input_csv_file_with_embedded_newlines.unlink(missing_ok=True)
+            newlines_removed_output_file.unlink(missing_ok=True)
     
     def test_remove_newlines_with_custom_output_path(self):
         """Test newline removal with custom output path."""
         # Given: A CSV file and custom output path
-        csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
-        custom_output = csv_with_embedded_newlines.parent / "custom_output.csv"
+        input_csv_file_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
+        custom_output_file_path = input_csv_file_with_embedded_newlines.parent / "custom_output.csv"
         
         try:
-            # When: User removes newlines with custom output path
-            run_remove_newlines(csv_with_embedded_newlines, str(custom_output))
+            # When: User removes newlines with the custom output path
+            run_remove_newlines(input_csv_file_with_embedded_newlines, str(custom_output_file_path))
             
             # Then: Custom output file should be created
-            assert custom_output.exists(), "Custom output file should be created"
+            assert custom_output_file_path.exists(), "Custom output file should be created"
             
-            with open(custom_output, 'r', encoding='utf-8') as f:
-                content = f.read()
-                assert "Task with newlines in summary" in content
+            with open(custom_output_file_path, 'r', encoding='utf-8') as f:
+                processed_content = f.read()
+                assert "Task with newlines in summary" in processed_content
         finally:
-            csv_with_embedded_newlines.unlink(missing_ok=True)
-            custom_output.unlink(missing_ok=True)
+            input_csv_file_with_embedded_newlines.unlink(missing_ok=True)
+            custom_output_file_path.unlink(missing_ok=True)
     
     def test_remove_newlines_from_empty_csv(self):
         """Test newline removal from empty CSV file."""
         # Given: An empty CSV file
-        empty_csv_file = create_temp_csv_file(CSV_EMPTY)
+        input_empty_csv_file = create_temp_csv_file(CSV_EMPTY)
         
         try:
-            # When: User removes newlines from empty file
-            run_remove_newlines(empty_csv_file, None)
+            # When: User removes newlines from the empty file
+            run_remove_newlines(input_empty_csv_file, None)
             
             # Then: Output file should be created even for empty input
-            output_path = empty_csv_file.with_name(f"{empty_csv_file.stem}-no-newlines.csv")
-            assert output_path.exists(), "Output file should be created even for empty input"
+            newlines_removed_output_file = input_empty_csv_file.with_name(f"{input_empty_csv_file.stem}-no-newlines.csv")
+            assert newlines_removed_output_file.exists(), "Output file should be created even for empty input"
         finally:
-            empty_csv_file.unlink(missing_ok=True)
-            output_path.unlink(missing_ok=True)
+            input_empty_csv_file.unlink(missing_ok=True)
+            newlines_removed_output_file.unlink(missing_ok=True)
 
 
 class TestCSVExtractFieldValuesCommand:

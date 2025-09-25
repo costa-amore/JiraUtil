@@ -31,7 +31,7 @@ class TestJiraUtilAPI:
     def test_user_can_process_csv_files(self):
         """Test that users can process CSV files through the API."""
         # Given: A CSV file with formatting issues that need processing
-        csv_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
+        csv_file_with_embedded_newlines = create_temp_csv_file(create_csv_with_embedded_newlines())
         
         # And: Import the required processing functions
         from jira_cleaner import run_remove_newlines
@@ -39,62 +39,62 @@ class TestJiraUtilAPI:
         from jira_dates_eu import run as run_jira_dates_eu
         
         try:
-            # When: User processes CSV through API
-            run_remove_newlines(csv_with_embedded_newlines, None)
+            # When: User processes the CSV file through API
+            run_remove_newlines(csv_file_with_embedded_newlines, None)
             
             # Then: Newlines processing should complete successfully
-            newlines_output = csv_with_embedded_newlines.with_name(f"{csv_with_embedded_newlines.stem}-no-newlines.csv")
-            assert newlines_output.exists()
+            newlines_output_file = csv_file_with_embedded_newlines.with_name(f"{csv_file_with_embedded_newlines.stem}-no-newlines.csv")
+            assert newlines_output_file.exists()
             
         finally:
             # Cleanup
-            csv_with_embedded_newlines.unlink(missing_ok=True)
-            if 'newlines_output' in locals():
-                newlines_output.unlink(missing_ok=True)
+            csv_file_with_embedded_newlines.unlink(missing_ok=True)
+            if 'newlines_output_file' in locals():
+                newlines_output_file.unlink(missing_ok=True)
     
     def test_user_can_extract_field_values_from_csv(self):
         """Test that users can extract field values from CSV files."""
         # Given: A CSV file with structured data for field extraction
-        csv_for_field_extraction = create_temp_csv_file(create_csv_for_field_extraction())
+        csv_file_for_field_extraction = create_temp_csv_file(create_csv_for_field_extraction())
         
         # And: Import the required processing function
         from csv_utils import run_extract_field_values
         
         try:
-            # When: User extracts field values from CSV
-            run_extract_field_values(csv_for_field_extraction, "Status", None)
+            # When: User extracts field values from the CSV file
+            run_extract_field_values(csv_file_for_field_extraction, "Status", None)
             
             # Then: Field extraction should complete successfully
-            status_output = csv_for_field_extraction.with_name(f"{csv_for_field_extraction.stem}-status.txt")
-            assert status_output.exists()
+            field_extraction_output_file = csv_file_for_field_extraction.with_name(f"{csv_file_for_field_extraction.stem}-status.txt")
+            assert field_extraction_output_file.exists()
             
         finally:
             # Cleanup
-            csv_for_field_extraction.unlink(missing_ok=True)
-            if 'status_output' in locals():
-                status_output.unlink(missing_ok=True)
+            csv_file_for_field_extraction.unlink(missing_ok=True)
+            if 'field_extraction_output_file' in locals():
+                field_extraction_output_file.unlink(missing_ok=True)
     
     def test_user_can_convert_dates_in_csv(self):
         """Test that users can convert date formats in CSV files."""
         # Given: A CSV file with ISO date formats that need conversion
-        csv_with_iso_dates = create_temp_csv_file(create_csv_with_iso_dates())
+        csv_file_with_iso_dates = create_temp_csv_file(create_csv_with_iso_dates())
         
         # And: Import the required processing function
         from jira_dates_eu import run as run_jira_dates_eu
         
         try:
-            # When: User converts dates in CSV
-            run_jira_dates_eu(csv_with_iso_dates, None)
+            # When: User converts dates in the CSV file
+            run_jira_dates_eu(csv_file_with_iso_dates, None)
             
             # Then: Date conversion should complete successfully
-            dates_output = csv_with_iso_dates.with_name(f"{csv_with_iso_dates.stem}-eu-dates.csv")
-            assert dates_output.exists()
+            date_conversion_output_file = csv_file_with_iso_dates.with_name(f"{csv_file_with_iso_dates.stem}-eu-dates.csv")
+            assert date_conversion_output_file.exists()
             
         finally:
             # Cleanup
-            csv_with_iso_dates.unlink(missing_ok=True)
-            if 'dates_output' in locals():
-                dates_output.unlink(missing_ok=True)
+            csv_file_with_iso_dates.unlink(missing_ok=True)
+            if 'date_conversion_output_file' in locals():
+                date_conversion_output_file.unlink(missing_ok=True)
     
     def test_user_can_reset_test_fixtures(self):
         """Test that users can reset test fixtures through the API."""
