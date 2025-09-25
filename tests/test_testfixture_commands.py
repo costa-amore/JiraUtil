@@ -21,94 +21,65 @@ from testfixture.issue_processor import process_issues_by_label, assert_issues_e
 from jira_manager import JiraInstanceManager
 
 
-class TestTestFixturePatternParsing:
-    """Test pattern parsing functionality for test fixtures."""
+class TestIssueSummaryPatternParsing:
+    """Test issue summary pattern parsing functionality for test fixtures."""
     
-    def test_parse_summary_pattern_valid_patterns(self):
-        """Test parsing valid summary patterns for reset operations."""
-        # Test various valid patterns - note: when current status matches target, should_update is False
-        test_cases = [
-            ("I was in To Do - expected to be in In Progress", "To Do", False, "To Do"),  # Already in target status
-            ("I was in In Progress - expected to be in Done", "In Progress", False, "In Progress"),  # Already in target status
-            ("I was in Done - expected to be in Closed", "Done", False, "Done"),  # Already in target status
-            ("I was in Backlog - expected to be in To Do", "Backlog", False, "Backlog"),  # Already in target status
+    def test_issue_summary_pattern_parsing(self):
+        """Test comprehensive issue summary pattern parsing for all supported formats."""
+        # Test all valid issue summary patterns with different scenarios
+        issue_summary_test_cases = [
+            # Format 1: "I was in <status1> - expected to be in <status2>"
+            ("I was in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),  # Already in target
+            ("I was in To Do - expected to be in In Progress", "In Progress", True, "To Do", "To Do", "In Progress"),  # Needs update
+            
+            # Format 2: "[<context> - ]starting in <status1> - expected to be in <status2>"
+            ("Bug fix - starting in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),  # With context, already in target
+            ("Bug fix - starting in To Do - expected to be in In Progress", "In Progress", True, "To Do", "To Do", "In Progress"),  # With context, needs update
+            ("starting in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),  # Without context, already in target
+            ("starting in To Do - expected to be in In Progress", "In Progress", True, "To Do", "To Do", "In Progress"),  # Without context, needs update
+            
+            # Case insensitive
+            ("i was in to do - expected to be in in progress", "TO DO", False, "to do", "to do", "in progress"),
+            ("BUG FIX - STARTING IN TO DO - EXPECTED TO BE IN IN PROGRESS", "to do", False, "TO DO", "TO DO", "IN PROGRESS"),
+            
+            # More permissive patterns (anything before key phrases is ignored)
+            ("Context starting in To Do - expected to be in In Progress", "To Do", False, "To Do", "To Do", "In Progress"),
+            ("Some random text before starting in Done - expected to be in Closed", "Done", False, "Done", "Done", "Closed"),
         ]
         
-        for summary, current_status, should_update, target_status in test_cases:
-            result = parse_summary_pattern(summary, current_status)
-            assert result is not None, f"Should parse pattern: {summary}"
-            assert result == (should_update, target_status), f"Should return correct values for: {summary}"
+        for issue_summary, current_status, should_update, target_status, expected_status1, expected_status2 in issue_summary_test_cases:
+            # Test summary pattern parsing (for reset operations)
+            summary_result = parse_summary_pattern(issue_summary, current_status)
+            assert summary_result is not None, f"Should parse issue summary pattern: {issue_summary}"
+            assert summary_result == (should_update, target_status), f"Should return correct summary values for: {issue_summary}"
+            
+            # Test expectation pattern parsing (for assert operations)
+            expectation_result = parse_expectation_pattern(issue_summary)
+            assert expectation_result is not None, f"Should parse expectation pattern: {issue_summary}"
+            assert expectation_result == (expected_status1, expected_status2), f"Should return correct expectation values for: {issue_summary}"
     
-    def test_parse_summary_pattern_already_in_target_status(self):
-        """Test parsing when issue is already in target status."""
-        summary = "I was in To Do - expected to be in In Progress"
-        current_status = "To Do"  # Already in target status
-        
-        result = parse_summary_pattern(summary, current_status)
-        assert result == (False, "To Do"), "Should indicate no update needed when already in target status"
-    
-    def test_parse_summary_pattern_needs_update(self):
-        """Test parsing when issue needs to be updated to target status."""
-        summary = "I was in To Do - expected to be in In Progress"
-        current_status = "In Progress"  # Not in target status, needs update
-        
-        result = parse_summary_pattern(summary, current_status)
-        assert result == (True, "To Do"), "Should indicate update needed when not in target status"
-    
-    def test_parse_summary_pattern_case_insensitive(self):
-        """Test pattern parsing is case insensitive."""
-        test_cases = [
-            ("i was in to do - expected to be in in progress", "TO DO", False, "to do"),  # Already in target status
-            ("I WAS IN IN PROGRESS - EXPECTED TO BE IN DONE", "in progress", False, "IN PROGRESS"),  # Already in target status
-            ("I was in DONE - expected to be in CLOSED", "done", False, "DONE"),  # Already in target status
-        ]
-        
-        for summary, current_status, should_update, target_status in test_cases:
-            result = parse_summary_pattern(summary, current_status)
-            assert result is not None, f"Should parse case insensitive pattern: {summary}"
-            assert result == (should_update, target_status), f"Should handle case insensitive matching"
-    
-    def test_parse_summary_pattern_invalid_patterns(self):
-        """Test parsing invalid summary patterns."""
-        invalid_patterns = [
+    def test_invalid_issue_summary_patterns(self):
+        """Test that invalid issue summary patterns are rejected (case insensitive)."""
+        invalid_issue_summary_patterns = [
             "Regular issue summary",
-            "I was in To Do",
-            "Expected to be in In Progress",
-            "I was in To Do - should be in In Progress",  # Wrong keyword
+            "I was in To Do",  # Missing expected part
+            "i was in to do",  # Case insensitive - missing expected part
+            "Expected to be in In Progress",  # Missing I was in part
+            "expected to be in in progress",  # Case insensitive - missing I was in part
+            "I was in To Do expected to be in In Progress",  # Missing " - "
+            "i was in to do expected to be in in progress",  # Case insensitive - missing " - "
             "I was To Do - expected to be in In Progress",  # Missing "in"
-            "",
+            "i was to do - expected to be in in progress",  # Case insensitive - missing "in"
             "I was in - expected to be in In Progress",  # Empty status
+            "i was in - expected to be in in progress",  # Case insensitive - empty status
+            "",  # Empty string
         ]
         
-        for summary in invalid_patterns:
-            result = parse_summary_pattern(summary, "To Do")
-            assert result is None, f"Should not parse invalid pattern: {summary}"
-    
-    def test_parse_expectation_pattern_valid_patterns(self):
-        """Test parsing valid expectation patterns for assert operations."""
-        test_cases = [
-            ("I was in To Do - expected to be in In Progress", "To Do", "In Progress"),
-            ("I was in In Progress - expected to be in Done", "In Progress", "Done"),
-            ("I was in Done - expected to be in Closed", "Done", "Closed"),
-        ]
-        
-        for summary, expected_status1, expected_status2 in test_cases:
-            result = parse_expectation_pattern(summary)
-            assert result is not None, f"Should parse expectation pattern: {summary}"
-            assert result == (expected_status1, expected_status2), f"Should return correct statuses"
-    
-    def test_parse_expectation_pattern_invalid_patterns(self):
-        """Test parsing invalid expectation patterns."""
-        invalid_patterns = [
-            "Regular issue summary",
-            "I was in To Do",
-            "Expected to be in In Progress",
-            "",
-        ]
-        
-        for summary in invalid_patterns:
-            result = parse_expectation_pattern(summary)
-            assert result is None, f"Should not parse invalid expectation pattern: {summary}"
+        for invalid_issue_summary in invalid_issue_summary_patterns:
+            summary_result = parse_summary_pattern(invalid_issue_summary, "Some Status")
+            expectation_result = parse_expectation_pattern(invalid_issue_summary)
+            assert summary_result is None, f"Should not parse invalid issue summary pattern: '{invalid_issue_summary}'"
+            assert expectation_result is None, f"Should not parse invalid expectation pattern: '{invalid_issue_summary}'"
 
 
 class TestTestFixtureResetCommand:

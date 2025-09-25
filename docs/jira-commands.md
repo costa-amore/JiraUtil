@@ -13,10 +13,16 @@ Process issues with a specified label and update their status based on summary p
 
 ### Pattern Matching
 
-The tool looks for issues with summaries matching this pattern (case-insensitive):
+The tool looks for issues with summaries matching one of these patterns (case-insensitive):
 
+**Format 1 (Original):**
 ```text
-"I was in <status1> - expected to be in <status2>"
+"[<optional context> - ]I was in <status1> - expected to be in <status2>"
+```
+
+**Format 2 (Starting Pattern):**
+```text
+"[<optional context> - ]starting in <status1> - expected to be in <status2>"
 ```
 
 When found, it updates the issue status to `<status1>`.

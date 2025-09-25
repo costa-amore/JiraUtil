@@ -4,27 +4,44 @@
 
 ## Pattern Format
 
-For Jira test fixture management, issue summaries must match this pattern:
+For Jira test fixture management, issue summaries must match one of these patterns:
 
+**Format 1 (Original):**
 ```text
-I was in <status1> - expected to be in <status2>
+[<optional context> - ]I was in <status1> - expected to be in <status2>
+```
+
+**Format 2 (Starting Pattern):**
+```text
+[<optional context> - ]starting in <status1> - expected to be in <status2>
 ```
 
 ## Examples
 
-**Valid patterns:**
+**Valid issue summary patterns (Format 1):**
 
 - `I was in To Do - expected to be in In Progress`
 - `I was in In Progress - expected to be in Done`
 - `I was in SIT/LAB VALIDATED - expected to be in CLOSED`
 - `I was in CLOSED - expected to be in CLOSED`
 
-**Invalid patterns:**
+**Valid issue summary patterns (Format 2):**
 
-- `I was in TODO - expected to be in IN PROGRESS` (wrong case)
-- `I was in To Do - expected to be in In Progress` (extra spaces)
-- `Was in To Do - expected to be in In Progress` (missing "I")
+- `starting in To Do - expected to be in In Progress` (without context)
+- `Bug fix - starting in To Do - expected to be in In Progress` (with context)
+- `Feature request - starting in In Progress - expected to be in Done` (with context)
+- `Hotfix - starting in SIT/LAB VALIDATED - expected to be in CLOSED` (with context)
+- `Enhancement - starting in CLOSED - expected to be in CLOSED` (with context)
+
+
+**Invalid issue summary patterns:**
+
+- `I was in To Do` (missing expected part)
+- `Expected to be in In Progress` (missing I was in part)
 - `I was in To Do expected to be in In Progress` (missing " - ")
+- `I was To Do - expected to be in In Progress` (missing "in")
+- `I was in - expected to be in In Progress` (empty status)
+- `Context - starting in To Do expected to be in In Progress` (missing " - " in context format)
 
 ## Command Behavior
 
