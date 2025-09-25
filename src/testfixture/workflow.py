@@ -49,3 +49,27 @@ def run_assert_expectations(jira_url: str, username: str, password: str, label: 
     # Use the AssertExpectations specific process function
     results = assert_issues_expectations(manager, label)
     report_assertion_results(results)
+
+
+def run_trigger_operation(jira_url: str, username: str, password: str, label: str, issue_key: str) -> None:
+    """
+    Run trigger operation to toggle a label on a specific issue.
+
+    Args:
+        jira_url: Jira instance URL
+        username: Jira username
+        password: Jira password or API token
+        label: Label to toggle
+        issue_key: Key of the issue to modify
+    """
+    # Connect to Jira
+    manager = JiraInstanceManager(jira_url, username, password)
+    manager.connect()
+    
+    # Get the issue
+    issue = manager.jira.issue(issue_key)
+    
+    # Add the label
+    current_labels = issue.fields.labels or []
+    new_labels = list(current_labels) + [label]
+    issue.update(fields={"labels": new_labels})

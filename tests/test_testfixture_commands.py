@@ -122,7 +122,7 @@ class TestTestFixtureAPI:
             # Then: Should create Jira manager and call reset process
             mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
             mock_process.assert_called_once_with(mock_jira_manager, "rule-testing")
-    
+        
     def test_assert_workflow_command_orchestrates_rule_verification(self):
         """Test that assert workflow command coordinates the rule verification process."""
         # Given: High-level assert workflow command and mock dependencies
@@ -140,6 +140,34 @@ class TestTestFixtureAPI:
             # Then: Should create Jira manager and call assert process
             mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
             mock_assert.assert_called_once_with(mock_jira_manager, "rule-testing")
+    
+    def test_trigger_operation_adds_label_when_not_present(self):
+        """Test that trigger operation adds label when issue doesn't have it."""
+        # Given: Test scenario with issue that doesn't have the trigger label
+        from testfixture.workflow import run_trigger_operation
+        
+        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class:
+            mock_jira_manager = Mock()
+            mock_manager_class.return_value = mock_jira_manager
+            mock_jira_manager.connect.return_value = True
+            
+            # Mock issue without the label
+            mock_issue = Mock()
+            mock_issue.key = "TAPS-212"
+            mock_issue.fields.labels = []
+            mock_jira_manager.jira.issue.return_value = mock_issue
+            
+            # When: User runs trigger operation
+            with patch('builtins.print'):
+                run_trigger_operation("https://jira.example.com", "user", "pass", "TransitionSprintItems", "TAPS-212")
+            
+            # Then: Should add the label to the issue
+            mock_jira_manager.connect.assert_called_once()
+            mock_jira_manager.jira.issue.assert_called_once_with("TAPS-212")
+            mock_issue.update.assert_called_once()
+            # Verify the label was added
+            call_args = mock_issue.update.call_args
+            assert "TransitionSprintItems" in call_args[1]["fields"]["labels"]
 
 
 if __name__ == "__main__":
