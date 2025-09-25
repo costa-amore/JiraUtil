@@ -10,6 +10,7 @@ from csv_utils.field_extractor import (
 	extract_field_values_from_rows,
 	format_field_values_text
 )
+from .fixtures import create_field_extractor_rows
 
 
 class TestFindFieldIndex:
@@ -48,77 +49,79 @@ class TestFindFieldIndex:
 class TestExtractFieldValuesFromRows:
 	"""Test the extract_field_values_from_rows function."""
 	
-	def test_extract_field_values_basic(self):
+	def test_basic_extraction(self):
 		"""Test basic field value extraction."""
-		rows = [
-			["Issue key", "Summary", "Parent key", "Status"],
-			["PROJ-1", "Task 1", "EPIC-1", "Done"],
-			["PROJ-2", "Task 2", "EPIC-1", "In Progress"],
-			["PROJ-3", "Task 3", "EPIC-2", "To Do"]
-		]
+		# Setup: Create rows with specific parent keys and statuses
+		rows = create_field_extractor_rows([
+			("PROJ-1", "Task 1", "EPIC-1", "Done"),
+			("PROJ-2", "Task 2", "EPIC-1", "In Progress"),
+			("PROJ-3", "Task 3", "EPIC-2", "To Do")
+		])
+		
+		# Test Parent key extraction
 		field_values, count = extract_field_values_from_rows(rows, "Parent key")
 		assert field_values == ["EPIC-1", "EPIC-2"]
 		assert count == 2
 		
-		# Test extracting Status field
+		# Test Status extraction
 		status_values, status_count = extract_field_values_from_rows(rows, "Status")
 		assert status_values == ["Done", "In Progress", "To Do"]
 		assert status_count == 3
 	
-	def test_extract_field_values_with_duplicates(self):
+	def test_extraction_with_duplicates(self):
 		"""Test field value extraction with duplicates."""
-		rows = [
-			["Issue key", "Summary", "Parent key", "Status"],
-			["PROJ-1", "Task 1", "EPIC-1", "Done"],
-			["PROJ-2", "Task 2", "EPIC-1", "In Progress"],
-			["PROJ-3", "Task 3", "EPIC-1", "To Do"],
-			["PROJ-4", "Task 4", "EPIC-2", "Done"]
-		]
+		# Setup: Create rows with duplicate parent keys and statuses
+		rows = create_field_extractor_rows([
+			("PROJ-1", "Task 1", "EPIC-1", "Done"),
+			("PROJ-2", "Task 2", "EPIC-1", "In Progress"),
+			("PROJ-3", "Task 3", "EPIC-1", "To Do"),
+			("PROJ-4", "Task 4", "EPIC-2", "Done")
+		])
+		
+		# Test Parent key extraction (should deduplicate)
 		field_values, count = extract_field_values_from_rows(rows, "Parent key")
 		assert field_values == ["EPIC-1", "EPIC-2"]
 		assert count == 2
 		
-		# Test Status field with duplicates
+		# Test Status extraction (should deduplicate)
 		status_values, status_count = extract_field_values_from_rows(rows, "Status")
 		assert status_values == ["Done", "In Progress", "To Do"]
 		assert status_count == 3
 	
-	def test_extract_field_values_with_empty_values(self):
+	def test_extraction_with_empty_values(self):
 		"""Test field value extraction with empty values."""
-		rows = [
-			["Issue key", "Summary", "Parent key", "Status"],
-			["PROJ-1", "Task 1", "EPIC-1", "Done"],
-			["PROJ-2", "Task 2", "", "In Progress"],
-			["PROJ-3", "Task 3", "EPIC-2", "To Do"],
-			["PROJ-4", "Task 4", None, "Done"]
-		]
+		# Setup: Create rows with empty and None parent keys
+		rows = create_field_extractor_rows([
+			("PROJ-1", "Task 1", "EPIC-1", "Done"),
+			("PROJ-2", "Task 2", "", "In Progress"),
+			("PROJ-3", "Task 3", "EPIC-2", "To Do"),
+			("PROJ-4", "Task 4", None, "Done")
+		])
+		
+		# Test Parent key extraction (should filter out empty/None)
 		field_values, count = extract_field_values_from_rows(rows, "Parent key")
 		assert field_values == ["EPIC-1", "EPIC-2"]
 		assert count == 2
 	
 	def test_no_field_column(self):
 		"""Test when field column doesn't exist."""
-		rows = [
-			["Issue key", "Summary", "Status"],
-			["PROJ-1", "Task 1", "Done"],
-			["PROJ-2", "Task 2", "In Progress"]
-		]
+		rows = [["Issue key", "Summary", "Status"], ["PROJ-1", "Task 1", "Done"]]
 		field_values, count = extract_field_values_from_rows(rows, "Parent key")
 		assert field_values == []
 		assert count == 0
 	
 	def test_empty_rows(self):
 		"""Test with empty rows."""
-		rows = []
-		field_values, count = extract_field_values_from_rows(rows, "Parent key")
+		field_values, count = extract_field_values_from_rows([], "Parent key")
 		assert field_values == []
 		assert count == 0
 	
 	def test_header_only(self):
 		"""Test with header only, no data rows."""
-		rows = [
-			["Issue key", "Summary", "Parent key", "Status"]
-		]
+		# Setup: Create rows with only header, no data
+		rows = [["Issue key", "Summary", "Parent key", "Status"]]
+		
+		# Test extraction from header-only rows
 		field_values, count = extract_field_values_from_rows(rows, "Parent key")
 		assert field_values == []
 		assert count == 0

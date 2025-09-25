@@ -196,3 +196,18 @@ PROJ-2,Task 2,2024-02-01 09:15:00,2024-02-05 16:20:00,In Progress
 PROJ-3,Task 3,2024-03-10 11:00:00,2024-03-10 11:00:00,To Do'''
 
 CSV_EMPTY = ""
+
+# Field extractor test data factory
+def create_field_extractor_rows(rows_data):
+    """
+    Create field extractor test rows with standard header.
+    
+    Args:
+        rows_data: List of tuples (issue_key, summary, parent_key, status)
+        
+    Returns:
+        List of rows with header + data rows
+    """
+    header = ["Issue key", "Summary", "Parent key", "Status"]
+    data_rows = [list(row) for row in rows_data]
+    return [header] + data_rows
