@@ -15,6 +15,7 @@ This guide explains how to build standalone executables for the JiraUtil project
 Before building, you may want to run linting to check code quality:
 
 ```powershell
+
 # Check for linting issues
 .\scripts\lint-all.ps1
 
