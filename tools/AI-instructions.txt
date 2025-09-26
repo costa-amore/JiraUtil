@@ -39,6 +39,12 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
     - Push changes to remote repository
     - Create GitHub release with feature description
 
+  BUG: Fix release script to commit linter auto-fixes
+    - The release script runs markdown linting and auto-fixes files
+    - These auto-fixed files are not included in the release commit
+    - Need to modify scripts/release.ps1 to commit any files modified by linter
+    - This prevents leaving uncommitted changes after release
+
   then review the code
     extract large code blocks into intent-revealing classes and functions
   then review the files that were added or edited in this process 
