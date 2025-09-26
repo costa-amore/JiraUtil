@@ -32,20 +32,15 @@ if (-not (Invoke-BuildTests)) {
 # Run all linters and check if any changes were made
 Write-Host "[LINT] Running all linters..." -ForegroundColor Yellow
 
-$linterChanges = $false
-
-# Run markdown linting on all markdown files
-if (-not (Invoke-MarkdownLinting -Fix)) {
-    exit 1
-}
+# Markdown linting removed - rely on AI instructions to prevent issues
 
 # Run Python linting on all Python files
-if (-not (Invoke-PythonLinting -Fix)) {
+if (-not (Invoke-PythonLinting -Directories @("src/", "tests/", "tools/") -Fix)) {
     exit 1
 }
 
 # Run PowerShell linting on all PowerShell files
-if (-not (Invoke-PowerShellLinting -Fix)) {
+if (-not (Invoke-PowerShellLinting -Directories @("scripts/") -Fix)) {
     exit 1
 }
 

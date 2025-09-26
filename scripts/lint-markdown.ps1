@@ -3,7 +3,7 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [string]$SourcePath = "docs/ .cursor/",
+    [string[]]$SourcePath = @("docs/", ".cursor/"),
     
     [Parameter(Mandatory=$false)]
     [string]$ReadmePath = "README.md",
@@ -34,8 +34,9 @@ function Invoke-MarkdownLinting {
         if ($IsFix) {
             # First try to auto-fix issues
             Write-Host "[LINT] Attempting to auto-fix markdown issues..." -ForegroundColor Cyan
-            $arguments = @("tools\markdown_linter.py", "--fix") + $Path.Split(' ')
-        $fixProcess = Start-Process -FilePath "powershell" -ArgumentList @("-Command", ".\run.ps1 $($arguments -join ' ')") -Wait -PassThru -NoNewWindow
+            $pathArgs = $SourcePath
+            & .\run.ps1 "tools\markdown_linter.py" "--fix" @pathArgs
+            $fixProcess = @{ ExitCode = $LASTEXITCODE }
             if ($fixProcess.ExitCode -eq 0) {
                 Write-Host "[OK] Auto-fix completed successfully!" -ForegroundColor Green
             } else {
@@ -45,8 +46,9 @@ function Invoke-MarkdownLinting {
         
         # Now run linting to check for remaining issues
         Write-Host "[LINT] Running markdown linting after auto-fix..." -ForegroundColor Cyan
-        $arguments = @("tools\markdown_linter.py") + $Path.Split(' ')
-        $lintProcess = Start-Process -FilePath "powershell" -ArgumentList @("-Command", ".\run.ps1 $($arguments -join ' ')") -Wait -PassThru -NoNewWindow
+        $pathArgs = $SourcePath
+        & .\run.ps1 "tools\markdown_linter.py" @pathArgs
+        $lintProcess = @{ ExitCode = $LASTEXITCODE }
         if ($lintProcess.ExitCode -ne 0) {
             Write-Host "[FAIL] Markdown linting failed! Build aborted." -ForegroundColor Red
             Write-Host "Please fix all remaining markdown linting errors before building executables." -ForegroundColor Red
