@@ -63,6 +63,12 @@ def run_tests():
 	colored_print("  [COLOR] Color System Tests    - Text tag validation, color consistency")
 	colored_print("  [VERSION] Version Management  - 4-component versioning, build scripts, executables")
 	
+	colored_print("\n[USAGE] Run specific tests:")
+	colored_print("  python tests/run_tests.py testfixture                    # Run testfixture category")
+	colored_print("  python tests/run_tests.py test_testfixture_trigger.py    # Run specific file")
+	colored_print("  python tests/run_tests.py test_trigger_operation         # Run tests matching pattern")
+	colored_print("  python tests/run_tests.py all                            # Run all tests")
+	
 	colored_print("\n[RUN] Running tests...")
 	print("-" * 60)
 	
@@ -111,10 +117,10 @@ def run_tests():
 
 
 def run_specific_test_category(category):
-	"""Run tests for a specific category."""
+	"""Run tests for a specific category, file, or pattern."""
 	category_mapping = {
 		"csv": "test_csv_export_commands.py",
-		"testfixture": "test_testfixture_commands.py", 
+		"testfixture": "test_testfixture_trigger.py",  # Fixed: was test_testfixture_commands.py
 		"cli": "test_cli_commands.py",
 		"overview": "test_functional_overview.py",
 		"color": "test_color_system.py",
@@ -122,29 +128,57 @@ def run_specific_test_category(category):
 		"all": None
 	}
 	
+	if category == "all":
+		return run_tests()
+	
+	# Check if it's a direct file path or pattern
+	if category.endswith('.py'):
+		# Direct file path provided
+		test_file = f"tests/{category}" if not category.startswith('tests/') else category
+		if not Path(test_file).exists():
+			colored_print(f"[ERROR] Test file not found: {test_file}")
+			return False
+		return run_test_file(test_file, category)
+	
+	# Check if it's a test method pattern (e.g., "test_trigger_operation_with_multiple_labels")
+	if category.startswith('test_'):
+		colored_print(f"[TEST] Running tests matching pattern: {category}")
+		cmd = [sys.executable, "-m", "pytest", "-k", category, "-v", "--tb=short"]
+		return run_pytest_command(cmd, f"tests matching '{category}'")
+	
+	# Check if it's a category mapping
 	if category not in category_mapping:
 		colored_print(f"[ERROR] Unknown category: {category}")
 		print(f"Available categories: {', '.join(category_mapping.keys())}")
+		print("Or provide:")
+		print("  - A test file name (e.g., 'test_testfixture_trigger.py')")
+		print("  - A test method pattern (e.g., 'test_trigger_operation')")
 		return False
-	
-	if category == "all":
-		return run_tests()
 	
 	test_file = f"tests/{category_mapping[category]}"
 	if not Path(test_file).exists():
 		colored_print(f"[ERROR] Test file not found: {test_file}")
 		return False
 	
-	colored_print(f"[TEST] Running {category} tests...")
+	return run_test_file(test_file, category)
+
+
+def run_test_file(test_file, description):
+	"""Run a specific test file."""
+	colored_print(f"[TEST] Running {description} tests...")
 	cmd = [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"]
-	
+	return run_pytest_command(cmd, description)
+
+
+def run_pytest_command(cmd, description):
+	"""Run a pytest command and handle the result."""
 	try:
 		# Use real-time output with unbuffered stdout
 		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0)
-		print(f"SUCCESS: {category.title()} tests passed!")
+		print(f"SUCCESS: {description.title()} tests passed!")
 		return True
 	except subprocess.CalledProcessError as e:
-		print(f"FAILED: {category.title()} tests failed!")
+		print(f"FAILED: {description.title()} tests failed!")
 		return False
 
 
