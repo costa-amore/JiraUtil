@@ -114,14 +114,7 @@ function Get-NewVersion {
 function Invoke-ReleaseBuild {
     param([string]$Platform, [bool]$Clean)
     
-    # First, run linting separately to fix any issues before versioning
-    Write-Build "Running linters to fix any issues before versioning..."
-    if (-not (Invoke-PreReleaseLinting)) {
-        Write-Fail "Linting failed! Release aborted."
-        return $false
-    }
-    
-    # Now run the build with version increment
+    # Run the build with version increment (includes linting)
     Write-Build "Building with version increment..."
     & .\scripts\build.ps1 -Platform $Platform -Clean:$Clean -BuildForRelease
     
@@ -132,65 +125,6 @@ function Invoke-ReleaseBuild {
     return $true
 }
 
-function Invoke-PreReleaseLinting {
-    <#
-    .SYNOPSIS
-    Runs all linters and commits fixes before versioning changes.
-    #>
-    
-    Write-Host "[LINT] Running pre-release linting..." -ForegroundColor Yellow
-    
-    # Import linter functions
-    . "$PSScriptRoot\lint-markdown.ps1"
-    . "$PSScriptRoot\lint-python.ps1"
-    . "$PSScriptRoot\lint-powershell.ps1"
-    
-    # Run all linters with auto-fix
-    $allPassed = $true
-    
-    # Markdown linting
-    if (-not (Invoke-MarkdownLinting -Fix)) {
-        $allPassed = $false
-    }
-    
-    # Python linting
-    if (-not (Invoke-PythonLinting -Directories @("src/", "tests/", "tools/") -Fix)) {
-        $allPassed = $false
-    }
-    
-    # PowerShell linting
-    if (-not (Invoke-PowerShellLinting -Directories @("scripts/") -Fix)) {
-        $allPassed = $false
-    }
-    
-    if (-not $allPassed) {
-        Write-Fail "Linting failed! Please fix issues manually."
-        return $false
-    }
-    
-    # Check if there are any uncommitted changes from linter fixes
-    $gitStatus = git status --porcelain
-    if ($gitStatus) {
-        Write-Host "[LINT] Found linter auto-fixes, committing changes..." -ForegroundColor Cyan
-        
-        # Add all modified files
-        git add .
-        
-        # Commit the linter fixes
-        git commit -m "fix: apply linter auto-fixes before release"
-        
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "[OK] Linter fixes committed successfully!" -ForegroundColor Green
-            return $true
-        } else {
-            Write-Fail "Failed to commit linter fixes!"
-            return $false
-        }
-    } else {
-        Write-Host "[OK] No linter fixes needed." -ForegroundColor Green
-        return $true
-    }
-}
 
 
 # =============================================================================
@@ -251,7 +185,7 @@ function Start-ReleaseProcess {
         return $false
     }
     
-    # Validate uncommitted changes
+    # Validate uncommitted changes - abort if any exist
     if (-not (Test-UncommittedChanges)) {
         return $false
     }

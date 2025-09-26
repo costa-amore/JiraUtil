@@ -29,6 +29,11 @@ if (-not (Invoke-BuildTests)) {
     exit 1
 }
 
+# Run all linters and check if any changes were made
+Write-Host "[LINT] Running all linters..." -ForegroundColor Yellow
+
+$linterChanges = $false
+
 # Run markdown linting on all markdown files
 if (-not (Invoke-MarkdownLinting -Fix)) {
     exit 1
@@ -43,6 +48,18 @@ if (-not (Invoke-PythonLinting -Fix)) {
 if (-not (Invoke-PowerShellLinting -Fix)) {
     exit 1
 }
+
+# Check if any linters made changes
+$gitStatus = git status --porcelain
+if ($gitStatus) {
+    Write-Host "[LINT] Linters made changes to files. Please review and commit them before building." -ForegroundColor Yellow
+    Write-Host "Modified files:" -ForegroundColor Cyan
+    Write-Host $gitStatus -ForegroundColor Gray
+    Write-Host "Run 'git add .' and 'git commit -m \"fix: apply linter auto-fixes\"' to commit the changes." -ForegroundColor Green
+    Write-Host "Then run the build again." -ForegroundColor Green
+    exit 1
+}
+
 
 # Handle versioning AFTER tests pass
 $IsCI = $env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true"
