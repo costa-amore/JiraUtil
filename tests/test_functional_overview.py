@@ -110,10 +110,9 @@ class TestJiraUtilAPI:
             mock_process.return_value = create_reset_result(processed=2, updated=2)
             
             with patch('builtins.print'):
-                run_TestFixture_Reset("https://jira.example.com", "user", "pass", "rule-testing")
+                run_TestFixture_Reset(mock_manager, "rule-testing")
             
             # Then: Should call appropriate functions
-            mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
             mock_process.assert_called_once_with(mock_manager, "rule-testing")
     
     def test_user_can_assert_test_fixtures(self):
@@ -130,10 +129,9 @@ class TestJiraUtilAPI:
             mock_assert.return_value = create_assert_result(processed=2, passed=1, failed=1, failures=['PROJ-2: Expected Done but is To Do'])
             
             with patch('builtins.print'):
-                run_assert_expectations("https://jira.example.com", "user", "pass", "rule-testing")
+                run_assert_expectations(mock_manager, "rule-testing")
             
             # Then: Should call appropriate functions
-            mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
             mock_assert.assert_called_once_with(mock_manager, "rule-testing")
     
     def test_user_can_parse_cli_commands(self):

@@ -117,10 +117,9 @@ class TestTestFixtureAPI:
             
             # When: User runs the reset workflow command
             with patch('builtins.print'):
-                run_TestFixture_Reset("https://jira.example.com", "user", "pass", "rule-testing")
+                run_TestFixture_Reset(mock_jira_manager, "rule-testing")
             
-            # Then: Should create Jira manager and call reset process
-            mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
+            # Then: Should call reset process
             mock_process.assert_called_once_with(mock_jira_manager, "rule-testing")
         
     def test_assert_workflow_command_orchestrates_rule_verification(self):
@@ -135,10 +134,9 @@ class TestTestFixtureAPI:
             
             # When: User runs the assert workflow command
             with patch('builtins.print'):
-                run_assert_expectations("https://jira.example.com", "user", "pass", "rule-testing")
+                run_assert_expectations(mock_jira_manager, "rule-testing")
             
-            # Then: Should create Jira manager and call assert process
-            mock_manager_class.assert_called_once_with("https://jira.example.com", "user", "pass")
+            # Then: Should call assert process
             mock_assert.assert_called_once_with(mock_jira_manager, "rule-testing")
     
     def test_trigger_operation_adds_label_when_not_present(self):
@@ -182,10 +180,8 @@ class TestTestFixtureAPI:
     def _execute_trigger_operation(self, mock_manager):
         """Execute the trigger operation with mocked dependencies."""
         from testfixture.workflow import run_trigger_operation
-        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class:
-            mock_manager_class.return_value = mock_manager
-            with patch('builtins.print'):
-                run_trigger_operation("https://jira.example.com", "user", "pass", "TransitionSprintItems", "TAPS-212")
+        with patch('builtins.print'):
+            run_trigger_operation(mock_manager, "TransitionSprintItems", "TAPS-212")
     
     def _assert_label_was_added(self, mock_issue):
         """Assert that the label was added to the issue."""
