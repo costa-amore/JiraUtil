@@ -32,6 +32,13 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
     - Update command reference documentation
     - Test the actual command line interface to verify help output
 
+  IMPORTANT: Version and release the feature
+    - Bump version using python tools/set-version.py (minor for features, patch for fixes)
+    - Stage and commit these 3 files together: scripts/version.json, README.md, .code_hash
+    - Use commit message: "chore: bump version to X.Y.Z for [feature name]"
+    - Push changes to remote repository
+    - Create GitHub release with feature description
+
   then review the code
     extract large code blocks into intent-revealing classes and functions
   then review the files that were added or edited in this process 
