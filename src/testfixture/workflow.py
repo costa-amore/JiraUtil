@@ -55,13 +55,19 @@ def run_trigger_operation(manager, label: str, issue_key: str) -> None:
 
 def _toggle_label_on_issue(manager, issue_key: str, label: str) -> None:
     """Toggle a label on an issue by removing it if present, then adding it."""
-    issue, current_labels = _load_issue_and_labels(manager, issue_key)
-    
-    if label in current_labels:
-        _remove_label_from_issue(issue, label)
+    try:
         issue, current_labels = _load_issue_and_labels(manager, issue_key)
-    
-    _add_label_to_issue(issue, label, current_labels)
+        
+        if label in current_labels:
+            _remove_label_from_issue(issue, label)
+            print(f"INFO: {label} was removed from {issue_key}")
+            issue, current_labels = _load_issue_and_labels(manager, issue_key)
+        
+        _add_label_to_issue(issue, label, current_labels)
+        print(f"INFO: {label} was set on {issue_key}")
+    except Exception as e:
+        print(f"FATAL ERROR: {e}")
+        raise
 
 
 def _load_issue_and_labels(manager, issue_key: str):
