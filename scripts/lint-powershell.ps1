@@ -47,7 +47,7 @@ function Invoke-PowerShellLinting {
     
     # Run PowerShell linter
     try {
-        $result = & python tools\powershell_linter.py @arguments
+        $result = & .\run.ps1 tools\powershell_linter.py @arguments
         return $result -eq 0
     } catch {
         Write-Host "[ERROR] Failed to run PowerShell linter: $_" -ForegroundColor Red

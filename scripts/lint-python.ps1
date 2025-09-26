@@ -47,7 +47,7 @@ function Invoke-PythonLinting {
     
     # Run Python linter
     try {
-        $result = & python tools\python_linter.py @arguments
+        $result = & .\run.ps1 tools\python_linter.py @arguments
         return $result -eq 0
     } catch {
         Write-Host "[ERROR] Failed to run Python linter: $_" -ForegroundColor Red

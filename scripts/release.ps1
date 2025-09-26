@@ -154,12 +154,12 @@ function Invoke-PreReleaseLinting {
     }
     
     # Python linting
-    if (-not (Invoke-PythonLinting -Fix)) {
+    if (-not (Invoke-PythonLinting -Directories @("src/", "tests/", "tools/") -Fix)) {
         $allPassed = $false
     }
     
     # PowerShell linting
-    if (-not (Invoke-PowerShellLinting -Fix)) {
+    if (-not (Invoke-PowerShellLinting -Directories @("scripts/") -Fix)) {
         $allPassed = $false
     }
     
