@@ -65,6 +65,16 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
 **Commit Message Prefixes:**
 - Use: feat, fix, cleanup, chore, refactor
 - Keep consistent with recent commit history
+- Focus on WHY the change was made, not WHAT changed (diffs show the what)
+- Keep messages concise and avoid repeating details visible in the diff
+
+**Avoid Duplication:**
+- NEVER create duplicate content within a file
+- ALWAYS check for existing duplication in sections being edited
+- If adding new capabilities, integrate them into existing sections rather than creating new ones
+- Prefer referencing existing sections over repeating information
+- Remove outdated or redundant content when making changes
+- Keep documentation concise and focused on single source of truth
 
 **Test Coverage Duplication Detection:**
 - Detect if more than 1 test verifies the same functional use-case or part of it
