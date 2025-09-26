@@ -1,28 +1,42 @@
 from jira_manager import JiraInstanceManager
 from testfixture import run_TestFixture_Reset, run_assert_expectations, run_trigger_operation, run_trigger_operation_with_multiple_labels
+from cli.parser import DEFAULT_TEST_FIXTURE_LABEL
 
 
 def handle_test_fixture_commands(args, result: dict) -> dict:
-    """Handle test-fixture commands."""
+    """Handle test-fixture commands with support for chaining."""
     jira_url, username, password = get_jira_credentials(args)
     
-    if args.test_command in ["reset", "r"]:
-        execute_with_jira_manager(jira_url, username, password, run_TestFixture_Reset, args.label)
-        return result
-    elif args.test_command in ["assert", "a"]:
-        execute_with_jira_manager(jira_url, username, password, run_assert_expectations, args.label)
-        return result
-    elif args.test_command in ["trigger", "t"]:
-        # Check if multiple labels are provided (comma-separated)
-        if ',' in args.label:
-            execute_with_jira_manager(jira_url, username, password, run_trigger_operation_with_multiple_labels, args.label, args.key)
+    # Get the label to use for reset/assert commands
+    label = args.label if args.label else DEFAULT_TEST_FIXTURE_LABEL
+    
+    # Process each command in the chain sequentially
+    for command in args.commands:
+        if command in ["reset", "r"]:
+            print(f"[CHAIN] Executing reset with label: {label}")
+            execute_with_jira_manager(jira_url, username, password, run_TestFixture_Reset, label)
+        elif command in ["assert", "a"]:
+            print(f"[CHAIN] Executing assert with label: {label}")
+            execute_with_jira_manager(jira_url, username, password, run_assert_expectations, label)
+        elif command in ["trigger", "t"]:
+            # For trigger, use the label from args.label (required for trigger)
+            if not args.label:
+                from cli.parser import build_parser
+                parser = build_parser()
+                parser.error("Trigger command requires -l/--label argument")
+            
+            print(f"[CHAIN] Executing trigger with label: {args.label}, key: {args.key}")
+            # Check if multiple labels are provided (comma-separated)
+            if ',' in args.label:
+                execute_with_jira_manager(jira_url, username, password, run_trigger_operation_with_multiple_labels, args.label, args.key)
+            else:
+                execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.label, args.key)
         else:
-            execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.label, args.key)
-        return result
-    else:
-        from cli.parser import build_parser
-        parser = build_parser()
-        parser.error("Unknown test-fixture command")
+            from cli.parser import build_parser
+            parser = build_parser()
+            parser.error(f"Unknown test-fixture command: {command}")
+    
+    return result
 
 
 def execute_with_jira_manager(jira_url: str, username: str, password: str, workflow_function, *args):

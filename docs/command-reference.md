@@ -34,6 +34,7 @@ JiraUtil <command> [subcommand] [options] [arguments]
 | `test-fixture reset` | `tf r` | Reset test fixture issues based on summary pattern |
 | `test-fixture assert` | `tf a` | Assert test fixture issues are in expected status |
 | `test-fixture trigger` | `tf t` | Trigger automation rules by toggling a label on a specific issue |
+| `test-fixture <commands>` | `tf <commands>` | Chain multiple commands: r (reset), a (assert), t (trigger) |
 
 ### Utility Commands
 
@@ -237,6 +238,47 @@ JiraUtil tf t -l "MyRule" -k "PROJ-456" --jira-url "https://mycompany.atlassian.
 - `INFO`: When labels are set on issue (multiple labels mode)
 - `ERROR`: When no valid labels are provided
 - `FATAL ERROR`: When issue is not found
+
+### test-fixture chained commands
+
+**Usage:**
+
+```bash
+JiraUtil test-fixture <commands> -l <label> [-k <key>] [--jira-url <url>] [--username <user>] [--password <pass>]
+JiraUtil tf <commands> -l <label> [-k <key>] [--jira-url <url>] [--username <user>] [--password <pass>]
+```
+
+**Arguments:**
+
+- `<commands>` - Space-separated sequence of commands: r (reset), a (assert), t (trigger)
+- `-l`, `--label` - Label(s) to use for reset/assert commands (comma-separated for multiple labels)
+
+**Options:**
+
+- `-k`, `--key` - Issue key for trigger command (default: TAPS-212)
+- `--jira-url` - Override Jira URL from config
+- `--username` - Override Jira username from config
+- `--password` - Override Jira password from config
+
+**Description:** Execute multiple test fixture commands in sequence. All commands in the chain use the same `-l` and `-k` parameters. Commands are executed in the order specified.
+
+**Command Codes:**
+
+- `r` - Reset test fixture issues
+- `a` - Assert test fixture expectations
+- `t` - Trigger automation rules
+
+**Examples:**
+
+See [Command Examples Reference](shared/command-examples.md#chained-commands) for comprehensive examples.
+
+**Notes:**
+
+- Commands are executed sequentially in the order specified
+- All commands in the chain use the same `-l` label parameter
+- Only the trigger command (`t`) uses the `-k` key parameter
+- Reset and assert commands use the default label if `-l` is not provided
+- Trigger command requires `-l` parameter to be specified
 
 ### list
 

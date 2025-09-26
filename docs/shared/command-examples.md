@@ -88,6 +88,32 @@ JiraUtil AssertExpectations --jira-url https://company.atlassian.net --username 
 JiraUtil ae my-test-label
 ```
 
+### Chained Commands
+
+```bash
+
+# Reset then trigger
+JiraUtil tf r t -l my-label
+
+# Reset, assert, then trigger
+JiraUtil tf r a t -l my-label
+
+# Multiple resets before trigger
+JiraUtil tf r r r t -l my-label
+
+# Complex mixed sequence
+JiraUtil tf a r a t a a a a -l my-label
+
+# With custom issue key
+JiraUtil tf r t -l my-label -k PROJECT-123
+
+# Multiple labels
+JiraUtil tf r a t -l label1,label2
+
+# With custom credentials
+JiraUtil tf r t -l my-label --jira-url https://company.atlassian.net --username user@company.com --password token
+```
+
 ## Help Commands
 
 ```bash

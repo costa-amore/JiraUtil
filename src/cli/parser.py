@@ -35,31 +35,14 @@ def build_parser() -> argparse.ArgumentParser:
     fixdates.add_argument("input", help="Path to the input Jira CSV file")
     fixdates.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-eu-dates.csv next to input")
     
-    # test-fixture subcommand group (alias: tf)
-    test_fixture = subparsers.add_parser("test-fixture", aliases=["tf"], help="Test fixture management commands")
-    test_fixture_subparsers = test_fixture.add_subparsers(dest="test_command", required=True)
-    
-    # reset subcommand under test-fixture (alias: r)
-    reset_test_fixture = test_fixture_subparsers.add_parser("reset", aliases=["r"], help="Process issues with specified label and update status based on summary pattern")
-    reset_test_fixture.add_argument("label", nargs='?', default=DEFAULT_TEST_FIXTURE_LABEL, help=f"Jira label to search for (default: '{DEFAULT_TEST_FIXTURE_LABEL}')")
-    reset_test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
-    reset_test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
-    reset_test_fixture.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
-    
-    # assert subcommand under test-fixture (alias: a)
-    assert_expectations = test_fixture_subparsers.add_parser("assert", aliases=["a"], help="Assert that issues with specified label are in their expected status based on summary pattern")
-    assert_expectations.add_argument("label", nargs='?', default=DEFAULT_TEST_FIXTURE_LABEL, help=f"Jira label to search for (default: '{DEFAULT_TEST_FIXTURE_LABEL}')")
-    assert_expectations.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
-    assert_expectations.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
-    assert_expectations.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
-    
-    # trigger subcommand under test-fixture (alias: t)
-    trigger_operation = test_fixture_subparsers.add_parser("trigger", aliases=["t"], help="Trigger automation rules by setting labels on a specific issue")
-    trigger_operation.add_argument("-l", "--label", required=True, help="Label(s) to trigger automation rules (comma-separated for multiple labels)")
-    trigger_operation.add_argument("-k", "--key", default="TAPS-212", help="Issue key to trigger (default: TAPS-212)")
-    trigger_operation.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
-    trigger_operation.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
-    trigger_operation.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
+    # test-fixture subcommand group (alias: tf) - supports chained commands
+    test_fixture = subparsers.add_parser("test-fixture", aliases=["tf"], help="Test fixture management commands (supports chaining: tf r t -l label)")
+    test_fixture.add_argument("commands", nargs='+', help="Chained commands: r (reset), a (assert), t (trigger). Use -l for labels, -k for issue key")
+    test_fixture.add_argument("-l", "--label", help="Label(s) to use for reset/assert commands (comma-separated for multiple labels)")
+    test_fixture.add_argument("-k", "--key", default="TAPS-212", help="Issue key for trigger command (default: TAPS-212)")
+    test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
+    test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
+    test_fixture.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
     
     # list command
     list_cmd = subparsers.add_parser("list", aliases=["ls"], help="List available commands and their descriptions")

@@ -23,6 +23,10 @@ def show_list() -> None:
     print("  test-fixture reset [label]             Reset test fixture issues")
     print("  test-fixture assert [label]            Assert test fixture expectations")
     print("  test-fixture trigger -l <label> [-k <key>]  Trigger automation rules by toggling a label")
+    print("  test-fixture <commands> -l <label>     Chain commands: r (reset), a (assert), t (trigger)")
+    print("    Examples:")
+    print("      tf r t -l label                    Reset then trigger")
+    print("      tf r a t -l label,label2           Reset, assert, then trigger with multiple labels")
     print()
     print("Utility Commands:")
     print("  list                                   Show this command list")
@@ -37,6 +41,7 @@ def show_list() -> None:
     print("  tf r [label]                           test-fixture reset")
     print("  tf a [label]                           test-fixture assert")
     print("  tf t -l <label> [-k <key>]             test-fixture trigger")
+    print("  tf <commands> -l <label>               chain commands (r, a, t)")
     print("  ls                                     list")
     print("  st                                     status")
 
