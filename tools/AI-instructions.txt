@@ -26,6 +26,12 @@ first describe the requirements in terms of examples (try to maintain a GWT styl
       only keeping the lower level tests to reduce execution speed and test complexity
     -> ask for confirmation by preparing a commit with a message message the functionality added
 
+  IMPORTANT: Update help commands and documentation
+    - Add new commands to src/cli/commands.py show_list() function
+    - Add short aliases to the help output
+    - Update command reference documentation
+    - Test the actual command line interface to verify help output
+
   then review the code
     extract large code blocks into intent-revealing classes and functions
   then review the files that were added or edited in this process 
