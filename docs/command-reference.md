@@ -223,7 +223,7 @@ JiraUtil tf t -l "MyRule" -k "PROJ-456" --jira-url "https://mycompany.atlassian.
 **Logging:**
 
 - `INFO`: When label is removed from issue
-- `INFO`: When label is set on issue  
+- `INFO`: When label is set on issue
 - `FATAL ERROR`: When issue is not found
 
 ### list

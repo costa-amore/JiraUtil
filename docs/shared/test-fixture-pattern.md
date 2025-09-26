@@ -33,7 +33,6 @@ For Jira test fixture management, issue summaries must match one of these patter
 - `Hotfix - starting in SIT/LAB VALIDATED - expected to be in CLOSED` (with context)
 - `Enhancement - starting in CLOSED - expected to be in CLOSED` (with context)
 
-
 **Invalid issue summary patterns:**
 
 - `I was in To Do` (missing expected part)
