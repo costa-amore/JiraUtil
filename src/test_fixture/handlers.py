@@ -12,6 +12,10 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
     elif args.test_command in ["assert", "a"]:
         execute_with_jira_manager(jira_url, username, password, run_assert_expectations, args.label)
         return result
+    elif args.test_command in ["trigger", "t"]:
+        from testfixture.workflow import run_trigger_operation
+        execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.label, args.key)
+        return result
     else:
         from cli.parser import build_parser
         parser = build_parser()

@@ -53,6 +53,14 @@ def build_parser() -> argparse.ArgumentParser:
     assert_expectations.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
     assert_expectations.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
     
+    # trigger subcommand under test-fixture (alias: t)
+    trigger_operation = test_fixture_subparsers.add_parser("trigger", aliases=["t"], help="Trigger automation rules by toggling a label on a specific issue")
+    trigger_operation.add_argument("-l", "--label", required=True, help="Label to trigger automation rules")
+    trigger_operation.add_argument("-k", "--key", default="TAPS-212", help="Issue key to trigger (default: TAPS-212)")
+    trigger_operation.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
+    trigger_operation.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
+    trigger_operation.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")
+    
     # list command
     list_cmd = subparsers.add_parser("list", aliases=["ls"], help="List available commands and their descriptions")
     
