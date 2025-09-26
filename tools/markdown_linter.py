@@ -29,6 +29,97 @@ def fix_extra_blank_lines(content):
     return content
 
 
+def fix_list_spacing(content):
+    """Add blank lines before and after lists."""
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for i, line in enumerate(lines):
+        # Check if current line is a list item (starts with - or number.)
+        is_list_item = re.match(r'^\s*[-*+]\s+', line) or re.match(r'^\s*\d+\.\s+', line)
+        
+        if is_list_item:
+            # Check if previous line is not empty and not a list item
+            prev_line = lines[i-1] if i > 0 else ""
+            prev_is_list = re.match(r'^\s*[-*+]\s+', prev_line) or re.match(r'^\s*\d+\.\s+', prev_line)
+            prev_is_empty = prev_line.strip() == ""
+            
+            if not prev_is_list and not prev_is_empty and prev_line.strip() != "":
+                # Add blank line before list
+                fixed_lines.append("")
+            
+            fixed_lines.append(line)
+            
+            # Check if next line is not a list item and not empty
+            next_line = lines[i+1] if i < len(lines) - 1 else ""
+            next_is_list = re.match(r'^\s*[-*+]\s+', next_line) or re.match(r'^\s*\d+\.\s+', next_line)
+            next_is_empty = next_line.strip() == ""
+            
+            if not next_is_list and not next_is_empty and next_line.strip() != "":
+                # Add blank line after list
+                fixed_lines.append("")
+        else:
+            fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+
+def fix_header_spacing(content):
+    """Add blank lines before headers (except first header after section)."""
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for i, line in enumerate(lines):
+        # Check if current line is a header (starts with #)
+        is_header = re.match(r'^#{1,6}\s+', line)
+        
+        if is_header:
+            # Check if previous line is not empty
+            prev_line = lines[i-1] if i > 0 else ""
+            prev_is_empty = prev_line.strip() == ""
+            
+            if not prev_is_empty and prev_line.strip() != "":
+                # Add blank line before header
+                fixed_lines.append("")
+            
+            fixed_lines.append(line)
+        else:
+            fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+
+def fix_code_block_spacing(content):
+    """Add blank lines before and after code blocks."""
+    lines = content.split('\n')
+    fixed_lines = []
+    in_code_block = False
+    
+    for i, line in enumerate(lines):
+        # Check if line starts a code block
+        if line.strip().startswith('```'):
+            if not in_code_block:
+                # Starting code block - add blank line before if previous line is not empty
+                prev_line = lines[i-1] if i > 0 else ""
+                if prev_line.strip() != "":
+                    fixed_lines.append("")
+                in_code_block = True
+            else:
+                # Ending code block - add blank line after if next line is not empty
+                next_line = lines[i+1] if i < len(lines) - 1 else ""
+                if next_line.strip() != "":
+                    fixed_lines.append(line)
+                    fixed_lines.append("")
+                    continue
+                in_code_block = False
+            
+            fixed_lines.append(line)
+        else:
+            fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+
 def lint_markdown_file(file_path, fix=False):
     """Lint a single markdown file."""
     try:
@@ -43,6 +134,9 @@ def lint_markdown_file(file_path, fix=False):
     # Apply fixes
     fixed_content = fix_trailing_spaces(fixed_content)
     fixed_content = fix_extra_blank_lines(fixed_content)
+    fixed_content = fix_list_spacing(fixed_content)
+    fixed_content = fix_header_spacing(fixed_content)
+    fixed_content = fix_code_block_spacing(fixed_content)
     
     # Check if any changes were made
     if original_content != fixed_content:

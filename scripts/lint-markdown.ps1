@@ -3,7 +3,7 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [string]$SourcePath = "docs/",
+    [string]$SourcePath = "docs/ .cursor/",
     
     [Parameter(Mandatory=$false)]
     [string]$ReadmePath = "README.md",

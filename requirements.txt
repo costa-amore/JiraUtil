@@ -13,3 +13,8 @@ pandas>=2.0.0
 pyinstaller>=6.0.0
 
 # Documentation linting (custom script in tools/)
+
+# Python linting and formatting
+flake8>=6.0.0
+black>=23.0.0
+isort>=5.12.0

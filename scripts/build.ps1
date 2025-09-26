@@ -18,6 +18,8 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\build-versioning.ps1"
 . "$PSScriptRoot\build-documentation.ps1"
 . "$PSScriptRoot\build-packaging.ps1"
+. "$PSScriptRoot\lint-python.ps1"
+. "$PSScriptRoot\lint-powershell.ps1"
 
 Write-Host "[BUILD] Building JiraUtil Executables" -ForegroundColor Cyan
 Write-Host "Platform: $Platform" -ForegroundColor Yellow
@@ -27,8 +29,18 @@ if (-not (Invoke-BuildTests)) {
     exit 1
 }
 
-# Run markdown linting on source docs
-if (-not (Invoke-MarkdownLinting -SourcePath "docs/" -ReadmePath "README.md" -Fix)) {
+# Run markdown linting on all markdown files
+if (-not (Invoke-MarkdownLinting -Fix)) {
+    exit 1
+}
+
+# Run Python linting on all Python files
+if (-not (Invoke-PythonLinting -Fix)) {
+    exit 1
+}
+
+# Run PowerShell linting on all PowerShell files
+if (-not (Invoke-PowerShellLinting -Fix)) {
     exit 1
 }
 
