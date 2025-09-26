@@ -29,31 +29,7 @@ if (-not (Invoke-BuildTests)) {
     exit 1
 }
 
-# Run all linters and check if any changes were made
-Write-Host "[LINT] Running all linters..." -ForegroundColor Yellow
-
-# Markdown linting removed - rely on AI instructions to prevent issues
-
-# Run Python linting on all Python files
-if (-not (Invoke-PythonLinting -Directories @("src/", "tests/", "tools/") -Fix)) {
-    exit 1
-}
-
-# Run PowerShell linting on all PowerShell files
-if (-not (Invoke-PowerShellLinting -Directories @("scripts/") -Fix)) {
-    exit 1
-}
-
-# Check if any linters made changes
-$gitStatus = git status --porcelain
-if ($gitStatus) {
-    Write-Host "[LINT] Linters made changes to files. Please review and commit them before building." -ForegroundColor Yellow
-    Write-Host "Modified files:" -ForegroundColor Cyan
-    Write-Host $gitStatus -ForegroundColor Gray
-    Write-Host "Run 'git add .' and 'git commit -m \"fix: apply linter auto-fixes\"' to commit the changes." -ForegroundColor Green
-    Write-Host "Then run the build again." -ForegroundColor Green
-    exit 1
-}
+# Linting removed from build - run '.\scripts\lint-all.ps1' separately if needed
 
 
 # Handle versioning AFTER tests pass

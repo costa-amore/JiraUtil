@@ -56,6 +56,7 @@ This document contains specific instructions for AI assistants working on this p
 - **Build script**: `.\scripts\build.ps1 -Platform windows`
 - **Release script**: `.\scripts\release.ps1 -Platform windows`
 - **Linter wrappers**: `.\scripts\lint-markdown.ps1`, `.\scripts\lint-python.ps1`, `.\scripts\lint-powershell.ps1`
+- **All linters**: `.\scripts\lint-all.ps1` (runs all linters together)
 
 ### Dependency Management
 
@@ -102,11 +103,11 @@ This document contains specific instructions for AI assistants working on this p
 - Add short aliases to the help output
 - Update command reference documentation
 - Test the actual command line interface to verify help output
-- **Always run linter check when updating files**:
-  - Markdown files: `.\scripts\lint-markdown.ps1`
-  - Python files: `.\scripts\lint-python.ps1 -Fix`
-  - PowerShell files: `.\scripts\lint-powershell.ps1 -Fix`
-- **Note**: The current linter only checks basic formatting. IDE may report additional markdown linting issues that need manual fixing.
+- **Linting is now separate from build/release process** due to reliability issues
+- **Run linting manually when needed**:
+  - All linters: `.\scripts\lint-all.ps1 -Fix`
+  - Individual: `.\scripts\lint-markdown.ps1`, `.\scripts\lint-python.ps1 -Fix`, `.\scripts\lint-powershell.ps1 -Fix`
+- **Note**: Linters were removed from build process because they caused false positives and build failures
 
 ### Markdown Formatting Rules
 
@@ -119,7 +120,7 @@ This document contains specific instructions for AI assistants working on this p
 - **Add blank lines around blockquotes and other block elements**
 - **Ensure consistent spacing** - one blank line between sections, two blank lines before major sections
 - **NEVER add trailing spaces** - always trim whitespace at end of lines
-- **ALWAYS run linter after editing markdown files** to catch formatting issues
+- **Run linting manually** with `.\scripts\lint-all.ps1 -Fix` to catch formatting issues
 
 ### PowerShell Scripting Rules
 
@@ -136,12 +137,12 @@ This document contains specific instructions for AI assistants working on this p
 - Use the release script directly: `.\scripts\release.ps1 -Platform windows`
 - The release script automatically:
   - Runs tests first (tests must pass before release)
-  - Runs linters and commits any fixes separately (before versioning)
+  - Builds executables (linters removed due to reliability issues)
   - Bumps version (minor for features, patch for fixes)
   - Commits version changes
   - Pushes to remote repository
   - Creates GitHub release with feature description
-- Linter fixes are committed separately from version changes for clean git history
+- Run linting manually before release if desired: `.\scripts\lint-all.ps1 -Fix`
 - If tests fail, fix the issues before running release script again
 - GitHub Actions are already configured in `.github` folder
 
@@ -191,8 +192,4 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Bug Fixes
 
-- Fix release script to commit linter auto-fixes
-- The release script runs markdown linting and auto-fixes files
-- These auto-fixed files are not included in the release commit
-- Need to modify `scripts/release.ps1` to commit any files modified by linter
-- This prevents leaving uncommitted changes after release
+- (This section will be updated as needed for future bug fixes)

@@ -10,6 +10,20 @@ This guide explains how to build standalone executables for the JiraUtil project
 - All project dependencies installed
 - PyInstaller (installed automatically by build scripts)
 
+## Code Quality (Optional)
+
+Before building, you may want to run linting to check code quality:
+
+```powershell
+# Check for linting issues
+.\scripts\lint-all.ps1
+
+# Fix linting issues automatically
+.\scripts\lint-all.ps1 -Fix
+```
+
+**Note**: Linting is not integrated into the build process due to reliability issues that were causing build failures. The build process focuses on testing and compilation only.
+
 ## Quick Start
 
 **Important**: The build process runs tests first and will abort if any tests fail. This ensures only working code gets built into executables.

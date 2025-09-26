@@ -116,15 +116,20 @@ Local build numbers don't increment for:
 
 ```bash
 
-# 1. Commit all changes first
+# 1. Optional: Run linting to check code quality
+.\scripts\lint-all.ps1 -Fix
+
+# 2. Commit all changes first
 git add .
 git commit -m "Your commit message"
 
-# 2. Create the release
+# 3. Create the release
 .\scripts\release.ps1 -Platform windows  # Increments build number, commits, pushes, and triggers CI
 ```
 
 **⚠️ Important**: The release script will fail if there are uncommitted changes. The release script will push all commits and trigger CI automatically.
+
+**Note**: Linting is not integrated into the release process due to reliability issues that were causing build failures. Run linting manually before releasing if desired.
 
 ## 🔄 GitHub Actions
 
