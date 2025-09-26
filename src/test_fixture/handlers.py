@@ -1,5 +1,5 @@
 from jira_manager import JiraInstanceManager
-from testfixture import run_TestFixture_Reset, run_assert_expectations, run_trigger_operation
+from testfixture import run_TestFixture_Reset, run_assert_expectations, run_trigger_operation, run_trigger_operation_with_multiple_labels
 
 
 def handle_test_fixture_commands(args, result: dict) -> dict:
@@ -13,7 +13,11 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
         execute_with_jira_manager(jira_url, username, password, run_assert_expectations, args.label)
         return result
     elif args.test_command in ["trigger", "t"]:
-        execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.label, args.key)
+        # Check if multiple labels are provided (comma-separated)
+        if ',' in args.label:
+            execute_with_jira_manager(jira_url, username, password, run_trigger_operation_with_multiple_labels, args.label, args.key)
+        else:
+            execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.label, args.key)
         return result
     else:
         from cli.parser import build_parser

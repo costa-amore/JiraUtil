@@ -194,7 +194,7 @@ JiraUtil tf t -l <label> [-k <issue_key>] [--jira-url <url>] [--username <user>]
 
 **Arguments:**
 
-- `-l`, `--label` - Label to trigger automation rules (required)
+- `-l`, `--label` - Label(s) to trigger automation rules (comma-separated for multiple labels) (required)
 - `-k`, `--key` - Issue key to trigger (default: "TAPS-212")
 
 **Options:**
@@ -205,16 +205,22 @@ JiraUtil tf t -l <label> [-k <issue_key>] [--jira-url <url>] [--username <user>]
 
 **Description:**
 
-Triggers automation rules by toggling a label on a specific issue. If the issue has the specified label, it removes it, saves the edit, then adds it back. If the issue doesn't have the label, it adds it directly.
+Triggers automation rules by setting labels on a specific issue. For single labels, it toggles the label (removes if present, then adds it back). For multiple comma-separated labels, it replaces all existing labels with the new ones in a single operation.
 
 **Examples:**
 
 ```bash
-# Trigger with default issue key
+# Trigger with single label (default issue key)
 JiraUtil tf t -l "TransitionSprintItems"
+
+# Trigger with multiple labels
+JiraUtil tf t -l "TransitionSprintItems,CloseEpic,UpdateStatus"
 
 # Trigger with specific issue key
 JiraUtil tf t -l "TransitionSprintItems" -k "PROJ-123"
+
+# Trigger multiple labels with specific issue key
+JiraUtil tf t -l "TransitionSprintItems,CloseEpic" -k "PROJ-123"
 
 # Trigger with custom Jira credentials
 JiraUtil tf t -l "MyRule" -k "PROJ-456" --jira-url "https://mycompany.atlassian.net" --username "user@company.com" --password "token"
@@ -222,8 +228,10 @@ JiraUtil tf t -l "MyRule" -k "PROJ-456" --jira-url "https://mycompany.atlassian.
 
 **Logging:**
 
-- `INFO`: When label is removed from issue
-- `INFO`: When label is set on issue
+- `INFO`: When label is removed from issue (single label mode)
+- `INFO`: When label is set on issue (single label mode)
+- `INFO`: When labels are set on issue (multiple labels mode)
+- `ERROR`: When no valid labels are provided
 - `FATAL ERROR`: When issue is not found
 
 ### list

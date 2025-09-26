@@ -114,6 +114,87 @@ class TestTestFixtureTrigger:
         
         assert fatal_message, f"Expected FATAL ERROR message, got: {error_messages}"
 
+    def test_trigger_operation_with_multiple_labels_adds_all_labels(self):
+        # Given: Issue without any of the trigger labels
+        issue_without_labels = self._create_mock_issue_with_labels([])
+        mock_manager = self._create_mock_jira_manager(issue_without_labels)
+        
+        # When: Trigger operation is executed with multiple labels
+        self._execute_trigger_operation_with_multiple_labels(mock_manager, "TransitionSprintItems,CloseEpic,UpdateStatus")
+        
+        # Then: All labels should be added to the issue
+        self._assert_all_labels_were_added(issue_without_labels, ["TransitionSprintItems", "CloseEpic", "UpdateStatus"])
+    
+    def test_trigger_operation_with_multiple_labels_removes_existing_and_adds_new(self):
+        # Given: Issue with some existing labels
+        issue_with_existing_labels = self._create_mock_issue_with_labels(["OldLabel", "AnotherLabel"])
+        mock_manager = self._create_mock_jira_manager(issue_with_existing_labels)
+        
+        # When: Trigger operation is executed with multiple labels
+        self._execute_trigger_operation_with_multiple_labels(mock_manager, "TransitionSprintItems,CloseEpic")
+        
+        # Then: All labels should be replaced with the new ones
+        self._assert_labels_were_replaced(issue_with_existing_labels, ["TransitionSprintItems", "CloseEpic"])
+    
+    def test_trigger_operation_with_multiple_labels_trims_whitespace(self):
+        # Given: Issue without any labels
+        issue_without_labels = self._create_mock_issue_with_labels([])
+        mock_manager = self._create_mock_jira_manager(issue_without_labels)
+        
+        # When: Trigger operation is executed with labels containing whitespace
+        self._execute_trigger_operation_with_multiple_labels(mock_manager, " TransitionSprintItems , CloseEpic , UpdateStatus ")
+        
+        # Then: All labels should be added with whitespace trimmed
+        self._assert_all_labels_were_added(issue_without_labels, ["TransitionSprintItems", "CloseEpic", "UpdateStatus"])
+    
+    def test_trigger_operation_with_empty_labels_shows_error(self):
+        # Given: Issue without any labels
+        issue_without_labels = self._create_mock_issue_with_labels([])
+        mock_manager = self._create_mock_jira_manager(issue_without_labels)
+        
+        # When: Trigger operation is executed with empty labels
+        mock_print = self._execute_trigger_operation_with_multiple_labels_and_print_capture(mock_manager, "")
+        
+        # Then: Should show error message
+        self._assert_error_message_for_empty_labels(mock_print)
+    
+    def _execute_trigger_operation_with_multiple_labels(self, mock_manager, labels_string):
+        from testfixture.workflow import run_trigger_operation_with_multiple_labels
+        run_trigger_operation_with_multiple_labels(mock_manager, labels_string, "TAPS-212")
+    
+    def _execute_trigger_operation_with_multiple_labels_and_print_capture(self, mock_manager, labels_string):
+        from testfixture.workflow import run_trigger_operation_with_multiple_labels
+        with patch('builtins.print') as mock_print:
+            try:
+                run_trigger_operation_with_multiple_labels(mock_manager, labels_string, "TAPS-212")
+            except Exception:
+                # Exception is expected, but we still want to capture the print output
+                pass
+        return mock_print
+    
+    def _assert_all_labels_were_added(self, mock_issue, expected_labels):
+        mock_issue.update.assert_called_once()
+        call_args = mock_issue.update.call_args
+        actual_labels = call_args[1]["fields"]["labels"]
+        for label in expected_labels:
+            assert label in actual_labels, f"Expected label '{label}' to be in {actual_labels}"
+    
+    def _assert_labels_were_replaced(self, mock_issue, expected_labels):
+        mock_issue.update.assert_called_once()
+        call_args = mock_issue.update.call_args
+        actual_labels = call_args[1]["fields"]["labels"]
+        assert set(actual_labels) == set(expected_labels), f"Expected labels {expected_labels}, got {actual_labels}"
+    
+    def _assert_error_message_for_empty_labels(self, mock_print):
+        calls = mock_print.call_args_list
+        assert len(calls) >= 1
+        
+        # Check for error message about empty labels
+        error_messages = [call[0][0] for call in calls if len(call[0]) > 0]
+        error_message = any("error" in msg.lower() and "label" in msg.lower() for msg in error_messages)
+        
+        assert error_message, f"Expected error message about empty labels, got: {error_messages}"
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

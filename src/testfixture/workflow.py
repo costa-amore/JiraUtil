@@ -88,3 +88,48 @@ def _add_label_to_issue(issue, label, current_labels):
     """Add the specified label to the issue."""
     new_labels = list(current_labels) + [label]
     issue.update(fields={"labels": new_labels})
+
+
+def run_trigger_operation_with_multiple_labels(manager, labels_string: str, issue_key: str) -> None:
+    """
+    Run trigger operation with multiple comma-separated labels on a specific issue.
+
+    Args:
+        manager: Connected JiraInstanceManager
+        labels_string: Comma-separated labels to set
+        issue_key: Key of the issue to modify
+    """
+    # Parse and validate labels
+    labels = _parse_labels_string(labels_string)
+    if not labels:
+        print("ERROR: No valid labels provided")
+        return
+    
+    # Set all labels on the issue in one operation
+    _set_labels_on_issue(manager, issue_key, labels)
+
+
+def _parse_labels_string(labels_string: str) -> list:
+    """Parse comma-separated labels string and return cleaned list."""
+    if not labels_string or not labels_string.strip():
+        return []
+    
+    # Split by comma and strip whitespace
+    labels = [label.strip() for label in labels_string.split(',')]
+    
+    # Filter out empty strings
+    return [label for label in labels if label]
+
+
+def _set_labels_on_issue(manager, issue_key: str, labels: list) -> None:
+    """Set the specified labels on an issue, replacing all existing labels."""
+    try:
+        issue, current_labels = _load_issue_and_labels(manager, issue_key)
+        
+        # Replace all labels with the new ones
+        issue.update(fields={"labels": labels})
+        print(f"INFO: Set labels {labels} on {issue_key}")
+        
+    except Exception as e:
+        print(f"FATAL ERROR: {e}")
+        raise
