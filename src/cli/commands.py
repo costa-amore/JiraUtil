@@ -22,6 +22,7 @@ def show_list() -> None:
     print("Test Fixture Commands:")
     print("  test-fixture reset [label]             Reset test fixture issues")
     print("  test-fixture assert [label]            Assert test fixture expectations")
+    print("  test-fixture trigger -l <label> [-k <key>]  Trigger automation rules by toggling a label")
     print()
     print("Utility Commands:")
     print("  list                                   Show this command list")
@@ -35,6 +36,7 @@ def show_list() -> None:
     print("  ce fd <input>                          csv-export fix-dates-eu")
     print("  tf r [label]                           test-fixture reset")
     print("  tf a [label]                           test-fixture assert")
+    print("  tf t -l <label> [-k <key>]             test-fixture trigger")
     print("  ls                                     list")
     print("  st                                     status")
 
