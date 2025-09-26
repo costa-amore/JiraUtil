@@ -33,6 +33,7 @@ JiraUtil <command> [subcommand] [options] [arguments]
 |---------|-------|-------------|
 | `test-fixture reset` | `tf r` | Reset test fixture issues based on summary pattern |
 | `test-fixture assert` | `tf a` | Assert test fixture issues are in expected status |
+| `test-fixture trigger` | `tf t` | Trigger automation rules by toggling a label on a specific issue |
 
 ### Utility Commands
 
@@ -181,6 +182,49 @@ JiraUtil tf a [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 ```bash
 JiraUtil tf a my-test-label
 ```
+
+### test-fixture trigger
+
+**Usage:**
+
+```bash
+JiraUtil test-fixture trigger -l <label> [-k <issue_key>] [--jira-url <url>] [--username <user>] [--password <pass>]
+JiraUtil tf t -l <label> [-k <issue_key>] [--jira-url <url>] [--username <user>] [--password <pass>]
+```
+
+**Arguments:**
+
+- `-l`, `--label` - Label to trigger automation rules (required)
+- `-k`, `--key` - Issue key to trigger (default: "TAPS-212")
+
+**Options:**
+
+- `--jira-url` - Jira instance URL
+- `--username` - Jira username
+- `--password` - Jira password/API token
+
+**Description:**
+
+Triggers automation rules by toggling a label on a specific issue. If the issue has the specified label, it removes it, saves the edit, then adds it back. If the issue doesn't have the label, it adds it directly.
+
+**Examples:**
+
+```bash
+# Trigger with default issue key
+JiraUtil tf t -l "TransitionSprintItems"
+
+# Trigger with specific issue key
+JiraUtil tf t -l "TransitionSprintItems" -k "PROJ-123"
+
+# Trigger with custom Jira credentials
+JiraUtil tf t -l "MyRule" -k "PROJ-456" --jira-url "https://mycompany.atlassian.net" --username "user@company.com" --password "token"
+```
+
+**Logging:**
+
+- `INFO`: When label is removed from issue
+- `INFO`: When label is set on issue  
+- `FATAL ERROR`: When issue is not found
 
 ### list
 
