@@ -17,6 +17,7 @@ This guide explains how to build standalone executables for the JiraUtil project
 ### Simple Build (Recommended)
 
 ```powershell
+
 # Build for Windows (default platform)
 .\scripts\build.ps1
 
@@ -30,6 +31,7 @@ This guide explains how to build standalone executables for the JiraUtil project
 ### Platform-Specific Build Scripts
 
 ```powershell
+
 # Windows-specific build script
 .\scripts\build-windows.ps1
 ```
@@ -78,6 +80,7 @@ See [Configuration Reference](shared/configuration.md) for detailed setup instru
 Edit `JiraUtil.spec` to customize the build:
 
 ```python
+
 # Add custom data files
 datas=[
     ('custom_file.txt', '.'),
@@ -130,10 +133,12 @@ pip install -r requirements.txt
 The build process automatically runs tests before building, but you can also verify manually:
 
 ```powershell
+
 # Run tests before building (good practice - although the build process runs the tests as well)
 .\run.ps1 tests\run_tests.py
 
 # Test the built executables
+
 # Windows
 .\build-executables\Windows\JiraUtil.exe --help
 ```

@@ -16,11 +16,13 @@ Process issues with a specified label and update their status based on summary p
 The tool looks for issues with summaries matching one of these patterns (case-insensitive):
 
 **Format 1 (Original):**
+
 ```text
 "[<optional context> - ]I was in <status1> - expected to be in <status2>"
 ```
 
 **Format 2 (Starting Pattern):**
+
 ```text
 "[<optional context> - ]starting in <status1> - expected to be in <status2>"
 ```
@@ -50,6 +52,7 @@ When found, it updates the issue status to `<status1>`.
 ### Examples
 
 ```powershell
+
 # Process "rule-testing" issues (default)
 ./run.ps1 .\JiraUtil.py ResetTestFixture
 
@@ -119,6 +122,7 @@ When found, it asserts that the current status matches `<status2>`.
 
 ```powershell
 ./run.ps1 .\JiraUtil.py AssertExpectations
+
 # Short-hand: ./run.ps1 .\ju.py ae
 ```
 
@@ -126,6 +130,7 @@ When found, it asserts that the current status matches `<status2>`.
 
 ```powershell
 ./run.ps1 .\JiraUtil.py AssertExpectations my-custom-label
+
 # Short-hand: ./run.ps1 .\ju.py ae my-custom-label
 ```
 
@@ -133,22 +138,27 @@ When found, it asserts that the current status matches `<status2>`.
 
 ```powershell
 ./run.ps1 .\JiraUtil.py AssertExpectations --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
+
 # Short-hand: ./run.ps1 .\ju.py ae --jira-url "https://yourcompany.atlassian.net" --username "your.email@company.com" --password "your_api_token"
 ```
 
 ### AssertExpectations Examples
 
 ```powershell
+
 # Assert "rule-testing" issues (default)
 ./run.ps1 .\JiraUtil.py AssertExpectations
+
 # Short-hand: ./run.ps1 .\ju.py ae
 
 # Assert "bug-fix" issues
 ./run.ps1 .\JiraUtil.py AssertExpectations bug-fix
+
 # Short-hand: ./run.ps1 .\ju.py ae bug-fix
 
 # Assert with custom credentials
 ./run.ps1 .\JiraUtil.py AssertExpectations --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
+
 # Short-hand: ./run.ps1 .\ju.py ae --jira-url "https://company.atlassian.net" --username "user@company.com" --password "token"
 ```
 
@@ -185,8 +195,10 @@ Assertion process completed:
   Assertions failed: 10
   Not evaluated: 27
   Failures:
+
     - TAPS-211: Expected 'CLOSED' but is 'SIT/LAB Validated'
     - TAPS-197: Expected 'CLOSED' but is 'Ready to Validate'
+
   Not evaluated: TAPS-209, TAPS-208, TAPS-206, TAPS-205, TAPS-203, TAPS-202, TAPS-201, TAPS-199, TAPS-198, TAPS-196, TAPS-195, TAPS-193, TAPS-192, TAPS-190, TAPS-189, TAPS-187, TAPS-186, TAPS-185, TAPS-183, TAPS-182, TAPS-180, TAPS-179, TAPS-178, TAPS-176, TAPS-175, TAPS-174, TAPS-171
 
 ============================================================

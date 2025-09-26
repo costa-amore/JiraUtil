@@ -13,6 +13,7 @@
 ### 1. Clone or Download
 
 ```powershell
+
 # If using git
 git clone <repository-url>
 cd Jira_csv_helper
@@ -23,6 +24,7 @@ cd Jira_csv_helper
 ### 2. Environment Setup
 
 ```powershell
+
 # Run the setup script (creates virtual environment, installs dependencies, and activates it)
 .\setup-environment.ps1
 ```
@@ -53,6 +55,7 @@ JIRA_PASSWORD=your_api_token_here
 After running the setup script, you can use commands in two ways:
 
 ```powershell
+
 # Option 1: Use run script (recommended - always uses venv)
 .\run.ps1 .\JiraUtil.py --help
 .\run.ps1 tests\run_tests.py
@@ -74,6 +77,7 @@ python .\JiraUtil.py --help
 If you encounter issues with the virtual environment:
 
 ```powershell
+
 # Rebuild everything (automatically activates the environment)
 .\setup-environment.ps1
 ```
@@ -83,6 +87,7 @@ If you encounter issues with the virtual environment:
 If you update `requirements.txt`:
 
 ```powershell
+
 # Rebuild with new dependencies (automatically activates the environment)
 .\setup-environment.ps1
 ```
@@ -92,6 +97,7 @@ If you update `requirements.txt`:
 If you encounter any issues with the environment or dependencies:
 
 ```powershell
+
 # Complete rebuild (fixes most issues and activates environment)
 .\setup-environment.ps1
 ```
@@ -103,6 +109,7 @@ For new terminal sessions, you have two options:
 ### Option 1: Run the setup script again (recommended)
 
 ```powershell
+
 # This will reactivate the environment and run tests
 .\setup-environment.ps1
 ```
@@ -110,6 +117,7 @@ For new terminal sessions, you have two options:
 ### Option 2: Use the run script for any command
 
 ```powershell
+
 # This automatically uses the virtual environment
 .\run.ps1 tests\run_tests.py
 .\run.ps1 .\JiraUtil.py --help

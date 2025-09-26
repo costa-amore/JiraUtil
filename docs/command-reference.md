@@ -58,12 +58,15 @@ JiraUtil -v
 **Examples**:
 
 ```bash
+
 # Show version
 JiraUtil --version
+
 # Output: JiraUtil 1.0.2
 
 # Short form
 JiraUtil -v
+
 # Output: JiraUtil 1.0.2
 ```
 
@@ -210,6 +213,7 @@ Triggers automation rules by setting labels on a specific issue. For single labe
 **Examples:**
 
 ```bash
+
 # Trigger with single label (default issue key)
 JiraUtil tf t -l "TransitionSprintItems"
 

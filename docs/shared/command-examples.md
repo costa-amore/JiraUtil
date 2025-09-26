@@ -13,6 +13,7 @@ JiraUtil <command> [subcommand] [options] [arguments]
 ### Remove Newlines
 
 ```bash
+
 # Basic usage
 JiraUtil CsvExport remove-newline input.csv
 
@@ -26,6 +27,7 @@ JiraUtil ce rn input.csv
 ### Extract Field Values
 
 ```bash
+
 # Extract assignees
 JiraUtil CsvExport extract-to-comma-separated-list "Assignee" input.csv
 
@@ -39,6 +41,7 @@ JiraUtil ce ecl "Assignee" input.csv
 ### Fix Dates for European Excel
 
 ```bash
+
 # Basic usage
 JiraUtil CsvExport fix-dates-eu input.csv
 
@@ -54,6 +57,7 @@ JiraUtil ce fd input.csv
 ### ResetTestFixture
 
 ```bash
+
 # Default label (rule-testing)
 JiraUtil ResetTestFixture
 
@@ -70,6 +74,7 @@ JiraUtil rt my-test-label
 ### AssertExpectations
 
 ```bash
+
 # Default label (rule-testing)
 JiraUtil AssertExpectations
 
@@ -86,6 +91,7 @@ JiraUtil ae my-test-label
 ## Help Commands
 
 ```bash
+
 # General help
 JiraUtil --help
 
@@ -105,6 +111,7 @@ JiraUtil ae --help
 ### CSV Processing Workflow
 
 ```bash
+
 # 1. Clean the data
 JiraUtil ce rn raw-data.csv --output clean-data.csv
 
@@ -119,10 +126,12 @@ JiraUtil ce fd clean-data.csv --output final-data.csv
 ### Jira Test Fixture Workflow
 
 ```bash
+
 # 1. Reset test fixtures to initial state
 JiraUtil rt rule-testing
 
 # 2. Run your automation/tests here
+
 # (manual step or external process)
 
 # 3. Verify expectations
@@ -132,6 +141,7 @@ JiraUtil ae rule-testing
 ### Development Workflow
 
 ```bash
+
 # 1. Setup environment
 ./setup-environment.ps1
 

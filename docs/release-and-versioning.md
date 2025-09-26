@@ -33,6 +33,7 @@ Examples: `1.0` (manual) → `1.0.0.0` → `1.0.0.1` (local build) → `1.0.1.0`
 **⚠️ Never edit `scripts/version.json` manually!** Use the dev-friendly command:
 
 ```bash
+
 # Set version to 1.0 (build and local numbers will be 0)
 .\run.ps1 tools\set-version.py 1.0
 
@@ -106,6 +107,7 @@ Local build numbers don't increment for:
 ### Development Build
 
 ```bash
+
 # Make code changes, then:
 .\scripts\build-windows.ps1           # Will auto-increment local build if changes detected
 ```
@@ -113,6 +115,7 @@ Local build numbers don't increment for:
 ### Creating a Release
 
 ```bash
+
 # 1. Commit all changes first
 git add .
 git commit -m "Your commit message"
@@ -141,6 +144,7 @@ git commit -m "Your commit message"
 ### Version Not Incrementing
 
 ```bash
+
 # Check if files are tracked
 .\run.ps1 tools\code_change_detector.py changed
 
@@ -154,6 +158,7 @@ python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import 
 ### Manual Version Reset Issues
 
 ```bash
+
 # Reset to known good version
 .\run.ps1 tools\set-version.py 1.0
 
@@ -164,6 +169,7 @@ python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import 
 ### Version Mismatch
 
 ```bash
+
 # Check current version
 .\run.ps1 tools\version_manager.py get --version-file scripts/version.json
 

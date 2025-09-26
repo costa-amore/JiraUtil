@@ -7,11 +7,13 @@
 For Jira test fixture management, issue summaries must match one of these patterns:
 
 **Format 1 (Original):**
+
 ```text
 [<optional context> - ]I was in <status1> - expected to be in <status2>
 ```
 
 **Format 2 (Starting Pattern):**
+
 ```text
 [<optional context> - ]starting in <status1> - expected to be in <status2>
 ```

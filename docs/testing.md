@@ -9,6 +9,7 @@
 **First time setup:**
 
 ```powershell
+
 # Create virtual environment and install dependencies
 .\setup-environment.ps1
 ```
@@ -16,6 +17,7 @@
 **Run tests:**
 
 ```powershell
+
 # Run comprehensive test suite with detailed output
 .\run.ps1 tests\run_tests.py
 ```
@@ -25,6 +27,7 @@
 The build system automatically runs tests before building executables:
 
 ```powershell
+
 # Build process (runs tests first, then builds if tests pass)
 .\build-windows.ps1
 ```
@@ -34,6 +37,7 @@ The build system automatically runs tests before building executables:
 ### Test Categories
 
 ```powershell
+
 # Run specific test categories
 .\run.ps1 tests\run_tests.py csv          # CSV export functionality
 .\run.ps1 tests\run_tests.py testfixture  # Test fixture management
@@ -68,6 +72,7 @@ The project includes a comprehensive functional test suite covering all major fu
 Create a new file in `tests/` with the pattern `test_*.py`:
 
 ```python
+
 # tests/test_my_module.py
 import pytest
 from src.my_module import my_function
@@ -129,6 +134,7 @@ Use the Debug panel (`Ctrl+Shift+D`) and select:
 Edit `debug-helper.py` to test specific commands:
 
 ```python
+
 # Uncomment the command you want to debug:
 debug_command(["JiraUtil.py", "CsvExport", "remove-newline", "test.csv"])
 debug_command(["JiraUtil.py", "ResetTestFixture", "rule-testing"])
@@ -148,6 +154,7 @@ debug_command(["JiraUtil.py", "CsvExport", "fix-dates-eu", "test.csv"])
 ### pytest Not Found
 
 ```powershell
+
 # Rebuild environment (installs all dependencies including pytest)
 .\setup-environment.ps1
 ```
@@ -157,6 +164,7 @@ debug_command(["JiraUtil.py", "CsvExport", "fix-dates-eu", "test.csv"])
 If you get import errors, rebuild the environment:
 
 ```powershell
+
 # Rebuild environment (fixes import issues and activates venv)
 .\setup-environment.ps1
 ```
@@ -164,6 +172,7 @@ If you get import errors, rebuild the environment:
 ### Virtual Environment Issues
 
 ```powershell
+
 # Rebuild environment (fixes most dependency issues)
 .\setup-environment.ps1
 ```
@@ -173,6 +182,7 @@ If you get import errors, rebuild the environment:
 If you encounter any issues with dependencies or the environment:
 
 ```powershell
+
 # Complete environment rebuild (fixes most issues and activates venv)
 .\setup-environment.ps1
 ```

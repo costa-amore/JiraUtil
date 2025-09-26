@@ -42,15 +42,20 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Running Scripts
 
-- **Always use the virtual environment approach**: `.\run.ps1 <script_path>`
-- **Build script**: `.\run.ps1 scripts\build.ps1 -Platform windows`
-- **Release script**: `.\run.ps1 scripts\release.ps1 -Platform windows`
-- **Linter script**: `.\run.ps1 scripts\lint-markdown.ps1`
+- **Python scripts**: Use `.\run.ps1 <script_path>` to run in virtual environment
+- **PowerShell scripts**: Run directly since we're already in PowerShell with venv activated
+
+#### Python Scripts (use .\run.ps1)
+
 - **Markdown linter**: `.\run.ps1 tools\markdown_linter.py --fix <file>`
-- **Python linter**: `.\run.ps1 scripts\lint-python.ps1`
-- **Python linter (fix)**: `.\run.ps1 scripts\lint-python.ps1 -Fix`
-- **PowerShell linter**: `.\run.ps1 scripts\lint-powershell.ps1`
-- **PowerShell linter (fix)**: `.\run.ps1 scripts\lint-powershell.ps1 -Fix`
+- **Python linter**: `.\run.ps1 tools\python_linter.py --fix <file>`
+- **PowerShell linter**: `.\run.ps1 tools\powershell_linter.py --fix <file>`
+
+#### PowerShell Scripts (run directly)
+
+- **Build script**: `.\scripts\build.ps1 -Platform windows`
+- **Release script**: `.\scripts\release.ps1 -Platform windows`
+- **Linter wrappers**: `.\scripts\lint-markdown.ps1`, `.\scripts\lint-python.ps1`, `.\scripts\lint-powershell.ps1`
 
 ### Dependency Management
 
@@ -98,9 +103,9 @@ This document contains specific instructions for AI assistants working on this p
 - Update command reference documentation
 - Test the actual command line interface to verify help output
 - **Always run linter check when updating files**:
-  - Markdown files: `.\run.ps1 scripts\lint-markdown.ps1`
-  - Python files: `.\run.ps1 scripts\lint-python.ps1 -Fix`
-  - PowerShell files: `.\run.ps1 scripts\lint-powershell.ps1 -Fix`
+  - Markdown files: `.\scripts\lint-markdown.ps1`
+  - Python files: `.\scripts\lint-python.ps1 -Fix`
+  - PowerShell files: `.\scripts\lint-powershell.ps1 -Fix`
 - **Note**: The current linter only checks basic formatting. IDE may report additional markdown linting issues that need manual fixing.
 
 ### Markdown Formatting Rules
@@ -128,7 +133,7 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Release Process
 
-- Use the release script with virtual environment: `.\run.ps1 scripts\release.ps1 -Platform windows`
+- Use the release script directly: `.\scripts\release.ps1 -Platform windows`
 - The release script automatically:
   - Runs tests first (tests must pass before release)
   - Runs linters and commits any fixes separately (before versioning)

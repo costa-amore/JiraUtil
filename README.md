@@ -62,6 +62,7 @@ Version: 1.1.1.0
 The project includes a comprehensive functional test suite covering all major functionalities:
 
 ```powershell
+
 # Run all tests with detailed output
 .\run.ps1 tests\run_tests.py
 
