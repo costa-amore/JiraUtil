@@ -201,11 +201,18 @@ CSV_EXPORT_COMMANDS = [
     (['csv-export', 'fix-dates-eu', 'input.csv', '--output', 'output.csv'], 'csv-export', 'fix-dates-eu', 'input.csv'),
 ]
 
-TEST_FIXTURE_COMMANDS = [
-    (['test-fixture', 'reset', 'custom-label'], 'test-fixture', 'reset', 'custom-label'),
-    (['tf', 'r'], 'tf', 'r', 'rule-testing'),
-    (['test-fixture', 'assert', 'custom-label'], 'test-fixture', 'assert', 'custom-label'),
-    (['tf', 'a'], 'tf', 'a', 'rule-testing'),
+TEST_FIXTURE_SINGLE_COMMANDS = [
+    (['test-fixture', 'reset', '-l', 'custom-label'], 'test-fixture', 'reset', 'custom-label'),
+    (['tf', 'r', '-l', 'rule-testing'], 'tf', 'r', 'rule-testing'),
+    (['test-fixture', 'assert', '-l', 'custom-label'], 'test-fixture', 'assert', 'custom-label'),
+    (['tf', 'a', '-l', 'rule-testing'], 'tf', 'a', 'rule-testing'),
+]
+
+TEST_FIXTURE_CHAINED_COMMANDS = [
+    (['test-fixture', 'r', 't', '-l', 'custom-label'], 'test-fixture', ['r', 't'], 'custom-label'),
+    (['tf', 'r', 'a', 't', '-l', 'rule-testing'], 'tf', ['r', 'a', 't'], 'rule-testing'),
+    (['test-fixture', 'r', 'r', 'r', 't', '-l', 'custom-label'], 'test-fixture', ['r', 'r', 'r', 't'], 'custom-label'),
+    (['tf', 'a', 'r', 'a', 't', 'a', 'a', 'a', 'a', '-l', 'rule-testing'], 'tf', ['a', 'r', 'a', 't', 'a', 'a', 'a', 'a'], 'rule-testing'),
 ]
 
 UTILITY_COMMANDS = [

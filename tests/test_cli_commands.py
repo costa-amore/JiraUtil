@@ -18,7 +18,7 @@ from version.manager import get_version
 from config.validator import check_config_file_for_template_values, get_config_file_status_message
 from .fixtures import (create_temp_config_file, create_temp_env_file, generate_env_content, 
                        TEMPLATE_CONFIG_CONTENT, CONFIGURED_CONFIG_CONTENT, 
-                       CSV_EXPORT_COMMANDS, TEST_FIXTURE_COMMANDS, UTILITY_COMMANDS)
+                       CSV_EXPORT_COMMANDS, TEST_FIXTURE_SINGLE_COMMANDS, TEST_FIXTURE_CHAINED_COMMANDS, UTILITY_COMMANDS)
 
 
 class TestCLICommands:
@@ -141,14 +141,24 @@ class TestCLICommands:
             assert args.csv_command == expected_subcommand
             assert args.input == expected_input
     
-    def test_testfixture_command_parsing(self):
-        """Test test fixture command parsing."""
+    def test_testfixture_single_command_parsing(self):
+        """Test test fixture single command parsing."""
         parser = build_parser()
         
-        for args_list, expected_command, expected_subcommand, expected_label in TEST_FIXTURE_COMMANDS:
+        for args_list, expected_command, expected_subcommand, expected_label in TEST_FIXTURE_SINGLE_COMMANDS:
             args = parser.parse_args(args_list)
             assert args.command == expected_command
-            assert args.test_command == expected_subcommand
+            assert args.commands == [expected_subcommand]
+            assert args.label == expected_label
+    
+    def test_testfixture_chained_command_parsing(self):
+        """Test test fixture chained command parsing."""
+        parser = build_parser()
+        
+        for args_list, expected_command, expected_subcommands, expected_label in TEST_FIXTURE_CHAINED_COMMANDS:
+            args = parser.parse_args(args_list)
+            assert args.command == expected_command
+            assert args.commands == expected_subcommands
             assert args.label == expected_label
     
     def test_utility_command_parsing(self):
