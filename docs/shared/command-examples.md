@@ -107,8 +107,8 @@ JiraUtil tf a r a t a a a a -l my-label
 # With custom issue key
 JiraUtil tf r t -l my-label -k PROJECT-123
 
-# Multiple labels
-JiraUtil tf r a t -l label1,label2
+# Multiple labels (use double quotes for comma-separated values)
+JiraUtil tf r a t -l "label1,label2"
 
 # With custom credentials
 JiraUtil tf r t -l my-label --jira-url https://company.atlassian.net --username user@company.com --password token

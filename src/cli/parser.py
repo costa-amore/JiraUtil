@@ -7,6 +7,30 @@ from version import get_version
 from testfixture import DEFAULT_TEST_FIXTURE_LABEL
 
 
+def validate_label_argument(value):
+    """Validate label argument and provide helpful error for common mistakes."""
+    if not value:
+        return value
+    
+    # Only check for space-separated labels that look like they should be comma-separated
+    # This happens when the shell splits unquoted comma-separated arguments
+    if ' ' in value and not (value.startswith('"') and value.endswith('"')):
+        # Check if this looks like multiple labels that were split by the shell
+        # Pattern: "label1 label2" where both parts look like valid labels
+        parts = value.split()
+        if len(parts) == 2 and all(part and not ' ' in part for part in parts):
+            # This looks like two labels that should have been comma-separated
+            raise argparse.ArgumentTypeError(
+                f"Invalid label format: '{value}'\n"
+                f"Problem: Multiple labels must be quoted and comma-separated\n"
+                f"Solution: Use double quotes around comma-separated labels\n"
+                f"   Example: -l \"{parts[0]},{parts[1]}\"\n"
+                f"   Or use single labels: -l \"{parts[0]}\""
+            )
+    
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line argument parser."""
     parser = argparse.ArgumentParser(prog="JiraUtil", description="Jira utilities")
@@ -38,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     # test-fixture subcommand group (alias: tf) - supports chained commands
     test_fixture = subparsers.add_parser("test-fixture", aliases=["tf"], help="Test fixture management commands (supports chaining: tf r t -l label)")
     test_fixture.add_argument("commands", nargs='+', help="Chained commands: r (reset), a (assert), t (trigger). Use -l for labels, -k for issue key")
-    test_fixture.add_argument("-l", "--label", help="Label(s) to use for reset/assert commands (comma-separated for multiple labels)")
+    test_fixture.add_argument("-l", "--label", type=validate_label_argument, help="Label(s) to use for reset/assert commands (comma-separated for multiple labels)")
     test_fixture.add_argument("-k", "--key", default="TAPS-212", help="Issue key for trigger command (default: TAPS-212)")
     test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
     test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")

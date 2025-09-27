@@ -4,6 +4,32 @@
 
 Common issues and solutions for JiraUtil.
 
+## Command Syntax Issues
+
+### Multiple Labels Not Working
+
+**Symptoms:**
+
+- Error: "The label 'label1 label2' can't contain spaces"
+- Labels are not being parsed as separate items
+- Command fails when using comma-separated labels
+
+**Solutions:**
+
+**Use double quotes for multiple labels:**
+
+```bash
+# ❌ Wrong - creates space-separated labels
+JiraUtil tf t -l label1,label2
+JiraUtil tf r a t -l label1,label2
+
+# ✅ Correct - creates comma-separated labels
+JiraUtil tf t -l "label1,label2"
+JiraUtil tf r a t -l "label1,label2"
+```
+
+**Root Cause:** Shell command line parsing treats commas as argument separators unless the entire string is quoted.
+
 ## Connection Issues
 
 ### "Failed to connect to Jira"
