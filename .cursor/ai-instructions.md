@@ -134,6 +134,15 @@ This document contains specific instructions for AI assistants working on this p
 - **ALWAYS sort both public and private groups alphabetically**
 - This makes processing diffs easier and improves code navigation
 
+### Test Consistency Rules
+
+- **ALWAYS follow the same mocking pattern** for all tests that call the same function
+- **ALWAYS mock all external dependencies** (credentials, network calls, file I/O) in every test
+- **ALWAYS use consistent decorator order**: `@patch` decorators in reverse dependency order
+- **ALWAYS use consistent parameter names**: `mock_get_creds, mock_execute` for credential/execution mocks
+- **ALWAYS mock the same functions** across similar test scenarios to prevent CI failures
+- **NEVER mix mocked and unmocked calls** to the same function within a test file
+
 ## Documentation Standards
 
 ### Avoid Duplication

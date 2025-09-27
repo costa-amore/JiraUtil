@@ -152,8 +152,13 @@ class TestTFChainedCommands(unittest.TestCase):
         calls = mock_execute.call_args_list
         # The default label should be used (this will be tested when we implement the handler)
 
-    def test_handle_chained_commands_unknown_command_fails(self):
+    @patch('test_fixture.handlers.execute_with_jira_manager')
+    @patch('test_fixture.handlers.get_jira_credentials')
+    def test_handle_chained_commands_unknown_command_fails(self, mock_get_creds, mock_execute):
         """Test that unknown commands in chain fail."""
+        mock_get_creds.return_value = ('http://test.com', 'user', 'pass')
+        mock_execute.return_value = None
+        
         args = MagicMock()
         args.commands = ['r', 'unknown', 't']
         args.label = 'test-label'
@@ -165,8 +170,13 @@ class TestTFChainedCommands(unittest.TestCase):
         with self.assertRaises(SystemExit):
             handle_test_fixture_commands(args, {})
 
-    def test_handle_chained_commands_trigger_without_label_fails(self):
+    @patch('test_fixture.handlers.execute_with_jira_manager')
+    @patch('test_fixture.handlers.get_jira_credentials')
+    def test_handle_chained_commands_trigger_without_label_fails(self, mock_get_creds, mock_execute):
         """Test that trigger command without label fails."""
+        mock_get_creds.return_value = ('http://test.com', 'user', 'pass')
+        mock_execute.return_value = None
+        
         args = MagicMock()
         args.commands = ['r', 't']
         args.label = None  # No label provided
