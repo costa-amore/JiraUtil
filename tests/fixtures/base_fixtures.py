@@ -34,12 +34,14 @@ TEST_FIXTURE_ASSERT_ISSUES = [
     {
         'key': 'PROJ-1',
         'summary': 'I was in To Do - expected to be in In Progress',
-        'status': 'In Progress'  # Matches expected status
+        'status': 'In Progress',  # Matches expected status
+        'issue_type': 'Story'
     },
     {
         'key': 'PROJ-2',
         'summary': 'starting in In Progress - expected to be in Done',
-        'status': 'To Do'  # Does not match expected status
+        'status': 'To Do',  # Does not match expected status
+        'issue_type': 'Bug'
     }
 ]
 

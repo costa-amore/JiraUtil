@@ -17,12 +17,26 @@ from tests.fixtures import (
 
 
 class TestTestFixtureAssert:
-    """Test cases for assert operations."""
+
+    # Public test methods (sorted alphabetically)
+    def test_assert_failure_message_current_format(self):
+        # Given: Issues with one failure (PROJ-2 should be in Done but is in To Do)
+        mock_jira_manager = self._create_assert_scenario()
+        
+        # When: Assert operation is executed and captures print output
+        mock_print = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        
+        # Then: Verify the current failure message format is: <key>: Expected '<expected_state>' but is '<actual_state>'
+        failure_messages = self._extract_failure_messages(mock_print)
+        
+        if failure_messages:
+            failure_message = failure_messages[0]
+            expected_format = "    - PROJ-2: Expected 'Done' but is 'To Do'"
+            assert failure_message == expected_format, f"Expected format '{expected_format}', got '{failure_message}'"
 
     def test_assert_operation_verifies_rule_automation_worked(self):
         # Given: Issues after automation has run
-        scenario_with_issues_after_automation = create_assert_scenario_with_expectations()
-        mock_jira_manager = scenario_with_issues_after_automation
+        mock_jira_manager = self._create_assert_scenario()
         
         # When: Assert operation is executed
         self._execute_assert_operation(mock_jira_manager)
@@ -32,7 +46,7 @@ class TestTestFixtureAssert:
 
     def test_assert_workflow_command_orchestrates_rule_verification(self):
         # Given: Assert workflow command with mock manager
-        mock_jira_manager = create_assert_scenario_with_expectations()
+        mock_jira_manager = self._create_assert_scenario()
         
         # When: Assert workflow command is executed
         self._execute_assert_operation(mock_jira_manager)
@@ -40,10 +54,24 @@ class TestTestFixtureAssert:
         # Then: Rule verification should be orchestrated
         mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
 
+    # Private helper methods (sorted alphabetically)
+    def _create_assert_scenario(self):
+        return create_assert_scenario_with_expectations()
+
     def _execute_assert_operation(self, mock_manager):
         from testfixture.workflow import run_assert_expectations
         with patch('builtins.print'):
             run_assert_expectations(mock_manager, "rule-testing")
+
+    def _execute_assert_operation_with_print_capture(self, mock_manager):
+        from testfixture.workflow import run_assert_expectations
+        with patch('builtins.print') as mock_print:
+            run_assert_expectations(mock_manager, "rule-testing")
+        return mock_print
+
+    def _extract_failure_messages(self, mock_print):
+        print_calls = [call[0][0] for call in mock_print.call_args_list if call[0]]
+        return [msg for msg in print_calls if 'Expected' in msg and 'but is' in msg]
 
 
 if __name__ == "__main__":
