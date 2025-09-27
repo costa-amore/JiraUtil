@@ -169,6 +169,14 @@ This document contains specific instructions for AI assistants working on this p
 - **Use proper error handling** with try-catch blocks
 - **Test PowerShell scripts** before committing changes
 
+### Error Message Formatting Rules
+
+- **NEVER use emojis in script output** - not in error messages, success messages, or any other output
+- **Emojis don't display consistently** across all terminals and can cause encoding issues
+- **Use the colored text enum** from `src/color_system.py` for visual emphasis instead
+- **Keep all output clean and professional** - use clear text labels like "Problem:" and "Solution:"
+- **Provide actionable solutions** - always include specific examples of correct usage
+
 ## Version and Release Management
 
 ### Release Process
