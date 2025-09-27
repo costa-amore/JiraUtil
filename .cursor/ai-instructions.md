@@ -164,6 +164,42 @@ This document contains specific instructions for AI assistants working on this p
 
 ## Test Coverage Management
 
+### Test Evolution Strategy
+
+#### Scaffolding vs API Tests
+
+- **Scaffolding Tests**: Implementation-coupled tests used during TDD development
+  - Tied to HOW the behavior is implemented
+  - Use these to incrementally build the design
+  - Essential for TDD red-green-refactor cycles
+  - Can be tightly coupled to internal structure
+
+- **API Tests**: Behavior-focused tests for final verification
+  - Test WHAT the feature does, not HOW it's implemented
+  - Verify expected behavior from user perspective
+  - Should be resilient to implementation changes
+  - Focus on public interfaces and outcomes
+
+#### Test Evolution Process
+
+1. **During Development**: Use scaffolding tests to drive implementation
+   - Write tests that fail for functional reasons (missing behavior)
+   - Implement minimal code to make tests pass
+   - Refactor while keeping tests green
+   - These tests can be tightly coupled to implementation details
+
+2. **Near Completion**: Create or adjust API tests
+   - Focus on testing the expected behavior
+   - Test public interfaces and user-visible outcomes
+   - Make tests as implementation-agnostic as possible
+
+3. **Cleanup Phase**: Evaluate and consolidate tests
+   - Identify which scaffolding tests are covered by API tests
+   - Remove redundant scaffolding tests
+   - Keep only scaffolding tests that provide unique value
+   - If scaffolding tests remain valuable, make them implementation-agnostic
+   - If many scaffolding tests remain, consider if the module needs its own API
+
 ### Test Coverage Duplication Detection
 
 - Detect if more than 1 test verifies the same functional use-case or part of it
