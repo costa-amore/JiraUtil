@@ -64,3 +64,28 @@ def report_assertion_results(results: Dict) -> None:
         print(f"="*60)
     else:
         print(f"Assertion process failed: {results.get('error', 'Unknown error')}")
+
+
+def report_trigger_results(results: Dict) -> None:
+    """
+    Report results from the trigger test fixture operation.
+    
+    Args:
+        results: Dictionary containing trigger operation results
+    """
+    if results['success']:
+        print(f"\nTrigger operation completed:")
+        print(f"  Issues processed: {results['processed']}")
+        print(f"  Issues triggered: {results['triggered']}")
+        
+        if results.get('trigger_results'):
+            for trigger_result in results['trigger_results']:
+                print(f"  Issue: {trigger_result['key']}")
+                print(f"  Labels set: {', '.join(trigger_result['trigger_labels'])}")
+                if trigger_result.get('summary'):
+                    print(f"  Summary: {trigger_result['summary']}")
+    else:
+        print(f"Trigger operation failed:")
+        if results.get('errors'):
+            for error in results['errors']:
+                print(f"  - {error}")

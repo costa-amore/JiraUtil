@@ -1,5 +1,5 @@
 from jira_manager import JiraInstanceManager
-from testfixture import run_TestFixture_Reset, run_assert_expectations, run_trigger_operation, run_trigger_operation_with_multiple_labels
+from testfixture import run_TestFixture_Reset, run_assert_expectations, run_trigger_operation
 from cli.parser import DEFAULT_TEST_FIXTURE_LABEL
 
 
@@ -26,11 +26,8 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
                 parser.error("Trigger command requires -l/--label argument")
             
             print(f"[CHAIN] Executing trigger with label: {args.label}, key: {args.key}")
-            # Check if multiple labels are provided (comma-separated)
-            if ',' in args.label:
-                execute_with_jira_manager(jira_url, username, password, run_trigger_operation_with_multiple_labels, args.label, args.key)
-            else:
-                execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.label, args.key)
+            # Use unified trigger function (handles both single and multiple labels)
+            execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.key, args.label)
         else:
             from cli.parser import build_parser
             parser = build_parser()

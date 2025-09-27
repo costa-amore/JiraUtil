@@ -10,196 +10,154 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import pytest
 from unittest.mock import Mock, patch
+from testfixture.workflow import run_trigger_operation
 
 
 class TestTestFixtureTrigger:
-    """Test cases for trigger operations."""
 
-    def test_trigger_operation_adds_label_when_not_present(self):
-        # Given: Issue without the trigger label
-        issue_without_label = self._create_mock_issue_with_labels([])
-        mock_manager = self._create_mock_jira_manager(issue_without_label)
+    # Public test methods (sorted alphabetically)
+    @pytest.mark.parametrize("scenario,trigger_labels,expected_error_contains,mock_manager_factory", [
+        ("shows error for empty labels", "", ["fatal", "error"], "normal"),
+        ("shows error for whitespace-only labels", "   ", ["fatal", "error"], "normal"),
+        ("logs fatal error when issue not found", "TransitionSprintItems", ["fatal", "error"], "fails"),
+    ])
+    def test_trigger_error_scenarios(self, scenario, trigger_labels, expected_error_contains, mock_manager_factory):
+        # Given: Mock manager based on scenario
+        mock_manager = self._create_mock_jira_manager_for_scenario(mock_manager_factory)
         
         # When: Trigger operation is executed
-        self._execute_trigger_operation(mock_manager)
+        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager, trigger_labels)
         
-        # Then: Label should be added to the issue
-        self._assert_label_was_added(issue_without_label)
-    
-    def test_trigger_operation_removes_and_adds_label_when_present(self):
-        # Given: Issue with the trigger label already present
-        issue_with_label = self._create_mock_issue_with_labels(["TransitionSprintItems"])
+        # Then: Should show appropriate error message
+        error_found = self._extract_error_message(mock_print, expected_error_contains)
+        assert error_found, f"Expected error message containing {expected_error_contains} for scenario: {scenario}"
+
+    def test_trigger_operation_logs_info_when_label_added(self):
+        # Given: Issue with no labels
+        issue_with_label = self._create_mock_issue_with_labels([])
         mock_manager = self._create_mock_jira_manager(issue_with_label)
         
         # When: Trigger operation is executed
-        self._execute_trigger_operation(mock_manager)
+        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager, "TransitionSprintItems")
         
-        # Then: Label should be removed then added back
-        self._assert_label_was_removed_then_added(issue_with_label)
-    
+        # Then: Should log INFO message for add operation only
+        remove_message, add_message = self._extract_messages(mock_print)
+        assert not remove_message, f"Expected no INFO message about label removal"
+        assert add_message, f"Expected INFO message about label addition"
+
     def test_trigger_operation_logs_info_when_label_removed_and_added(self):
         # Given: Issue with the trigger label already present
         issue_with_label = self._create_mock_issue_with_labels(["TransitionSprintItems"])
         mock_manager = self._create_mock_jira_manager(issue_with_label)
         
         # When: Trigger operation is executed
-        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager)
+        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager, "TransitionSprintItems")
         
         # Then: Should log INFO messages for remove and add operations
-        self._assert_info_logging_for_remove_and_add(mock_print)
-    
-    def test_trigger_operation_logs_fatal_error_when_issue_not_found(self):
-        # Given: Jira manager that raises exception when getting issue
-        mock_manager = self._create_mock_jira_manager_that_fails()
+        remove_message, add_message = self._extract_messages(mock_print)
+        assert remove_message, f"Expected INFO message about label removal"
+        assert add_message, f"Expected INFO message about label addition"
+
+    @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_final_labels,expected_updates", [
+        ("adds all labels when none present", [],
+         "TransitionSprintItems,CloseEpic,UpdateStatus",
+         ["TransitionSprintItems", "CloseEpic", "UpdateStatus"], 1),
+        
+        ("adds new labels while preserving existing ones", ["OldLabel", "AnotherLabel"],
+         "TransitionSprintItems,CloseEpic",
+         ["OldLabel", "AnotherLabel", "TransitionSprintItems", "CloseEpic"], 1),
+        
+        ("preserves existing labels when all trigger labels already present", ["TransitionSprintItems", "CloseEpic", "UpdateStatus", "ExistingLabel"],
+         "TransitionSprintItems,CloseEpic,UpdateStatus",
+         ["TransitionSprintItems", "CloseEpic", "UpdateStatus", "ExistingLabel"], 1),
+        
+        ("adds missing labels while preserving existing ones", ["TransitionSprintItems", "OldLabel"],
+         "TransitionSprintItems,CloseEpic,UpdateStatus",
+         ["TransitionSprintItems", "OldLabel", "CloseEpic", "UpdateStatus"], 1),
+        
+        ("trims whitespace from labels while preserving existing ones", ["ExistingLabel"],
+         " TransitionSprintItems , CloseEpic , UpdateStatus ",
+         ["ExistingLabel", "TransitionSprintItems", "CloseEpic", "UpdateStatus"], 1),
+        
+        ("single label: adds when not present", [],
+         "TransitionSprintItems",
+         ["TransitionSprintItems"], 1),
+        
+        ("single label: removes and adds when present", ["TransitionSprintItems"],
+         "TransitionSprintItems",
+         ["TransitionSprintItems"], 2),
+        
+        ("single label: adds while preserving existing ones", ["OldLabel", "AnotherLabel"],
+         "TransitionSprintItems",
+         ["OldLabel", "AnotherLabel", "TransitionSprintItems"], 1),
+        
+        ("single label: removes and adds while preserving existing ones", ["TransitionSprintItems", "OldLabel"],
+         "TransitionSprintItems",
+         ["TransitionSprintItems", "OldLabel"], 2),
+    ])
+    def test_trigger_scenarios(self, scenario, existing_labels, trigger_labels, expected_final_labels, expected_updates):
+        # Given: Issue with specific existing labels
+        issue = self._create_mock_issue_with_labels(existing_labels)
+        mock_manager = self._create_mock_jira_manager(issue)
         
         # When: Trigger operation is executed
-        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager)
+        run_trigger_operation(mock_manager, "TAPS-212", trigger_labels)
         
-        # Then: Should log FATAL ERROR for issue not found
-        self._assert_fatal_error_logging_for_issue_not_found(mock_print)
-    
+        # Then: Should call update the expected number of times
+        assert issue.update.call_count == expected_updates, f"Expected {expected_updates} updates for scenario: {scenario}"
+        
+        # Verify the final labels match expectations
+        final_call = issue.update.call_args_list[-1]
+        actual_labels = final_call[1]["fields"]["labels"]
+        assert set(actual_labels) == set(expected_final_labels), f"Expected {expected_final_labels}, got {actual_labels} for scenario: {scenario}"
+
+    # Private helper methods (sorted alphabetically)
     def _create_mock_issue_with_labels(self, labels):
         mock_issue = Mock()
         mock_issue.key = "TAPS-212"
         mock_issue.fields.labels = labels
         return mock_issue
-    
+
     def _create_mock_jira_manager(self, mock_issue):
         mock_jira_manager = Mock()
         mock_jira_manager.connect.return_value = True
         mock_jira_manager.jira.issue.return_value = mock_issue
         return mock_jira_manager
-    
-    def _execute_trigger_operation(self, mock_manager):
-        from testfixture.workflow import run_trigger_operation
-        run_trigger_operation(mock_manager, "TAPS-212", "TransitionSprintItems")
-    
-    def _execute_trigger_operation_with_print_capture(self, mock_manager):
-        from testfixture.workflow import run_trigger_operation
-        with patch('builtins.print') as mock_print:
-            try:
-                run_trigger_operation(mock_manager, "TAPS-212", "TransitionSprintItems")
-            except Exception:
-                # Exception is expected, but we still want to capture the print output
-                pass
-        return mock_print
-    
-    def _assert_label_was_added(self, mock_issue):
-        mock_issue.update.assert_called_once()
-        call_args = mock_issue.update.call_args
-        assert "TransitionSprintItems" in call_args[1]["fields"]["labels"]
-    
-    def _assert_label_was_removed_then_added(self, mock_issue):
-        assert mock_issue.update.call_count == 2  # Called twice: once to remove, once to add
-    
+
+    def _create_mock_jira_manager_for_scenario(self, mock_manager_factory):
+        if mock_manager_factory == "fails":
+            return self._create_mock_jira_manager_that_fails()
+        else:
+            issue = self._create_mock_issue_with_labels([])
+            return self._create_mock_jira_manager(issue)
+
     def _create_mock_jira_manager_that_fails(self):
         mock_jira_manager = Mock()
         mock_jira_manager.connect.return_value = True
         mock_jira_manager.jira.issue.side_effect = Exception("Issue not found")
         return mock_jira_manager
-    
-    def _assert_info_logging_for_remove_and_add(self, mock_print):
-        calls = mock_print.call_args_list
-        assert len(calls) >= 2
-        
-        # Check for INFO messages about label operations
-        info_messages = [call[0][0] for call in calls if len(call[0]) > 0]
-        remove_message = any("INFO" in msg and "Removed" in msg for msg in info_messages)
-        add_message = any("INFO" in msg and "Set" in msg for msg in info_messages)
-        
-        assert remove_message, f"Expected INFO message about label removal, got: {info_messages}"
-        assert add_message, f"Expected INFO message about label addition, got: {info_messages}"
-    
-    def _assert_fatal_error_logging_for_issue_not_found(self, mock_print):
-        calls = mock_print.call_args_list
-        assert len(calls) >= 1
-        
-        # Check for FATAL ERROR message
-        error_messages = [call[0][0] for call in calls if len(call[0]) > 0]
-        fatal_message = any("FATAL ERROR" in msg for msg in error_messages)
-        
-        assert fatal_message, f"Expected FATAL ERROR message, got: {error_messages}"
 
-    def test_trigger_operation_with_multiple_labels_adds_all_labels(self):
-        # Given: Issue without any of the trigger labels
-        issue_without_labels = self._create_mock_issue_with_labels([])
-        mock_manager = self._create_mock_jira_manager(issue_without_labels)
-        
-        # When: Trigger operation is executed with multiple labels
-        self._execute_trigger_operation_with_multiple_labels(mock_manager, "TransitionSprintItems,CloseEpic,UpdateStatus")
-        
-        # Then: All labels should be added to the issue
-        self._assert_all_labels_were_added(issue_without_labels, ["TransitionSprintItems", "CloseEpic", "UpdateStatus"])
-    
-    def test_trigger_operation_with_multiple_labels_removes_existing_and_adds_new(self):
-        # Given: Issue with some existing labels
-        issue_with_existing_labels = self._create_mock_issue_with_labels(["OldLabel", "AnotherLabel"])
-        mock_manager = self._create_mock_jira_manager(issue_with_existing_labels)
-        
-        # When: Trigger operation is executed with multiple labels
-        self._execute_trigger_operation_with_multiple_labels(mock_manager, "TransitionSprintItems,CloseEpic")
-        
-        # Then: All labels should be replaced with the new ones
-        self._assert_labels_were_replaced(issue_with_existing_labels, ["TransitionSprintItems", "CloseEpic"])
-    
-    def test_trigger_operation_with_multiple_labels_trims_whitespace(self):
-        # Given: Issue without any labels
-        issue_without_labels = self._create_mock_issue_with_labels([])
-        mock_manager = self._create_mock_jira_manager(issue_without_labels)
-        
-        # When: Trigger operation is executed with labels containing whitespace
-        self._execute_trigger_operation_with_multiple_labels(mock_manager, " TransitionSprintItems , CloseEpic , UpdateStatus ")
-        
-        # Then: All labels should be added with whitespace trimmed
-        self._assert_all_labels_were_added(issue_without_labels, ["TransitionSprintItems", "CloseEpic", "UpdateStatus"])
-    
-    def test_trigger_operation_with_empty_labels_shows_error(self):
-        # Given: Issue without any labels
-        issue_without_labels = self._create_mock_issue_with_labels([])
-        mock_manager = self._create_mock_jira_manager(issue_without_labels)
-        
-        # When: Trigger operation is executed with empty labels
-        mock_print = self._execute_trigger_operation_with_multiple_labels_and_print_capture(mock_manager, "")
-        
-        # Then: Should show error message
-        self._assert_error_message_for_empty_labels(mock_print)
-    
-    def _execute_trigger_operation_with_multiple_labels(self, mock_manager, labels_string):
-        from testfixture.workflow import run_trigger_operation_with_multiple_labels
-        run_trigger_operation_with_multiple_labels(mock_manager, labels_string, "TAPS-212")
-    
-    def _execute_trigger_operation_with_multiple_labels_and_print_capture(self, mock_manager, labels_string):
-        from testfixture.workflow import run_trigger_operation_with_multiple_labels
+    def _execute_trigger_operation_with_print_capture(self, mock_manager, labels_string):
         with patch('builtins.print') as mock_print:
             try:
-                run_trigger_operation_with_multiple_labels(mock_manager, labels_string, "TAPS-212")
+                run_trigger_operation(mock_manager, "TAPS-212", labels_string)
             except Exception:
                 # Exception is expected, but we still want to capture the print output
                 pass
         return mock_print
-    
-    def _assert_all_labels_were_added(self, mock_issue, expected_labels):
-        mock_issue.update.assert_called_once()
-        call_args = mock_issue.update.call_args
-        actual_labels = call_args[1]["fields"]["labels"]
-        for label in expected_labels:
-            assert label in actual_labels, f"Expected label '{label}' to be in {actual_labels}"
-    
-    def _assert_labels_were_replaced(self, mock_issue, expected_labels):
-        mock_issue.update.assert_called_once()
-        call_args = mock_issue.update.call_args
-        actual_labels = call_args[1]["fields"]["labels"]
-        assert set(actual_labels) == set(expected_labels), f"Expected labels {expected_labels}, got {actual_labels}"
-    
-    def _assert_error_message_for_empty_labels(self, mock_print):
+
+    def _extract_error_message(self, mock_print, expected_error_contains):
         calls = mock_print.call_args_list
-        assert len(calls) >= 1
-        
-        # Check for error message about empty labels
         error_messages = [call[0][0] for call in calls if len(call[0]) > 0]
-        error_message = any("error" in msg.lower() and "label" in msg.lower() for msg in error_messages)
-        
-        assert error_message, f"Expected error message about empty labels, got: {error_messages}"
+        return any(all(keyword in msg.lower() for keyword in expected_error_contains) for msg in error_messages)
+
+    def _extract_messages(self, mock_print):
+        calls = mock_print.call_args_list
+        info_messages = [call[0][0] for call in calls if len(call[0]) > 0]
+        remove_message = any("INFO" in msg and "Removed" in msg for msg in info_messages)
+        add_message = any("INFO" in msg and "Set" in msg for msg in info_messages)
+        return remove_message, add_message
+    
 
 
 if __name__ == "__main__":

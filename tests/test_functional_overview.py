@@ -103,17 +103,17 @@ class TestJiraUtilAPI:
         
         # When: User runs test fixture reset operation
         with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
-             patch('testfixture.workflow.process_issues_by_label') as mock_process:
+             patch('testfixture.issue_processor._get_issues_for_processing') as mock_get_issues:
             
             mock_manager = Mock()
             mock_manager_class.return_value = mock_manager
-            mock_process.return_value = create_reset_result(processed=2, updated=2)
+            mock_get_issues.return_value = {'success': True, 'issues': []}
             
             with patch('builtins.print'):
                 run_TestFixture_Reset(mock_manager, "rule-testing")
             
             # Then: Should call appropriate functions
-            mock_process.assert_called_once_with(mock_manager, "rule-testing")
+            mock_get_issues.assert_called_once_with(mock_manager, "rule-testing")
     
     def test_user_can_assert_test_fixtures(self):
         """Test that users can assert test fixture expectations through the API."""
@@ -122,17 +122,17 @@ class TestJiraUtilAPI:
         
         # When: User runs test fixture assert operation
         with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
-             patch('testfixture.workflow.assert_issues_expectations') as mock_assert:
+             patch('testfixture.issue_processor._get_issues_for_processing') as mock_get_issues:
             
             mock_manager = Mock()
             mock_manager_class.return_value = mock_manager
-            mock_assert.return_value = create_assert_result(processed=2, passed=1, failed=1, failures=['PROJ-2: Expected Done but is To Do'])
+            mock_get_issues.return_value = {'success': True, 'issues': []}
             
             with patch('builtins.print'):
                 run_assert_expectations(mock_manager, "rule-testing")
             
             # Then: Should call appropriate functions
-            mock_assert.assert_called_once_with(mock_manager, "rule-testing")
+            mock_get_issues.assert_called_once_with(mock_manager, "rule-testing")
     
     def test_user_can_parse_cli_commands(self):
         """Test that users can parse CLI commands through the API."""

@@ -92,8 +92,8 @@ class TestTFChainedCommands(unittest.TestCase):
         
         # Check second call (trigger)
         second_call = mock_execute.call_args_list[1]
-        self.assertEqual(second_call[0][4], 'test-label')  # label argument (args[4])
-        self.assertEqual(second_call[0][5], 'TEST-123')    # key argument (args[5])
+        self.assertEqual(second_call[0][4], 'TEST-123')    # key argument (args[4])
+        self.assertEqual(second_call[0][5], 'test-label')  # label argument (args[5])
 
     @patch('test_fixture.handlers.execute_with_jira_manager')
     @patch('test_fixture.handlers.get_jira_credentials')
@@ -122,8 +122,8 @@ class TestTFChainedCommands(unittest.TestCase):
         calls = mock_execute.call_args_list
         self.assertEqual(calls[0][0][4], 'test-label')  # reset (args[4])
         self.assertEqual(calls[1][0][4], 'test-label')  # assert (args[4])
-        self.assertEqual(calls[2][0][4], 'test-label')  # trigger (args[4])
-        self.assertEqual(calls[2][0][5], 'TEST-123')    # trigger key (args[5])
+        self.assertEqual(calls[2][0][4], 'TEST-123')    # trigger key (args[4])
+        self.assertEqual(calls[2][0][5], 'test-label')  # trigger label (args[5])
 
     @patch('test_fixture.handlers.execute_with_jira_manager')
     @patch('test_fixture.handlers.get_jira_credentials')
@@ -225,8 +225,8 @@ class TestTFChainedCommands(unittest.TestCase):
             self.assertEqual(calls[i][0][4], 'test-label')  # label argument
         
         # Last call should be trigger
-        self.assertEqual(calls[3][0][4], 'test-label')  # label argument
-        self.assertEqual(calls[3][0][5], 'TEST-123')    # key argument
+        self.assertEqual(calls[3][0][4], 'TEST-123')    # key argument
+        self.assertEqual(calls[3][0][5], 'test-label')  # label argument
 
     @patch('test_fixture.handlers.execute_with_jira_manager')
     @patch('test_fixture.handlers.get_jira_credentials')
@@ -255,8 +255,8 @@ class TestTFChainedCommands(unittest.TestCase):
         calls = mock_execute.call_args_list
         for i in range(8):
             if i == 3:  # Trigger command (4th call, index 3)
-                self.assertEqual(calls[i][0][4], 'test-label')  # label argument
-                self.assertEqual(calls[i][0][5], 'TEST-456')    # key argument
+                self.assertEqual(calls[i][0][4], 'TEST-456')    # key argument
+                self.assertEqual(calls[i][0][5], 'test-label')  # label argument
             else:  # All other commands (assert or reset)
                 self.assertEqual(calls[i][0][4], 'test-label')  # label argument
 
