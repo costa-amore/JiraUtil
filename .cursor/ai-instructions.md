@@ -17,6 +17,15 @@ This document contains specific instructions for AI assistants working on this p
 4. **Commit this single use-case**
 5. **Move to next simplest example and repeat**
 
+#### python test files organization
+
+1. use the GWT approach in each test
+2. keep the test method small and clean - extract plumbing code
+3. keep a clear mapping between the Given data and the assert data
+4. don't use Docstrings or comments, just extract into intention revealing functions.  
+5. organize the files in public & private functions, and sort them alphabetically
+6. use the trigger test code as an example
+
 ### Test Failure Verification
 
 - Tests must fail for functional reasons (missing behavior), not technical reasons (imports, syntax, etc.)
@@ -197,7 +206,7 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Commit Message Prefixes
 
-- Use: `feat`, `fix`, `cleanup`, `chore`, `refactor`
+- Use: `feat`, `fix`, `clean-up`, `chore`, `refactor`
 - Keep consistent with recent commit history
 - Focus on WHY the change was made, not WHAT changed (diffs show the what)
 - Keep messages concise and avoid repeating details visible in the diff
@@ -240,7 +249,7 @@ This document contains specific instructions for AI assistants working on this p
    - Test public interfaces and user-visible outcomes
    - Make tests as implementation-agnostic as possible
 
-3. **Cleanup Phase**: Evaluate and consolidate tests
+3. **clean-up Phase**: Evaluate and consolidate tests
    - Identify which scaffolding tests are covered by API tests
    - Remove redundant scaffolding tests
    - Keep only scaffolding tests that provide unique value
