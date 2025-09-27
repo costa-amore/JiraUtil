@@ -1,20 +1,17 @@
 repos:
   - repo: local
     hooks:
+      - id: lint
+        name: Run Linters
+        entry: .\scripts\lint.ps1
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
       - id: test-imports
         name: Test Import Validation
-        entry: python -c "
-import sys
-import os
-sys.path.insert(0, 'src')
-try:
-    from testfixture.workflow import *
-    from testfixture.issue_processor import *
-    print('✅ All imports valid')
-except ImportError as e:
-    print(f'❌ Import error: {e}')
-    sys.exit(1)
-"
+        entry: .\run.ps1 scripts\validate-imports.py
         language: system
         pass_filenames: false
         always_run: true

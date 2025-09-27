@@ -35,11 +35,13 @@ This document contains specific instructions for AI assistants working on this p
 ### Pre-Development Validation
 
 **Before making any changes:**
+
 1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
 2. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
 3. **Verify no failures** before starting work
 
 **After making changes:**
+
 1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
 2. **Run affected test categories**: `.\run.ps1 tests\run_tests.py <category>`
 3. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
@@ -83,6 +85,7 @@ This document contains specific instructions for AI assistants working on this p
 ### Refactoring Safety
 
 **When renaming functions or moving code:**
+
 1. **Search for all usages**: `grep -r "old_function_name" tests/ src/`
 2. **Update all references** before committing
 3. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
@@ -90,6 +93,7 @@ This document contains specific instructions for AI assistants working on this p
 5. **Verify no old references remain**
 
 **Common refactoring patterns:**
+
 - Function renames: Update all imports and calls
 - Module moves: Update all import paths
 - Parameter renames: Update all function calls

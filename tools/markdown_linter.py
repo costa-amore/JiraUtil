@@ -64,6 +64,36 @@ def fix_list_spacing(content):
     return '\n'.join(fixed_lines)
 
 
+def fix_emphasis_as_heading(content):
+    """Fix MD036: Convert bold text that should be headings to proper headings."""
+    lines = content.split('\n')
+    fixed_lines = []
+    
+    for i, line in enumerate(lines):
+        # Check if line is bold text that should be a heading
+        # Pattern: **TEXT** at start of line or after whitespace
+        bold_match = re.match(r'^(\s*)\*\*(.+?)\*\*$', line)
+        
+        if bold_match:
+            indent, text = bold_match.groups()
+            # Check if this looks like it should be a heading (not just bold text)
+            # Look for common patterns that indicate headings
+            if (text.upper() in ['CRITICAL', 'IMPORTANT', 'NOTE', 'WARNING', 'ERROR'] or
+                text.endswith(':') or
+                text.startswith('Step') or
+                text.startswith('Chapter') or
+                text.startswith('Section')):
+                # Convert to heading (use #### for emphasis text)
+                fixed_line = f"{indent}#### {text}"
+                fixed_lines.append(fixed_line)
+            else:
+                fixed_lines.append(line)
+        else:
+            fixed_lines.append(line)
+    
+    return '\n'.join(fixed_lines)
+
+
 def fix_header_spacing(content):
     """Add blank lines before headers (except first header after section)."""
     lines = content.split('\n')
@@ -87,6 +117,8 @@ def fix_header_spacing(content):
             fixed_lines.append(line)
     
     return '\n'.join(fixed_lines)
+
+
 
 
 def fix_code_block_spacing(content):
@@ -135,6 +167,7 @@ def lint_markdown_file(file_path, fix=False):
     fixed_content = fix_trailing_spaces(fixed_content)
     fixed_content = fix_extra_blank_lines(fixed_content)
     fixed_content = fix_list_spacing(fixed_content)
+    fixed_content = fix_emphasis_as_heading(fixed_content)
     fixed_content = fix_header_spacing(fixed_content)
     fixed_content = fix_code_block_spacing(fixed_content)
     
