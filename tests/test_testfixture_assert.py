@@ -31,7 +31,7 @@ class TestTestFixtureAssert:
         
         if failure_messages:
             failure_message = failure_messages[0]
-            expected_format = "    - PROJ-2: Expected 'Done' but is 'To Do'"
+            expected_format = "    - [Bug] PROJ-2: Expected 'Done' but is 'To Do'"
             assert failure_message == expected_format, f"Expected format '{expected_format}', got '{failure_message}'"
 
     def test_assert_operation_verifies_rule_automation_worked(self):

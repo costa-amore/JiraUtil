@@ -70,7 +70,8 @@ class JiraInstanceManager:
                 result.append({
                     'key': issue.key,
                     'summary': issue.fields.summary,
-                    'status': issue.fields.status.name
+                    'status': issue.fields.status.name,
+                    'issue_type': issue.fields.issuetype.name
                 })
             return result
         except JIRAError as e:

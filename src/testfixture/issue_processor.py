@@ -135,6 +135,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
     key = issue['key']
     summary = issue['summary']
     current_status = issue['status']
+    issue_type = issue.get('issue_type', 'Unknown')
     
     # Parse expectation pattern
     expectation = parse_expectation_pattern(summary)
@@ -144,7 +145,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
             'summary': summary,
             'status': current_status,
             'assert_result': None,  # Not evaluable
-            'issue_type': 'Unknown',  # Will be enhanced later
+            'issue_type': issue_type,
             'parent_epic': None,  # Will be enhanced later
             'rank': 0,  # Will be enhanced later
             'evaluable': False
@@ -163,7 +164,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         'summary': summary,
         'status': current_status,
         'assert_result': assert_result,
-        'issue_type': 'Unknown',  # Will be enhanced later
+        'issue_type': issue_type,
         'parent_epic': None,  # Will be enhanced later
         'rank': 0,  # Will be enhanced later
         'evaluable': True,
@@ -192,7 +193,7 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
         elif result['assert_result'] == 'FAIL':
             results['failed'] += 1
             results['failures'].append(
-                f"{result['key']}: Expected '{result['expected_status']}' but is '{result['status']}'"
+                f"[{result['issue_type']}] {result['key']}: Expected '{result['expected_status']}' but is '{result['status']}'"
             )
     
     return results
