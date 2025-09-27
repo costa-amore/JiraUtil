@@ -7,28 +7,41 @@ from version import get_version
 from testfixture import DEFAULT_TEST_FIXTURE_LABEL
 
 
-def validate_label_argument(value):
-    """Validate label argument and provide helpful error for common mistakes."""
+def validate_label_format(value):
     if not value:
-        return value
+        return {"valid": True, "value": value}
     
-    # Only check for space-separated labels that look like they should be comma-separated
-    # This happens when the shell splits unquoted comma-separated arguments
     if ' ' in value and not (value.startswith('"') and value.endswith('"')):
-        # Check if this looks like multiple labels that were split by the shell
-        # Pattern: "label1 label2" where both parts look like valid labels
         parts = value.split()
         if len(parts) == 2 and all(part and not ' ' in part for part in parts):
-            # This looks like two labels that should have been comma-separated
-            raise argparse.ArgumentTypeError(
-                f"Invalid label format: '{value}'\n"
-                f"Problem: Multiple labels must be quoted and comma-separated\n"
-                f"Solution: Use double quotes around comma-separated labels\n"
-                f"   Example: -l \"{parts[0]},{parts[1]}\"\n"
-                f"   Or use single labels: -l \"{parts[0]}\""
-            )
+            return {
+                "valid": False, 
+                "error_type": "space_separated_labels",
+                "value": value,
+                "parts": parts
+            }
     
-    return value
+    return {"valid": True, "value": value}
+
+
+def format_label_validation_error(validation_result):
+    if validation_result["error_type"] == "space_separated_labels":
+        parts = validation_result["parts"]
+        return (
+            f"Invalid label format: '{validation_result['value']}'\n"
+            f"Problem: Multiple labels must be quoted and comma-separated\n"
+            f"Solution: Use double quotes around comma-separated labels\n"
+            f"   Example: -l \"{parts[0]},{parts[1]}\"\n"
+            f"   Or use single labels: -l \"{parts[0]}\""
+        )
+
+
+def validate_label_argument(value):
+    result = validate_label_format(value)
+    if not result["valid"]:
+        error_message = format_label_validation_error(result)
+        raise argparse.ArgumentTypeError(error_message)
+    return result["value"]
 
 
 def build_parser() -> argparse.ArgumentParser:
