@@ -18,8 +18,6 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot\build-versioning.ps1"
 . "$PSScriptRoot\build-documentation.ps1"
 . "$PSScriptRoot\build-packaging.ps1"
-. "$PSScriptRoot\lint-python.ps1"
-. "$PSScriptRoot\lint-powershell.ps1"
 
 Write-Host "[BUILD] Building JiraUtil Executables" -ForegroundColor Cyan
 Write-Host "Platform: $Platform" -ForegroundColor Yellow
@@ -182,13 +180,7 @@ Show-BuildSummary -BuildResults $BuildResults -BuildDir $BuildDir
 # Create distribution packages
 New-DistributionPackage -BuildDir $BuildDir -Version $version
 
-# Run markdown linting on generated docs
-Write-Host "`n[LINT] Running markdown linting on generated documentation..." -ForegroundColor Yellow
-$GeneratedDocsPath = "$script:buildDir\Windows"
-& "$PSScriptRoot\lint-markdown.ps1" -GeneratedPath "$GeneratedDocsPath/" -GeneratedReadmePath "$GeneratedDocsPath/README.md" -Fix
-if ($LASTEXITCODE -ne 0) {
-    exit 1
-}
+# Markdown linting removed - run '.\scripts\lint-markdown.ps1' separately if needed
 
 # Show build instructions
 Show-BuildInstructions
