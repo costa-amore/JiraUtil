@@ -102,4 +102,4 @@ JiraUtil/
 - **Executables**: `JiraUtil.exe` (Windows), `JiraUtil` (Unix)
 - **Scripts**: `setup-environment.ps1`, `build-windows.ps1`, `tests/run_tests.py`
 - **Configuration**: `jira_config.env`, `jira_config_example.env`
-- **Documentation**: `user-guide.md`, `command-reference.md`, `troubleshooting.md`
+- **Documentation**: `docs/user-guide.md`, `docs/command-reference.md`, `docs/troubleshooting.md`

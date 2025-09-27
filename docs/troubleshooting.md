@@ -340,4 +340,4 @@ Contact your system administrator if:
 
 ---
 
-[🏠 Home](../README.md) | [← Command Reference](command-reference.md) | [User Guide →](../user-guide.md)
+[🏠 Home](../README.md) | [← Command Reference](command-reference.md) | [User Guide →](user-guide.md)
