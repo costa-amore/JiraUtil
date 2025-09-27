@@ -30,6 +30,8 @@ env.bak/
 
 # IDE/editor
 .vscode/
+!.vscode/settings.json
+!.vscode/launch.json
 .idea/
 *.code-workspace
 

@@ -2,6 +2,12 @@
 Tests for test fixture trigger operations.
 """
 
+import sys
+import os
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
 import pytest
 from unittest.mock import Mock, patch
 
@@ -66,13 +72,13 @@ class TestTestFixtureTrigger:
     
     def _execute_trigger_operation(self, mock_manager):
         from testfixture.workflow import run_trigger_operation
-        run_trigger_operation(mock_manager, "TransitionSprintItems", "TAPS-212")
+        run_trigger_operation(mock_manager, "TAPS-212", "TransitionSprintItems")
     
     def _execute_trigger_operation_with_print_capture(self, mock_manager):
         from testfixture.workflow import run_trigger_operation
         with patch('builtins.print') as mock_print:
             try:
-                run_trigger_operation(mock_manager, "TransitionSprintItems", "TAPS-212")
+                run_trigger_operation(mock_manager, "TAPS-212", "TransitionSprintItems")
             except Exception:
                 # Exception is expected, but we still want to capture the print output
                 pass
@@ -98,8 +104,8 @@ class TestTestFixtureTrigger:
         
         # Check for INFO messages about label operations
         info_messages = [call[0][0] for call in calls if len(call[0]) > 0]
-        remove_message = any("INFO" in msg and "removed" in msg for msg in info_messages)
-        add_message = any("INFO" in msg and "set" in msg for msg in info_messages)
+        remove_message = any("INFO" in msg and "Removed" in msg for msg in info_messages)
+        add_message = any("INFO" in msg and "Set" in msg for msg in info_messages)
         
         assert remove_message, f"Expected INFO message about label removal, got: {info_messages}"
         assert add_message, f"Expected INFO message about label addition, got: {info_messages}"

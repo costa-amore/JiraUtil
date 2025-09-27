@@ -32,6 +32,19 @@ This document contains specific instructions for AI assistants working on this p
 - **For individual test files**: `.\run.ps1 tests\run_tests.py <test_file.py>`
 - **For test patterns**: `.\run.ps1 tests\run_tests.py <pattern>`
 
+### Pre-Development Validation
+
+**Before making any changes:**
+1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
+2. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
+3. **Verify no failures** before starting work
+
+**After making changes:**
+1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
+2. **Run affected test categories**: `.\run.ps1 tests\run_tests.py <category>`
+3. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
+4. **Commit only when all tests pass**
+
 ### Test Categories
 
 - `testfixture` - Test fixture operations
@@ -66,6 +79,21 @@ This document contains specific instructions for AI assistants working on this p
 - The setup script manages the virtual environment and installs from `requirements.txt`
 
 ## Code Quality Guidelines
+
+### Refactoring Safety
+
+**When renaming functions or moving code:**
+1. **Search for all usages**: `grep -r "old_function_name" tests/ src/`
+2. **Update all references** before committing
+3. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
+4. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
+5. **Verify no old references remain**
+
+**Common refactoring patterns:**
+- Function renames: Update all imports and calls
+- Module moves: Update all import paths
+- Parameter renames: Update all function calls
+- Class renames: Update all instantiations
 
 ### Minimal Implementation Rules
 
