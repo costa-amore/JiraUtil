@@ -120,7 +120,7 @@ def run_specific_test_category(category):
 	"""Run tests for a specific category, file, or pattern."""
 	category_mapping = {
 		"csv": "test_csv_export_commands.py",
-		"testfixture": "test_testfixture_trigger.py",  # Fixed: was test_testfixture_commands.py
+		"testfixture": ["test_testfixture_trigger.py", "test_testfixture_assert.py", "test_testfixture_reset.py"],
 		"cli": "test_cli_commands.py",
 		"overview": "test_functional_overview.py",
 		"color": "test_color_system.py",
@@ -143,8 +143,11 @@ def run_specific_test_category(category):
 	# Check if it's a test method pattern (e.g., "test_trigger_operation_with_multiple_labels")
 	if category.startswith('test_'):
 		colored_print(f"[TEST] Running tests matching pattern: {category}")
+		src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 		cmd = [sys.executable, "-m", "pytest", "-k", category, "-v", "--tb=short"]
-		return run_pytest_command(cmd, f"tests matching '{category}'")
+		env = os.environ.copy()
+		env['PYTHONPATH'] = src_path
+		return run_pytest_command_with_env(cmd, f"tests matching '{category}'", env)
 	
 	# Check if it's a category mapping
 	if category not in category_mapping:
@@ -155,19 +158,42 @@ def run_specific_test_category(category):
 		print("  - A test method pattern (e.g., 'test_trigger_operation')")
 		return False
 	
-	test_file = f"tests/{category_mapping[category]}"
-	if not Path(test_file).exists():
-		colored_print(f"[ERROR] Test file not found: {test_file}")
+	test_files = category_mapping[category]
+	
+	# Handle both single file and list of files
+	if isinstance(test_files, str):
+		test_files = [test_files]
+	
+	# Check if all test files exist
+	missing_files = []
+	for test_file in test_files:
+		full_path = f"tests/{test_file}" if not test_file.startswith('tests/') else test_file
+		if not Path(full_path).exists():
+			missing_files.append(full_path)
+	
+	if missing_files:
+		colored_print(f"[ERROR] Test file(s) not found: {', '.join(missing_files)}")
 		return False
 	
-	return run_test_file(test_file, category)
+	# Run all test files for this category
+	success = True
+	for test_file in test_files:
+		full_path = f"tests/{test_file}" if not test_file.startswith('tests/') else test_file
+		if not run_test_file(full_path, f"{category} ({test_file})"):
+			success = False
+	
+	return success
 
 
 def run_test_file(test_file, description):
 	"""Run a specific test file."""
 	colored_print(f"[TEST] Running {description} tests...")
+	# Add src to Python path for pytest
+	src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 	cmd = [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"]
-	return run_pytest_command(cmd, description)
+	env = os.environ.copy()
+	env['PYTHONPATH'] = src_path
+	return run_pytest_command_with_env(cmd, description, env)
 
 
 def run_pytest_command(cmd, description):
@@ -175,6 +201,18 @@ def run_pytest_command(cmd, description):
 	try:
 		# Use real-time output with unbuffered stdout
 		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0)
+		print(f"SUCCESS: {description.title()} tests passed!")
+		return True
+	except subprocess.CalledProcessError as e:
+		print(f"FAILED: {description.title()} tests failed!")
+		return False
+
+
+def run_pytest_command_with_env(cmd, description, env):
+	"""Run a pytest command with custom environment and handle the result."""
+	try:
+		# Use real-time output with unbuffered stdout
+		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0, env=env)
 		print(f"SUCCESS: {description.title()} tests passed!")
 		return True
 	except subprocess.CalledProcessError as e:
