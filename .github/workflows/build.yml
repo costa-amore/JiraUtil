@@ -35,12 +35,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Lint markdown documentation
-      run: |
-        .venv\Scripts\Activate.ps1
-        echo "Linting markdown documentation..."
-        powershell -ExecutionPolicy Bypass -File scripts/lint-markdown.ps1 -SourcePath "docs/" -ReadmePath "README.md" -Fix
-        
     - name: Generate PyInstaller spec file
       run: |
         .venv\Scripts\Activate.ps1

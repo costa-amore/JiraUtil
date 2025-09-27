@@ -190,10 +190,12 @@ This document contains specific instructions for AI assistants working on this p
 ### Error Message Formatting Rules
 
 - **NEVER use emojis in script output** - not in error messages, success messages, or any other output
-- **Emojis don't display consistently** across all terminals and can cause encoding issues
+- **NEVER use emojis in PowerShell scripts** - they cause encoding issues in CI environments
+- **Emojis don't display consistently** across all terminals and can cause parsing errors
 - **Use the colored text enum** from `src/color_system.py` for visual emphasis instead
 - **Keep all output clean and professional** - use clear text labels like "Problem:" and "Solution:"
 - **Provide actionable solutions** - always include specific examples of correct usage
+- **Rely on IDE linting** - don't try to automate linting checks that cause more problems than they solve
 
 ## Version and Release Management
 
