@@ -118,6 +118,13 @@ This document contains specific instructions for AI assistants working on this p
 - Large files: >100 lines
 - Split into files with single purpose
 
+### Code Organization Rules
+
+- **ALWAYS group public functions at the top of files/classes**
+- **ALWAYS group private functions at the bottom of files/classes**
+- **ALWAYS sort both public and private groups alphabetically**
+- This makes processing diffs easier and improves code navigation
+
 ## Documentation Standards
 
 ### Avoid Duplication
