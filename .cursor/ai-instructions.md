@@ -2,6 +2,8 @@
 
 This document contains specific instructions for AI assistants working on this project. Follow these guidelines to ensure consistent, high-quality development practices.
 
+**IMPORTANT**: Ignore `.cursor/dev-instructions.md` - that file is for human developers to give better instructions to AI assistants, not for AI assistants to follow.
+
 ## Quick Reference Files
 
 - **Core Instructions**: `.cursor/ai-instructions-core.md` - Essential rules and commands
