@@ -58,6 +58,13 @@ This document contains specific instructions for AI assistants working on this p
 - **NEVER add multiple features in one step**
 - **ALWAYS verify test fails for functional reasons before implementing**
 
+### Command Execution
+
+- **IMMEDIATELY acknowledge successful commands** (exit code 0)
+- **Don't wait after clear success signals** - commit completions, test passes, etc.
+- **Ask "what's next" or summarize accomplishments** instead of waiting
+- **Only wait when explicitly requested** or when command output is unclear
+
 ### Code Organization
 
 - **ALWAYS group public functions at top, private at bottom**
