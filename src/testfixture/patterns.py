@@ -9,50 +9,43 @@ import re
 from typing import Optional, Tuple
 
 # Pattern matching for test fixture issue summaries
-# Supports two formats:
-# 1. "I was in <status1> - expected to be in <status2>"
-# 2. "[<optional context> - ]starting in <status1> - expected to be in <status2>"
-SUMMARY_PATTERN = r".*(?:I was in|starting in) (.+?) - expected to be in (.+)"
+START_STATE_PATTERN = r"(?:starting in|I was in)"
+EXPECTED_STATE_PATTERN = r"expected to be in"
+SUMMARY_PATTERN = rf"^(.*?)(?:{START_STATE_PATTERN}) (.+?) - {EXPECTED_STATE_PATTERN} (.+)"
 
 # Default label for test fixture issues (used to verify automation rules)
 DEFAULT_TEST_FIXTURE_LABEL = "rule-testing"
 
 
-def parse_summary_pattern(summary: str) -> Optional[Tuple[str, str]]:
-    """
-    Parse issue summary to extract status names for rule-testing pattern.
+# Public functions (sorted alphabetically)
+def extract_context_from_summary(summary: str) -> Optional[str]:
+    result = _parse_summary_groups(summary)
     
-    Args:
-        summary: Issue summary text
-        
-    Returns:
-        Tuple of (status1, status2) if pattern matches, None otherwise
-    """
-    match = re.search(SUMMARY_PATTERN, summary, re.IGNORECASE)
-    
-    if match:
-        status1 = match.group(1).strip()
-        status2 = match.group(2).strip()
-        return (status1, status2)
+    if result:
+        context = result[0]  # Group 1 is context
+        # Remove trailing " - " if present
+        if context.endswith(" - "):
+            context = context[:-3]
+        # Return context only if it's not empty and not just the start state pattern
+        if context and not re.match(rf"^{START_STATE_PATTERN}$", context, re.IGNORECASE):
+            return context
     
     return None
 
 
-def parse_expectation_pattern(summary: str) -> Optional[Tuple[str, str]]:
-    """
-    Parse issue summary to extract expected status for assertion pattern.
-    
-    Args:
-        summary: Issue summary text
-        
-    Returns:
-        Tuple of (status1, status2) if pattern matches, None otherwise
-    """
+def extract_statuses_from_summary(summary: str) -> Optional[Tuple[str, str]]:
+    result = _parse_summary_groups(summary)
+    return (result[1], result[2]) if result else None
+
+
+# Private functions (sorted alphabetically)
+def _parse_summary_groups(summary: str) -> Optional[Tuple[str, str, str]]:
     match = re.search(SUMMARY_PATTERN, summary, re.IGNORECASE)
     
     if match:
-        status1 = match.group(1).strip()
-        status2 = match.group(2).strip()
-        return (status1, status2)
+        context = match.group(1).strip()  # Group 1 is context
+        status1 = match.group(2).strip()  # Group 2 is status1
+        status2 = match.group(3).strip()  # Group 3 is status2
+        return (context, status1, status2)
     
     return None

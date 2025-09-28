@@ -7,7 +7,7 @@ issues, including status updates and expectation assertions.
 
 from typing import Dict, List
 from jira_manager import JiraInstanceManager
-from .patterns import parse_summary_pattern, parse_expectation_pattern
+from .patterns import extract_statuses_from_summary, extract_context_from_summary
 from utils.colors import colored_print
 
 
@@ -38,7 +38,7 @@ def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_lab
         print(f"  Current status: {current_status}")
         
         # Parse summary pattern
-        parse_result = parse_summary_pattern(summary)
+        parse_result = extract_statuses_from_summary(summary)
         if not parse_result:
             print(f"  Skipping - summary doesn't match expected pattern")
             results['skipped'] += 1
@@ -138,7 +138,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
     issue_type = issue.get('issue_type', 'Unknown')
     
     # Parse expectation pattern
-    expectation = parse_expectation_pattern(summary)
+    expectation = extract_statuses_from_summary(summary)
     if not expectation:
         return {
             'key': key,
@@ -152,6 +152,8 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         }
     
     status1, expected_status = expectation
+    
+    context = extract_context_from_summary(summary)
     
     # Evaluate assertion
     if current_status.upper() == expected_status.upper():
@@ -168,7 +170,8 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         'parent_epic': None,  # Will be enhanced later
         'rank': 0,  # Will be enhanced later
         'evaluable': True,
-        'expected_status': expected_status
+        'expected_status': expected_status,
+        'context': context
     }
 
 
@@ -192,8 +195,10 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
             results['passed'] += 1
         elif result['assert_result'] == 'FAIL':
             results['failed'] += 1
+            # Extract context from summary if present
+            context = f"{result.get('context', '')} " if result.get('context', '') else ""
             results['failures'].append(
-                f"[{result['issue_type']}] {result['key']}: Expected '{result['expected_status']}' but is '{result['status']}'"
+                f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
             )
     
     return results
