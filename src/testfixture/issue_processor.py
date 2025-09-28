@@ -222,20 +222,46 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
             # Epic itself failed - already collected in first pass
             pass
         elif result.get('parent_key'):
-            if result['parent_key'] not in epics:
-                # Parent not found in our collection, create placeholder
-                epics[result['parent_key']] = {'children': []}
-            if 'children' not in epics[result['parent_key']]:
-                epics[result['parent_key']]['children'] = []
-            epics[result['parent_key']]['children'].append(result)
-        elif result.get('parent_story'):
-            # Sub-task with Story parent
-            if result['parent_story'] not in stories:
-                # Parent story not found in our collection, create placeholder
-                stories[result['parent_story']] = {'children': []}
-            if 'children' not in stories[result['parent_story']]:
-                stories[result['parent_story']]['children'] = []
-            stories[result['parent_story']]['children'].append(result)
+            # Check if parent is an Epic or Story
+            parent_key = result['parent_key']
+            parent_issue = next((r for r in assertion_results if r['key'] == parent_key), None)
+            
+            if parent_issue and parent_issue['issue_type'] == 'Epic':
+                # Parent is an Epic
+                if parent_key not in epics:
+                    epics[parent_key] = {'children': []}
+                if 'children' not in epics[parent_key]:
+                    epics[parent_key]['children'] = []
+                epics[parent_key]['children'].append(result)
+            elif parent_issue and parent_issue['issue_type'] == 'Story':
+                # Parent is a Story - add to stories collection
+                if parent_key not in stories:
+                    stories[parent_key] = {'children': []}
+                if 'children' not in stories[parent_key]:
+                    stories[parent_key]['children'] = []
+                stories[parent_key]['children'].append(result)
+                
+                # If the parent story is non-evaluable, we need to add it to epics
+                # so it can be displayed in the hierarchy
+                if not parent_issue.get('evaluable', False):
+                    # Find the epic parent of this story
+                    story_parent_key = parent_issue.get('parent_key')
+                    if story_parent_key:
+                        story_parent_issue = next((r for r in assertion_results if r['key'] == story_parent_key), None)
+                        if story_parent_issue and story_parent_issue['issue_type'] == 'Epic':
+                            if story_parent_key not in epics:
+                                epics[story_parent_key] = {'children': []}
+                            if 'children' not in epics[story_parent_key]:
+                                epics[story_parent_key]['children'] = []
+                            # Add the story to the epic's children
+                            if parent_issue not in epics[story_parent_key]['children']:
+                                epics[story_parent_key]['children'].append(parent_issue)
+                    else:
+                        # Story has no epic parent - treat as orphaned
+                        orphaned.append(parent_issue)
+            else:
+                # Parent not found or unknown type - treat as orphaned
+                orphaned.append(result)
         else:
             orphaned.append(result)
     
@@ -245,12 +271,15 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
             if result['issue_type'] == 'Story' and result['key'] in stories and 'children' in stories[result['key']]:
                 # Non-evaluable story with children - add to epic's children
                 if result.get('parent_key'):
-                    if result['parent_key'] not in epics:
-                        epics[result['parent_key']] = {'children': []}
-                    if 'children' not in epics[result['parent_key']]:
-                        epics[result['parent_key']]['children'] = []
-                    epics[result['parent_key']]['children'].append(result)
-            elif not result.get('parent_key') and not result.get('parent_story') and result['issue_type'] != 'Epic':
+                    parent_key = result['parent_key']
+                    parent_issue = next((r for r in assertion_results if r['key'] == parent_key), None)
+                    if parent_issue and parent_issue['issue_type'] == 'Epic':
+                        if parent_key not in epics:
+                            epics[parent_key] = {'children': []}
+                        if 'children' not in epics[parent_key]:
+                            epics[parent_key]['children'] = []
+                        epics[parent_key]['children'].append(result)
+            elif not result.get('parent_key') and result['issue_type'] != 'Epic':
                 # Non-evaluable orphaned item
                 orphaned.append(result)
     
@@ -258,17 +287,20 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
     sorted_epics = sorted(epics.values(), key=lambda x: (JiraInstanceManager.get_rank_value(x), x.get('key', '')))
     for epic in sorted_epics:
         if 'key' in epic:  # This is an actual epic
-            if epic.get('evaluable', False):
-                # Epic has assertion pattern - show assertion format
-                context = f"{epic.get('context', '')} " if epic.get('context', '') else ""
-                results['failures'].append(
-                    f"[{epic['issue_type']}] {epic['key']}: {context}expected '{epic['expected_status']}' but is '{epic['status']}'"
-                )
-            else:
-                # Epic has no assertion pattern - show full summary
-                results['failures'].append(
-                    f"[{epic['issue_type']}] {epic['key']}: {epic['summary']}"
-                )
+            # Only add epic to failures if it has children or is evaluable
+            has_children = 'children' in epic and epic['children']
+            if epic.get('evaluable', False) or has_children:
+                if epic.get('evaluable', False):
+                    # Epic has assertion pattern - show assertion format
+                    context = f"{epic.get('context', '')} " if epic.get('context', '') else ""
+                    results['failures'].append(
+                        f"[{epic['issue_type']}] {epic['key']}: {context}expected '{epic['expected_status']}' but is '{epic['status']}'"
+                    )
+                else:
+                    # Epic has no assertion pattern but has children - show full summary
+                    results['failures'].append(
+                        f"[{epic['issue_type']}] {epic['key']}: {epic['summary']}"
+                    )
             
             # Add children sorted by rank
             if 'children' in epic:
@@ -323,10 +355,25 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
                 f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
             )
         else:
-            # Orphaned item without assertion pattern - show full summary
-            results['failures'].append(
-                f"[{result['issue_type']}] {result['key']}: {result['summary']}"
-            )
+            # Orphaned item without assertion pattern - only show if it has children
+            has_children = 'children' in result and result['children']
+            if has_children:
+                results['failures'].append(
+                    f"[{result['issue_type']}] {result['key']}: {result['summary']}"
+                )
+                
+                # Add children sorted by rank
+                children = sorted(result['children'], key=lambda x: (JiraInstanceManager.get_rank_value(x), x.get('key', '')))
+                for child in children:
+                    if child.get('evaluable', False):
+                        context = f"{child.get('context', '')} " if child.get('context', '') else ""
+                        results['failures'].append(
+                            f"    - [{child['issue_type']}] {child['key']}: {context}expected '{child['expected_status']}' but is '{child['status']}'"
+                        )
+                    else:
+                        results['failures'].append(
+                            f"    - [{child['issue_type']}] {child['key']}: {child['summary']}"
+                        )
     
     return results
 
