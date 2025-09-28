@@ -140,7 +140,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
     current_status = issue['status']
     issue_type = issue.get('issue_type', 'Unknown')
     rank = JiraInstanceManager.get_rank_value(issue)
-    parent_epic = issue.get('parent_epic')
+    parent_key = issue.get('parent_key')
     
     # Parse expectation pattern
     expectation = extract_statuses_from_summary(summary)
@@ -151,7 +151,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
             'status': current_status,
             'assert_result': None,  # Not evaluable
             'issue_type': issue_type,
-            'parent_epic': parent_epic,
+            'parent_key': parent_key,
             'rank': rank,
             'evaluable': False
         }
@@ -172,7 +172,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         'status': current_status,
         'assert_result': assert_result,
         'issue_type': issue_type,
-        'parent_epic': parent_epic,
+        'parent_key': parent_key,
         'rank': rank,
         'evaluable': True,
         'expected_status': expected_status,
@@ -221,13 +221,13 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
         if result['issue_type'] == 'Epic':
             # Epic itself failed - already collected in first pass
             pass
-        elif result.get('parent_epic'):
-            if result['parent_epic'] not in epics:
-                # Parent epic not found in our collection, create placeholder
-                epics[result['parent_epic']] = {'children': []}
-            if 'children' not in epics[result['parent_epic']]:
-                epics[result['parent_epic']]['children'] = []
-            epics[result['parent_epic']]['children'].append(result)
+        elif result.get('parent_key'):
+            if result['parent_key'] not in epics:
+                # Parent not found in our collection, create placeholder
+                epics[result['parent_key']] = {'children': []}
+            if 'children' not in epics[result['parent_key']]:
+                epics[result['parent_key']]['children'] = []
+            epics[result['parent_key']]['children'].append(result)
         elif result.get('parent_story'):
             # Sub-task with Story parent
             if result['parent_story'] not in stories:
@@ -244,13 +244,13 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
         if not result.get('evaluable', False):
             if result['issue_type'] == 'Story' and result['key'] in stories and 'children' in stories[result['key']]:
                 # Non-evaluable story with children - add to epic's children
-                if result.get('parent_epic'):
-                    if result['parent_epic'] not in epics:
-                        epics[result['parent_epic']] = {'children': []}
-                    if 'children' not in epics[result['parent_epic']]:
-                        epics[result['parent_epic']]['children'] = []
-                    epics[result['parent_epic']]['children'].append(result)
-            elif not result.get('parent_epic') and not result.get('parent_story') and result['issue_type'] != 'Epic':
+                if result.get('parent_key'):
+                    if result['parent_key'] not in epics:
+                        epics[result['parent_key']] = {'children': []}
+                    if 'children' not in epics[result['parent_key']]:
+                        epics[result['parent_key']]['children'] = []
+                    epics[result['parent_key']]['children'].append(result)
+            elif not result.get('parent_key') and not result.get('parent_story') and result['issue_type'] != 'Epic':
                 # Non-evaluable orphaned item
                 orphaned.append(result)
     

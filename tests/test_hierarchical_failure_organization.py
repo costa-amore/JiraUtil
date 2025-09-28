@@ -269,22 +269,22 @@ class TestHierarchicalFailureOrganization:
         epic['status'] = 'In Progress'  # Any status since it won't be evaluated
         return epic
 
-    def _create_story_failing_assertion(self, key, rank, parent_epic):
+    def _create_story_failing_assertion(self, key, rank, parent_key):
         status = 'To Do'
         summary = f"Some story context - starting in {status} - expected to be in Done"
         scenario = create_assert_scenario(issue_type="Story", issue_key=key, summary=summary, rank=rank)
         story = scenario.get_issues_by_label.return_value[0]
         story['status'] = status
-        story['parent_epic'] = parent_epic
+        story['parent_key'] = parent_key
         return story
 
-    def _create_story_non_evaluated(self, key, rank, parent_epic):
+    def _create_story_non_evaluated(self, key, rank, parent_key):
         # Story without assertion pattern (non-evaluated) - like TAPS-210
         summary = "Story without assertion pattern - just a regular story summary"
         scenario = create_assert_scenario(issue_type="Story", issue_key=key, summary=summary, rank=rank)
         story = scenario.get_issues_by_label.return_value[0]
         story['status'] = 'In Progress'  # Any status since it won't be evaluated
-        story['parent_epic'] = parent_epic
+        story['parent_key'] = parent_key
         return story
 
     def _create_subtask_failing_assertion(self, key, rank, parent_story):
@@ -303,7 +303,7 @@ class TestHierarchicalFailureOrganization:
         scenario = create_assert_scenario(issue_type="Sub-task", issue_key=key, summary=summary, rank=rank)
         orphaned = scenario.get_issues_by_label.return_value[0]
         orphaned['status'] = status
-        # No parent_epic set - this makes it orphaned
+        # No parent_key set - this makes it orphaned
         return orphaned
 
     def _create_orphaned_non_evaluable(self, key, rank):
@@ -312,7 +312,7 @@ class TestHierarchicalFailureOrganization:
         scenario = create_assert_scenario(issue_type="Sub-task", issue_key=key, summary=summary, rank=rank)
         orphaned = scenario.get_issues_by_label.return_value[0]
         orphaned['status'] = 'In Progress'  # Any status since it won't be evaluated
-        # No parent_epic set - this makes it orphaned
+        # No parent_key set - this makes it orphaned
         return orphaned
 
     def _create_orphaned_real_jira_format(self, key, rank):
@@ -321,7 +321,7 @@ class TestHierarchicalFailureOrganization:
         scenario = create_assert_scenario(issue_type="Sub-task", issue_key=key, summary=summary, rank=rank)
         orphaned = scenario.get_issues_by_label.return_value[0]
         orphaned['status'] = 'SIT/LAB Validated'  # Status that doesn't match expected
-        # No parent_epic set - this makes it orphaned
+        # No parent_key set - this makes it orphaned
         return orphaned
 
     def _execute_assert_operation_with_print_capture(self, mock_jira_manager):
