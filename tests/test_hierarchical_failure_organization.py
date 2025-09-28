@@ -9,19 +9,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from testfixture.workflow import run_assert_expectations
 from tests.fixtures import create_assert_scenario, create_mock_manager
+from jira_manager import DEFAULT_RANK_VALUE
 
 
 class TestHierarchicalFailureOrganization:
-    HIGHER_RANK = "0|i0000:"  # HIGH priority LexoRank
-    LOWER_RANK = "0|i0002:"   # LOW priority LexoRank  
-    MID_RANK = "0|i0001:"     # MED priority LexoRank
-    NO_RANK = "0|i0003:"      # LOWEST priority LexoRank
-    HIGHER_RANK_PLUS_5 = "0|h0000:"  # HIGHER priority than HIGHER_RANK
-    HIGHER_RANK_PLUS_10 = "0|f0000:"  # HIGHEST priority
+    HIGHEST_RANK = "0|f0000:"
+    HIGHER_RANK = "0|h0000:"
+    HIGH_RANK = "0|i0000:"
+    LOW_RANK = "0|i0002:"
+    MID_RANK = "0|i0001:"
+    NO_RANK = DEFAULT_RANK_VALUE
 
     @pytest.mark.parametrize("first_rank,second_rank,third_rank,expected_order", [
-        (HIGHER_RANK, LOWER_RANK, MID_RANK, ['PROJ-2', 'PROJ-3', 'PROJ-1']),
-        (HIGHER_RANK, LOWER_RANK, NO_RANK, ['PROJ-3', 'PROJ-2', 'PROJ-1'])
+        (HIGH_RANK, LOW_RANK, MID_RANK, ['PROJ-1', 'PROJ-3', 'PROJ-2']),
+        (HIGH_RANK, LOW_RANK, NO_RANK, ['PROJ-1', 'PROJ-2', 'PROJ-3'])
     ])
     def test_assert_failures_are_listed_according_to_rank(self, first_rank, second_rank, third_rank, expected_order):
         # Given: Three epics that failed with specified ranks
@@ -61,7 +62,7 @@ class TestHierarchicalFailureOrganization:
         output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
         
         # Then: Verify epic is displayed with both indented child stories
-        self._verify_epic_with_multiple_children_displayed(output, 'PROJ-1', 'PROJ-2', 'PROJ-3')
+        self._verify_epic_with_multiple_children_displayed(output, 'PROJ-1', 'PROJ-3', 'PROJ-2')
 
     def test_assert_failures_displays_epic_with_non_evaluated_parent(self):
         # Given: A failing story with an epic that isn't evaluated (no assertion pattern)
@@ -81,7 +82,7 @@ class TestHierarchicalFailureOrganization:
         output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
         
         # Then: Verify both epics appear with their children correctly grouped
-        self._verify_multiple_epics_with_children_displayed(output, 'PROJ-1', 'PROJ-2', 'PROJ-3', 'PROJ-5', 'PROJ-4')
+        self._verify_multiple_epics_with_children_displayed(output, 'PROJ-5', 'PROJ-4', 'PROJ-3', 'PROJ-1', 'PROJ-2')
 
     def test_assert_failures_displays_mixed_epics_and_orphaned_items(self):
         # Given: Epics with children and orphaned items (like real Jira output)
@@ -101,7 +102,7 @@ class TestHierarchicalFailureOrganization:
         output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
         
         # Then: Verify children are grouped under epic, not globally sorted
-        self._verify_children_grouped_under_epic_not_globally_sorted(output, 'PROJ-1', 'PROJ-2', 'PROJ-3')
+        self._verify_children_grouped_under_epic_not_globally_sorted(output, 'PROJ-1', 'PROJ-3', 'PROJ-2')
 
     def test_assert_failures_displays_orphaned_non_evaluable_items(self):
         # Given: Orphaned item without assertion pattern (like TAPS-211 Sub-task)
@@ -164,91 +165,91 @@ class TestHierarchicalFailureOrganization:
         return create_mock_manager([epic1, epic2, epic3])
 
     def _create_epic_with_child_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK)
-        story = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, epic['key'])
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
+        story = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, epic['key'])
         return create_mock_manager([epic, story])
 
     def _create_children_before_parents_scenario(self):
         # Create child story first (lower rank = appears first in sorted order)
-        story = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, "PROJ-1")
+        story = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, "PROJ-1")
         # Create parent epic second (higher rank = appears second in sorted order)
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK)
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
         # Return with child first to simulate children found before parents
         return create_mock_manager([story, epic])
 
     def _create_epic_with_multiple_children_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK)
-        story1 = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, epic['key'])
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
+        story1 = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, epic['key'])
         story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, epic['key'])
         return create_mock_manager([epic, story1, story2])
 
     def _create_epic_with_non_evaluated_parent_scenario(self):
         # Epic with summary that doesn't match assertion pattern (not evaluable)
-        epic = self._create_epic_non_evaluated("PROJ-1", self.HIGHER_RANK)
+        epic = self._create_epic_non_evaluated("PROJ-1", self.HIGH_RANK)
         # Story that fails assertion
-        story = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, epic['key'])
+        story = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, epic['key'])
         return create_mock_manager([epic, story])
 
     def _create_multiple_epics_stories_first_scenario(self):
         # Create stories first (lower ranks = appear first in sorted order)
-        story1 = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, "PROJ-1")
+        story1 = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, "PROJ-1")
         story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, "PROJ-1")
-        story3 = self._create_story_failing_assertion("PROJ-4", self.HIGHER_RANK, "PROJ-5")
+        story3 = self._create_story_failing_assertion("PROJ-4", self.HIGH_RANK, "PROJ-5")
         
         # Create epics second (higher ranks = appear second in sorted order)
-        epic1 = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_5)
-        epic2 = self._create_epic_failing_assertion("PROJ-5", self.HIGHER_RANK_PLUS_10)
+        epic1 = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK)
+        epic2 = self._create_epic_failing_assertion("PROJ-5", self.HIGHEST_RANK)
         
         # Return with stories first to simulate children found before parents
         return create_mock_manager([story1, story2, story3, epic1, epic2])
 
     def _create_mixed_epics_and_orphaned_scenario(self):
         # Create epic with children
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK)
-        story1 = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, epic['key'])
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
+        story1 = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, epic['key'])
         story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, epic['key'])
         
         # Create orphaned item (no parent epic)
-        orphaned = self._create_orphaned_failing_assertion("PROJ-4", self.HIGHER_RANK_PLUS_5)
+        orphaned = self._create_orphaned_failing_assertion("PROJ-4", self.HIGHER_RANK)
         
         return create_mock_manager([epic, story1, story2, orphaned])
 
     def _create_epic_higher_rank_than_children_scenario(self):
         # Epic with higher rank than its children - tests grouping vs global sorting
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_10)  # Rank 20
-        story1 = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, epic['key'])  # Rank 5
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHEST_RANK)  # Rank 20
+        story1 = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, epic['key'])  # Rank 5
         story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, epic['key'])    # Rank 7
         
         return create_mock_manager([epic, story1, story2])
 
     def _create_orphaned_non_evaluable_scenario(self):
         # Orphaned item without assertion pattern (like TAPS-211 Sub-task)
-        orphaned = self._create_orphaned_non_evaluable("PROJ-1", self.HIGHER_RANK)
+        orphaned = self._create_orphaned_non_evaluable("PROJ-1", self.HIGH_RANK)
         return create_mock_manager([orphaned])
 
     def _create_orphaned_evaluable_scenario(self):
         # Orphaned item with failing assertion (like TAPS-211 Sub-task)
-        orphaned = self._create_orphaned_failing_assertion("PROJ-1", self.HIGHER_RANK)
+        orphaned = self._create_orphaned_failing_assertion("PROJ-1", self.HIGH_RANK)
         return create_mock_manager([orphaned])
 
     def _create_orphaned_real_jira_format_scenario(self):
         # Orphaned item with real Jira summary format (like TAPS-211)
-        orphaned = self._create_orphaned_real_jira_format("TAPS-211", self.HIGHER_RANK)
+        orphaned = self._create_orphaned_real_jira_format("TAPS-211", self.HIGH_RANK)
         return create_mock_manager([orphaned])
 
     def _create_epic_story_subtask_scenario(self):
         # Epic with Story and Sub-task (like TAPS-211 under a Story under an Epic)
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_10)  # Rank 20
-        story = self._create_story_failing_assertion("PROJ-2", self.HIGHER_RANK, epic['key'])  # Rank 10
-        subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOWER_RANK, story['key'])  # Rank 5
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHEST_RANK)  # Rank 20
+        story = self._create_story_failing_assertion("PROJ-2", self.HIGH_RANK, epic['key'])  # Rank 10
+        subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOW_RANK, story['key'])  # Rank 5
         
         return create_mock_manager([epic, story, subtask])
 
     def _create_epic_non_evaluated_story_subtask_scenario(self):
         # Epic with non-evaluated Story and evaluable Sub-task (like TAPS-210 → TAPS-211)
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_10)  # Rank 20
-        story = self._create_story_non_evaluated("PROJ-2", self.HIGHER_RANK, epic['key'])  # Rank 10, non-evaluated
-        subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOWER_RANK, story['key'])  # Rank 5, evaluable
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHEST_RANK)  # Rank 20
+        story = self._create_story_non_evaluated("PROJ-2", self.HIGH_RANK, epic['key'])  # Rank 10, non-evaluated
+        subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOW_RANK, story['key'])  # Rank 5, evaluable
         
         return create_mock_manager([epic, story, subtask])
 
