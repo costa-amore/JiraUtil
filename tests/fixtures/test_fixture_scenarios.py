@@ -59,20 +59,21 @@ TEST_FIXTURE_CHAINED_COMMANDS = [
 
 
 # Public functions (sorted alphabetically)
-def create_assert_scenario(issue_type="Story", issue_key="PROJ-1", summary="I have a dream"):
+def create_assert_scenario(issue_type="Story", issue_key="PROJ-1", summary="I have a dream", rank=None):
     """Create a custom assert scenario with specific issue parameters."""
     from unittest.mock import Mock
     mock_manager = Mock()
-    mock_manager.get_issues_by_label.return_value = [
-        {
-            'key': issue_key,
-            'summary': summary,
-            'status': 'To Do',
-            'issue_type': issue_type,
-            'epic_link': None,
-            'rank': 0
-        }
-    ]
+    issue = {
+        'key': issue_key,
+        'summary': summary,
+        'status': 'To Do',
+        'issue_type': issue_type,
+        'epic_link': None,
+        'rank': 0
+    }
+    if rank is not None:
+        issue['rank'] = rank
+    mock_manager.get_issues_by_label.return_value = [issue]
     return mock_manager
 
 

@@ -71,7 +71,8 @@ class JiraInstanceManager:
                     'key': issue.key,
                     'summary': issue.fields.summary,
                     'status': issue.fields.status.name,
-                    'issue_type': issue.fields.issuetype.name
+                    'issue_type': issue.fields.issuetype.name,
+                    'rank': getattr(issue.fields, 'customfield_10016', 0)  # Rank field
                 })
             return result
         except JIRAError as e:

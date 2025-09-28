@@ -136,6 +136,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
     summary = issue['summary']
     current_status = issue['status']
     issue_type = issue.get('issue_type', 'Unknown')
+    rank = issue.get('rank', 0)
     
     # Parse expectation pattern
     expectation = extract_statuses_from_summary(summary)
@@ -147,7 +148,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
             'assert_result': None,  # Not evaluable
             'issue_type': issue_type,
             'parent_epic': None,  # Will be enhanced later
-            'rank': 0,  # Will be enhanced later
+            'rank': rank,
             'evaluable': False
         }
     
@@ -168,7 +169,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         'assert_result': assert_result,
         'issue_type': issue_type,
         'parent_epic': None,  # Will be enhanced later
-        'rank': 0,  # Will be enhanced later
+        'rank': rank,
         'evaluable': True,
         'expected_status': expected_status,
         'context': context
@@ -187,19 +188,25 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
         'assertion_results': assertion_results
     }
     
+    # Process non-failed results first
     for result in assertion_results:
         if not result['evaluable']:
             results['not_evaluated'] += 1
             results['not_evaluated_keys'].append(result['key'])
         elif result['assert_result'] == 'PASS':
             results['passed'] += 1
-        elif result['assert_result'] == 'FAIL':
-            results['failed'] += 1
-            # Extract context from summary if present
-            context = f"{result.get('context', '')} " if result.get('context', '') else ""
-            results['failures'].append(
-                f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
-            )
+    
+    # Sort failures by rank (ascending) and add them to results
+    failed_results = [r for r in assertion_results if r['evaluable'] and r['assert_result'] == 'FAIL']
+    failed_results.sort(key=lambda x: x['rank'])
+    
+    for result in failed_results:
+        results['failed'] += 1
+        # Extract context from summary if present
+        context = f"{result.get('context', '')} " if result.get('context', '') else ""
+        results['failures'].append(
+            f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
+        )
     
     return results
 
