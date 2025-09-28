@@ -14,8 +14,6 @@ from .base_fixtures import (
     create_temp_csv_file,
     create_temp_config_file,
     create_temp_env_file,
-    create_reset_result,
-    create_assert_result,
     create_field_extractor_rows,
     create_temp_version_file,
     create_version_manager_with_version,
@@ -30,22 +28,24 @@ from .base_fixtures import (
     create_configured_config_content,
     TEMPLATE_CONFIG_CONTENT,
     CONFIGURED_CONFIG_CONTENT,
-    CSV_EXPORT_COMMANDS,
-    TEST_FIXTURE_SINGLE_COMMANDS,
-    TEST_FIXTURE_CHAINED_COMMANDS,
     UTILITY_COMMANDS,
-    CSV_EMPTY,
-    TEST_FIXTURE_ISSUES,
-    TEST_FIXTURE_ASSERT_ISSUES
+    CSV_EMPTY
 )
 
 # Import scenario-based fixtures
 from .test_fixture_scenarios import (
+    create_assert_scenario,
     create_reset_scenario_with_expectations,
     create_assert_scenario_with_expectations,
     create_empty_scenario_with_expectations,
     create_connection_failure_scenario_with_expectations,
-    create_skip_scenario_with_expectations
+    create_skip_scenario_with_expectations,
+    create_assert_result,
+    create_reset_result,
+    TEST_FIXTURE_ISSUES,
+    TEST_FIXTURE_ASSERT_ISSUES,
+    TEST_FIXTURE_SINGLE_COMMANDS,
+    TEST_FIXTURE_CHAINED_COMMANDS
 )
 
 from .csv_scenarios import (
@@ -54,7 +54,8 @@ from .csv_scenarios import (
     create_csv_with_iso_dates,
     create_newlines_removal_scenario,
     create_field_extraction_scenario,
-    create_date_conversion_scenario
+    create_date_conversion_scenario,
+    CSV_EXPORT_COMMANDS
 )
 
 from .cli_scenarios import (

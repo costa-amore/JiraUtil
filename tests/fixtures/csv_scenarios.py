@@ -7,6 +7,14 @@ with expected results for CSV processing operations.
 
 from .base_fixtures import create_temp_csv_file, create_mock_manager_with_expected_results
 
+# CSV export command test data
+CSV_EXPORT_COMMANDS = [
+    (['csv-export', 'remove-newlines', 'input.csv'], 'csv-export', 'remove-newlines', 'input.csv'),
+    (['ce', 'rn', 'input.csv'], 'ce', 'rn', 'input.csv'),
+    (['csv-export', 'extract-to-comma-separated-list', 'Status', 'input.csv'], 'csv-export', 'extract-to-comma-separated-list', 'input.csv'),
+    (['csv-export', 'fix-dates-eu', 'input.csv', '--output', 'output.csv'], 'csv-export', 'fix-dates-eu', 'input.csv'),
+]
+
 
 def create_csv_with_embedded_newlines():
     """Create CSV content with various newline formats for testing newline removal."""

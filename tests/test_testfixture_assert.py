@@ -12,6 +12,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from tests.fixtures import (
+    create_assert_scenario,
     create_assert_scenario_with_expectations
 )
 
@@ -24,7 +25,7 @@ class TestTestFixtureAssert:
         issue_type = "Bug"
         issue_key = "PROJ-2"
         expected_format = f"    - [{issue_type}] {issue_key}: When in this context, expected 'Done' but is 'To Do'"
-        mock_jira_manager = self._create_assert_scenario(issue_type, issue_key, "When in this context, starting in To Do - expected to be in Done")
+        mock_jira_manager = create_assert_scenario(issue_type, issue_key, "When in this context, starting in To Do - expected to be in Done")
         
         # When: Assert operation is executed and captures print output
         mock_print = self._execute_assert_operation_with_print_capture(mock_jira_manager)
@@ -37,7 +38,7 @@ class TestTestFixtureAssert:
         issue_type = "Story"
         issue_key = "PROJ-3"
         expected_format = f"    - [{issue_type}] {issue_key}: expected 'CLOSED' but is 'SIT/LAB VALIDATED'"
-        mock_jira_manager = self._create_assert_scenario(issue_type, issue_key, "I was in SIT/LAB VALIDATED - expected to be in CLOSED")
+        mock_jira_manager = create_assert_scenario(issue_type, issue_key, "I was in SIT/LAB VALIDATED - expected to be in CLOSED")
         
         # When: Assert operation is executed and captures print output
         mock_print = self._execute_assert_operation_with_print_capture(mock_jira_manager)
@@ -47,7 +48,7 @@ class TestTestFixtureAssert:
 
     def test_assert_operation_verifies_rule_automation_worked(self):
         # Given: Issues after automation has run
-        mock_jira_manager = self._create_assert_scenario()
+        mock_jira_manager = create_assert_scenario_with_expectations()
         
         # When: Assert operation is executed
         self._execute_assert_operation(mock_jira_manager)
@@ -57,7 +58,7 @@ class TestTestFixtureAssert:
 
     def test_assert_workflow_command_orchestrates_rule_verification(self):
         # Given: Assert workflow command with mock manager
-        mock_jira_manager = self._create_assert_scenario()
+        mock_jira_manager = create_assert_scenario_with_expectations()
         
         # When: Assert workflow command is executed
         self._execute_assert_operation(mock_jira_manager)
@@ -66,21 +67,6 @@ class TestTestFixtureAssert:
         mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
 
     # Private helper methods (sorted alphabetically)
-    def _create_assert_scenario(self, issue_type=None, issue_key=None, summary=None):
-        if issue_type and issue_key and summary:
-            mock_manager = Mock()
-            mock_manager.get_issues_by_label.return_value = [
-                {
-                    'key': issue_key,
-                    'summary': summary,
-                    'status': 'To Do',
-                    'issue_type': issue_type,
-                    'epic_link': None,
-                    'rank': 0
-                }
-            ]
-            return mock_manager
-        return create_assert_scenario_with_expectations()
 
     def _extract_failure_messages(self, mock_print):
         print_calls = [call[0][0] for call in mock_print.call_args_list if call[0]]
