@@ -82,7 +82,7 @@ class JiraInstanceManager:
                     'summary': issue.fields.summary,
                     'status': issue.fields.status.name,
                     'issue_type': issue.fields.issuetype.name,
-                    'rank': getattr(issue.fields, 'customfield_10016', DEFAULT_RANK_VALUE),  # Rank field
+                    'rank': getattr(issue.fields, 'customfield_10011', DEFAULT_RANK_VALUE),  # Rank field
                     'parent_epic': parent_epic
                 })
             return result
