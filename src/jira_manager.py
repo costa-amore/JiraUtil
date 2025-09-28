@@ -9,6 +9,9 @@ from typing import List
 from jira import JIRA
 from jira.exceptions import JIRAError
 
+# Constants
+DEFAULT_RANK_VALUE = "z|zzzzz:"  # LexoRank string for unranked issues (sorts last)
+
 
 class JiraInstanceManager:
     """Manages Jira instance operations and provides reusable functionality."""
@@ -79,7 +82,7 @@ class JiraInstanceManager:
                     'summary': issue.fields.summary,
                     'status': issue.fields.status.name,
                     'issue_type': issue.fields.issuetype.name,
-                    'rank': getattr(issue.fields, 'customfield_10016', 0),  # Rank field
+                    'rank': getattr(issue.fields, 'customfield_10016', DEFAULT_RANK_VALUE),  # Rank field
                     'parent_epic': parent_epic
                 })
             return result
@@ -133,3 +136,16 @@ class JiraInstanceManager:
         except JIRAError as e:
             print(f"  Failed to update issue {issue_key}: {e}")
             return False
+    
+    @staticmethod
+    def get_rank_value(issue_dict: dict) -> str:
+        """
+        Get rank value from issue dictionary with consistent default.
+        
+        Args:
+            issue_dict: Dictionary containing issue data
+            
+        Returns:
+            Rank value as LexoRank string, or default if not present
+        """
+        return issue_dict.get('rank', DEFAULT_RANK_VALUE)

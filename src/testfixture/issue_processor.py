@@ -104,6 +104,9 @@ def _get_issues_for_processing(jira_instance: JiraInstanceManager, testfixture_l
     return {'success': True, 'issues': issues}
 
 
+
+
+
 def _print_assertion_progress(assertion_results: list) -> None:
     """
     Print assertion progress for each issue.
@@ -136,7 +139,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
     summary = issue['summary']
     current_status = issue['status']
     issue_type = issue.get('issue_type', 'Unknown')
-    rank = issue.get('rank', 0)
+    rank = JiraInstanceManager.get_rank_value(issue)
     parent_epic = issue.get('parent_epic')
     
     # Parse expectation pattern
@@ -252,7 +255,7 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
                 orphaned.append(result)
     
     # Sort epics by rank and add to failures
-    sorted_epics = sorted(epics.values(), key=lambda x: x.get('rank', 0))
+    sorted_epics = sorted(epics.values(), key=JiraInstanceManager.get_rank_value, reverse=True)
     for epic in sorted_epics:
         if 'key' in epic:  # This is an actual epic
             if epic.get('evaluable', False):
@@ -269,7 +272,7 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
             
             # Add children sorted by rank
             if 'children' in epic:
-                children = sorted(epic['children'], key=lambda x: x.get('rank', 0))
+                children = sorted(epic['children'], key=JiraInstanceManager.get_rank_value, reverse=True)
                 for child in children:
                     if child['issue_type'] == 'Story':
                         # Story child - check if it has sub-tasks
@@ -286,7 +289,7 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
                                 )
                             
                             # Add sub-tasks indented under story
-                            sub_tasks = sorted(stories[child['key']]['children'], key=lambda x: x.get('rank', 0))
+                            sub_tasks = sorted(stories[child['key']]['children'], key=JiraInstanceManager.get_rank_value, reverse=True)
                             for sub_task in sub_tasks:
                                 context = f"{sub_task.get('context', '')} " if sub_task.get('context', '') else ""
                                 results['failures'].append(
@@ -311,7 +314,7 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
                         )
     
     # Add orphaned issues sorted by rank
-    orphaned.sort(key=lambda x: x.get('rank', 0))
+    orphaned.sort(key=JiraInstanceManager.get_rank_value, reverse=True)
     for result in orphaned:
         if result.get('evaluable', False):
             # Orphaned item with assertion pattern - show assertion format

@@ -12,10 +12,12 @@ from tests.fixtures import create_assert_scenario, create_mock_manager
 
 
 class TestHierarchicalFailureOrganization:
-    HIGHER_RANK = 10
-    LOWER_RANK = 5
-    MID_RANK = 7
-    NO_RANK = 0
+    HIGHER_RANK = "0|i0000:"  # HIGH priority LexoRank
+    LOWER_RANK = "0|i0002:"   # LOW priority LexoRank  
+    MID_RANK = "0|i0001:"     # MED priority LexoRank
+    NO_RANK = "0|i0003:"      # LOWEST priority LexoRank
+    HIGHER_RANK_PLUS_5 = "0|h0000:"  # HIGHER priority than HIGHER_RANK
+    HIGHER_RANK_PLUS_10 = "0|f0000:"  # HIGHEST priority
 
     @pytest.mark.parametrize("first_rank,second_rank,third_rank,expected_order", [
         (HIGHER_RANK, LOWER_RANK, MID_RANK, ['PROJ-2', 'PROJ-3', 'PROJ-1']),
@@ -194,8 +196,8 @@ class TestHierarchicalFailureOrganization:
         story3 = self._create_story_failing_assertion("PROJ-4", self.HIGHER_RANK, "PROJ-5")
         
         # Create epics second (higher ranks = appear second in sorted order)
-        epic1 = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK + 5)
-        epic2 = self._create_epic_failing_assertion("PROJ-5", self.HIGHER_RANK + 10)
+        epic1 = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_5)
+        epic2 = self._create_epic_failing_assertion("PROJ-5", self.HIGHER_RANK_PLUS_10)
         
         # Return with stories first to simulate children found before parents
         return create_mock_manager([story1, story2, story3, epic1, epic2])
@@ -207,13 +209,13 @@ class TestHierarchicalFailureOrganization:
         story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, epic['key'])
         
         # Create orphaned item (no parent epic)
-        orphaned = self._create_orphaned_failing_assertion("PROJ-4", self.HIGHER_RANK + 5)
+        orphaned = self._create_orphaned_failing_assertion("PROJ-4", self.HIGHER_RANK_PLUS_5)
         
         return create_mock_manager([epic, story1, story2, orphaned])
 
     def _create_epic_higher_rank_than_children_scenario(self):
         # Epic with higher rank than its children - tests grouping vs global sorting
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK + 10)  # Rank 20
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_10)  # Rank 20
         story1 = self._create_story_failing_assertion("PROJ-2", self.LOWER_RANK, epic['key'])  # Rank 5
         story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, epic['key'])    # Rank 7
         
@@ -236,7 +238,7 @@ class TestHierarchicalFailureOrganization:
 
     def _create_epic_story_subtask_scenario(self):
         # Epic with Story and Sub-task (like TAPS-211 under a Story under an Epic)
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK + 10)  # Rank 20
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_10)  # Rank 20
         story = self._create_story_failing_assertion("PROJ-2", self.HIGHER_RANK, epic['key'])  # Rank 10
         subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOWER_RANK, story['key'])  # Rank 5
         
@@ -244,7 +246,7 @@ class TestHierarchicalFailureOrganization:
 
     def _create_epic_non_evaluated_story_subtask_scenario(self):
         # Epic with non-evaluated Story and evaluable Sub-task (like TAPS-210 → TAPS-211)
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK + 10)  # Rank 20
+        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGHER_RANK_PLUS_10)  # Rank 20
         story = self._create_story_non_evaluated("PROJ-2", self.HIGHER_RANK, epic['key'])  # Rank 10, non-evaluated
         subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOWER_RANK, story['key'])  # Rank 5, evaluable
         
