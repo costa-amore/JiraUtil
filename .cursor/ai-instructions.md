@@ -43,6 +43,18 @@ This document contains specific instructions for AI assistants working on this p
 - **Categories**: `.\run.ps1 tests\run_tests.py testfixture`
 - **NEVER use** `python -m pytest` directly
 
+### Test File Structure
+
+When creating new test files, follow the existing patterns:
+
+- **Class-based tests**: Use `class TestFeatureName:` (no unittest.TestCase inheritance)
+- **Parametrized tests**: Use `@pytest.mark.parametrize` with `pytest.main([__file__])` at bottom
+- **Assertions**: Use `assert` statements, not `self.assert*` methods
+- **GWT comments**: Keep Given/When/Then structural comments for clarity
+- **Helper methods**: Use `_` prefix for private helper methods
+- **Constants**: Define test constants at class level
+- **Imports**: Follow existing import patterns in other test files
+
 ### Test Categories
 
 - `testfixture` - Test fixture operations
