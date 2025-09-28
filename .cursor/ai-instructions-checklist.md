@@ -16,9 +16,27 @@
 
 - [ ] Follow TDD process from core instructions
 
+## If a bug is reported and you're asked to 'fix'
+
+- [ ] **ROLLBACK** any recent changes to restore broken state
+- [ ] **ADD TEST** that detects the problem (should fail initially)
+- [ ] **RUN TEST** to prove it detects the problem (test fails for right reasons)
+- [ ] **FIX THE ISSUE** with minimal changes
+- [ ] **RUN ALL TESTS** to prove fix works and nothing else broke
+- [ ] **CLEAN UP** any temporary files or debug code
+
 ## Test Execution Commands
 
 - [ ] See `.cursor/ai-instructions-core.md` for test execution commands
+
+## After Editing Instruction Files
+
+- [ ] **REVIEW** instruction files for consistency, conciseness, and duplications
+- [ ] **CHECK** same concepts use same wording across files
+- [ ] **REMOVE** redundant or verbose content
+- [ ] **ELIMINATE** repeated information across files
+- [ ] **VERIFY** linter compliance with `read_lints` tool
+- [ ] **REFERENCE** rather than repeat information
 
 ## Common Mistakes to Avoid
 

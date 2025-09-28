@@ -24,6 +24,19 @@
 4. **If fails for functional reasons** → implement minimal code to pass
 5. **Repeat with next test**
 
+## MANDATORY: Bug Fix Process (When Asked to 'Fix')
+
+**Follow this EXACT sequence - no shortcuts:**
+
+1. **ROLLBACK** - Undo any recent changes to restore the broken state
+2. **ADD TEST** - Create a test that detects the problem (should fail initially)
+3. **RUN TEST** - Execute the test to prove it detects the problem (test fails for right reasons)
+4. **FIX ISSUE** - Implement the minimal fix needed
+5. **RUN ALL TESTS** - Verify the fix works and nothing else broke
+6. **CLEAN UP** - Remove any temporary files or debug code
+
+**Why this works:** Rollback ensures you're fixing the actual problem, test-driven approach proves the fix works, minimal changes reduce risk.
+
 ## MANDATORY: Start with Scaffolding Test
 
 - Write ONE test that demonstrates core expected behavior
@@ -62,3 +75,12 @@
 - **Fix issues immediately** after editing files
 - **Avoid automated linters** that may introduce unwanted changes
 - **Always verify** no linter errors before committing changes
+
+## Instruction File Maintenance
+
+- **ALWAYS review instruction files** after making changes to them
+- **Check for consistency** - same concepts should use same wording
+- **Check for conciseness** - remove redundant or verbose content
+- **Check for duplications** - eliminate repeated information across files
+- **Verify linter compliance** - use `read_lints` tool on instruction files
+- **Keep single source of truth** - reference rather than repeat information

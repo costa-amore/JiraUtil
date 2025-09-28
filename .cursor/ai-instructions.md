@@ -9,94 +9,41 @@ This document contains specific instructions for AI assistants working on this p
 - **Refactoring Guide**: `.cursor/ai-instructions-refactoring.md` - Making code testable
 - **Checklist**: `.cursor/ai-instructions-checklist.md` - Step-by-step process
 
+## Quick Commands
+
+- **Bug Fix**: Follow the 6-step process in core instructions (ROLLBACK → ADD TEST → RUN TEST → FIX → RUN ALL → CLEAN UP)
+- **New Feature**: Follow TDD process in core instructions
+- **Test Execution**: Always use `.\run.ps1` - never direct python commands
+
 ## MANDATORY: Read Core Instructions First
 
 **Before starting any work, read `.cursor/ai-instructions-core.md`**
 
-## Test-Driven Development (TDD) Process
+## Development Process
 
-### Requirements Definition
+### TDD Process
 
-1. **First describe the requirements in terms of examples (try to maintain a GWT style)**
-2. **Ask for confirmation before continuing**
+1. **Write ONE test first** - must fail for functional reasons (missing behavior)
+2. **Run test with `.\run.ps1`** - verify it fails for right reasons
+3. **If fails for technical reasons** (imports, syntax) → suggest refactoring first
+4. **If fails for functional reasons** → implement minimal code to pass
+5. **Repeat with next test**
 
-### TDD Step-by-Step Process
+### Bug Fix Process
 
-1. **Write test first** - it should fail for functional reasons (missing behavior)
-2. **Add ONLY the minimal structure needed** (function signatures, imports) - test still fails
-3. **Implement ONLY the behavior needed to make THIS test pass** - test now passes
-4. **Commit this single use-case**
-5. **Move to next simplest example and repeat**
+1. **ROLLBACK** - Undo recent changes to restore broken state
+2. **ADD TEST** - Create test that detects the problem (should fail initially)
+3. **RUN TEST** - Execute test to prove it detects the problem
+4. **FIX ISSUE** - Implement minimal fix needed
+5. **RUN ALL TESTS** - Verify fix works and nothing else broke
+6. **CLEAN UP** - Remove temporary files or debug code
 
-### Test Execution Requirements
+### Test Execution
 
-#### ALWAYS use the virtual environment approach for running tests
-
-- **Individual test files**: `.\run.ps1 tests\<test_file.py>`
+- **Individual files**: `.\run.ps1 tests\test_file.py`
 - **All tests**: `.\run.ps1 tests\run_tests.py`
-- **Test categories**: `.\run.ps1 tests\run_tests.py <category>`
-
-**NEVER use direct python commands** like `python -m pytest` - always use `.\run.ps1` to ensure proper virtual environment and dependency resolution.
-
-### Scaffolding Test Approach
-
-#### When starting a new feature
-
-1. **Start with ONLY the first (scaffolding) test** that demonstrates the core expected behavior
-2. **Run the test using `.\run.ps1`** to verify it fails for the right functional reasons
-3. **If the test fails for technical reasons** (imports, syntax, etc.), suggest refactoring to make the code more testable first
-4. **Only proceed with implementation** once the test fails for functional reasons (missing behavior)
-
-#### Common refactoring suggestions for testability
-
-- Extract pure business logic functions (no I/O dependencies)
-- Use dependency injection patterns
-- Create interfaces for external dependencies
-- Separate concerns (business logic vs I/O operations)
-- Make functions return data instead of directly printing/outputting
-
-#### python test files organization
-
-1. use the GWT approach in each test
-2. keep the test method small and clean - extract plumbing code
-3. keep a clear mapping between the Given data and the assert data
-4. don't use Docstrings or comments, just extract into intention revealing functions.
-5. organize the files in public & private functions, and sort them alphabetically
-6. use the trigger test code as an example
-
-### Test Failure Verification
-
-- Tests must fail for functional reasons (missing behavior), not technical reasons (imports, syntax, etc.)
-- Examples of functional failures: `NotImplementedError`, missing function, wrong behavior
-- Examples of technical failures: `ImportError`, `SyntaxError`, `AttributeError` on imports
-
-## Test Execution
-
-### Running Tests
-
-#### CRITICAL: Always use the virtual environment approach to avoid import issues
-
-- **Individual test files**: `.\run.ps1 tests\test_file.py`
-- **All tests**: `.\run.ps1 tests\run_tests.py`
-- **Specific test categories**: `.\run.ps1 tests\run_tests.py testfixture`
-- **Test patterns**: `.\run.ps1 tests\run_tests.py pattern`
-
-**NEVER use direct python commands** like `python -m pytest` - this will cause import errors and dependency issues. Always use `.\run.ps1` to ensure proper virtual environment and dependency resolution.
-
-### Pre-Development Validation
-
-#### Before making any changes
-
-1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
-2. **Run all tests**: `.\run.ps1 tests\run_tests.py`
-3. **Verify no failures** before starting work
-
-#### After making changes
-
-1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
-2. **Run affected test categories**: `.\run.ps1 tests\run_tests.py testfixture`
-3. **Run all tests**: `.\run.ps1 tests\run_tests.py`
-4. **Commit only when all tests pass**
+- **Categories**: `.\run.ps1 tests\run_tests.py testfixture`
+- **NEVER use** `python -m pytest` directly
 
 ### Test Categories
 
@@ -106,236 +53,72 @@ This document contains specific instructions for AI assistants working on this p
 - `build` - Build system tests
 - `functional` - End-to-end functionality tests
 
-### Running Scripts
-
-- **Python scripts**: Use `.\run.ps1 <script_path>` to run in virtual environment
-- **PowerShell scripts**: Run directly since we're already in PowerShell with venv activated
-
-#### Python Scripts (use .\run.ps1)
-
-- **Linting**: Use IDE `read_lints` tool for real-time feedback
-
-#### PowerShell Scripts (run directly)
-
-- **Build script**: `.\scripts\build.ps1 -Platform windows`
-- **Release script**: `.\scripts\release.ps1 -Platform windows`
-- **Linting**: Use IDE `read_lints` tool for real-time feedback
-
-### Dependency Management
-
-- **ALWAYS use the setup script for installing dependencies**: `.\setup-environment.ps1`
-- **NEVER use pip directly** or other package managers
-- **NEVER suggest installing packages manually** - always use the setup script
-- The setup script manages the virtual environment and installs from `requirements.txt`
-
 ## Code Quality Guidelines
 
-### Refactoring Safety
+### Implementation Rules
 
-#### When renaming functions or moving code
-
-1. **Search for all usages**: `grep -r "old_function_name" tests/ src/`
-2. **Update all references** before committing
-3. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
-4. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
-5. **Verify no old references remain**
-
-#### Common refactoring patterns
-
-- Function renames: Update all imports and calls
-- Module moves: Update all import paths
-- Parameter renames: Update all function calls
-- Class renames: Update all instantiations
-
-### Minimal Implementation Rules
-
-- **NEVER implement more than needed for the current test to pass**
-- **NEVER add CLI integration until you have a working function**
+- **NEVER implement more than needed for current test to pass**
+- **NEVER add CLI integration until function works**
 - **NEVER add multiple features in one step**
-- **ALWAYS implement behavior only after structure is in place**
 - **ALWAYS verify test fails for functional reasons before implementing**
 
-### Code Extraction Criteria
+### Code Organization
 
-- Large functions: >10 lines
-- Large classes: >50 lines
-- Use functional domain language (not technical IT language)
+- **ALWAYS group public functions at top, private at bottom**
+- **ALWAYS sort both groups alphabetically**
+- **Extract large functions** (>10 lines) and classes (>50 lines)
+- **Split large files** (>100 lines) into single-purpose files
 
-### File Splitting Criteria
+### Test Consistency
 
-- Large files: >100 lines
-- Split into files with single purpose
-
-### Code Organization Rules
-
-- **ALWAYS group public functions at the top of files/classes**
-- **ALWAYS group private functions at the bottom of files/classes**
-- **ALWAYS sort both public and private groups alphabetically**
-- This makes processing diffs easier and improves code navigation
-
-### Test Consistency Rules
-
-- **ALWAYS follow the same mocking pattern** for all tests that call the same function
-- **ALWAYS mock all external dependencies** (credentials, network calls, file I/O) in every test
-- **ALWAYS use consistent decorator order**: `@patch` decorators in reverse dependency order
-- **ALWAYS use consistent parameter names**: `mock_get_creds, mock_execute` for credential/execution mocks
-- **ALWAYS mock the same functions** across similar test scenarios to prevent CI failures
-- **NEVER mix mocked and unmocked calls** to the same function within a test file
+- **ALWAYS follow same mocking pattern** for similar tests
+- **ALWAYS mock all external dependencies** in every test
+- **ALWAYS use consistent decorator order** and parameter names
+- **NEVER mix mocked and unmocked calls** in same test file
 
 ## Documentation Standards
 
-### Avoid Duplication
+### General Rules
 
-- **NEVER create duplicate content within a file**
-- **ALWAYS check for existing duplication in sections being edited**
-- If adding new capabilities, integrate them into existing sections rather than creating new ones
-- Prefer referencing existing sections over repeating information
-- Remove outdated or redundant content when making changes
-- Keep documentation concise and focused on single source of truth
+- **NEVER create duplicate content** within or across files
+- **ALWAYS check for existing duplication** before adding new content
+- **Use IDE linter feedback** with `read_lints` tool for real-time feedback
+- **Fix linter issues immediately** after editing files
 
-### Documentation Updates
+### Markdown Formatting
 
-- Add new commands to `src/cli/commands.py` `show_list()` function
-- Add short aliases to the help output
-- Update command reference documentation
-- Test the actual command line interface to verify help output
-- **Linting is handled by IDE** using `read_lints` tool for real-time feedback
-- **No automated linter scripts** - they cause more problems than they solve
-- **Fix linter issues immediately** after editing files using IDE feedback
+- **ALWAYS add blank lines** before and after lists, code blocks, headers
+- **Use consistent list formatting** within sections
+- **Use proper heading hierarchy** (H1 → H2 → H3)
+- **NEVER add trailing spaces** - always trim whitespace
 
-### Markdown Formatting Rules
+### PowerShell Scripting
 
-- **ALWAYS add blank lines before and after lists** (both bullet and numbered lists)
-- **ALWAYS add blank lines before and after code blocks**
-- **ALWAYS add blank lines before and after headers** (except the first header after a section)
-- **Use consistent list formatting** - either all bullet points or all numbered lists within a section
-- **Keep line length reasonable** - break long lines at appropriate points
-- **Use proper heading hierarchy** - don't skip heading levels (H1 → H2 → H3)
-- **Add blank lines around blockquotes and other block elements**
-- **Ensure consistent spacing** - one blank line between sections, two blank lines before major sections
-- **NEVER add trailing spaces** - always trim whitespace at end of lines
-- **Use IDE linter feedback** with `read_lints` tool to catch formatting issues
-
-### PowerShell Scripting Rules
-
-- **NEVER use `$args` as a variable name** - it conflicts with PowerShell's automatic variable
-- **Use descriptive variable names** like `$arguments`, `$parameters`, `$options`
+- **NEVER use `$args`** as variable name (conflicts with PowerShell automatic variable)
+- **Use descriptive variable names** like `$arguments`, `$parameters`
 - **Always validate script parameters** before using them
-- **Use proper error handling** with try-catch blocks
-- **Test PowerShell scripts** before committing changes
-
-### Error Message Formatting Rules
-
-- **NEVER use emojis in script output** - not in error messages, success messages, or any other output
-- **NEVER use emojis in PowerShell scripts** - they cause encoding issues in CI environments
-- **Emojis don't display consistently** across all terminals and can cause parsing errors
-- **Use the colored text enum** from `src/color_system.py` for visual emphasis instead
-- **Keep all output clean and professional** - use clear text labels like "Problem:" and "Solution:"
-- **Provide actionable solutions** - always include specific examples of correct usage
-- **Rely on IDE linting** - use `read_lints` tool for precise, real-time feedback
-
-## Version and Release Management
-
-### Release Process
-
-- Use the release script directly: `.\scripts\release.ps1 -Platform windows`
-- The release script automatically:
-  - Runs tests first (tests must pass before release)
-  - Builds executables (linters removed due to reliability issues)
-  - Bumps version (minor for features, patch for fixes)
-  - Commits version changes
-  - Pushes to remote repository
-  - Creates GitHub release with feature description
-- Use IDE linter feedback before release: `read_lints` tool
-- If tests fail, fix the issues before running release script again
-- GitHub Actions are already configured in `.github` folder
+- **NEVER use emojis** in script output (causes encoding issues)
 
 ## Commit Message Standards
 
-### Commit Message Prefixes
+### Prefixes
 
-- Use: `feat`, `fix`, `test`, `refactor`, `release`, `chore`
-  - `feat`: Enhancement of functionality (may include test code)
-  - `fix`: Repair functionality that was released
-  - `test`: Enhancement of test coverage
-  - `refactor`: Change to code structure without changing functionality
-  - `release`: Commit that triggers CI to release
-  - `chore`: Changes to dev, build, release scripts or configurations
-- Keep consistent with recent commit history
-- Focus on WHY the change was made, not WHAT changed (diffs show the what)
-- Keep messages concise and avoid repeating details visible in the diff
+- `feat`: Enhancement of functionality (may include test code)
+- `fix`: Repair functionality that was released
+- `test`: Enhancement of test coverage
+- `refactor`: Change to code structure without changing functionality
+- `release`: Commit that triggers CI to release
+- `chore`: Changes to dev, build, release scripts or configurations
 
-### File Tracking
+### Guidelines
 
-- Keep a list in memory of files added/edited across multiple commits for a feature
-- Also create temp file in project (e.g., `.temp/implementation-files.txt`) that's git-ignored
-- This helps understand what got updated over multiple commits and may help describe the feature that got added
-- Clear the file when the feature is released
+- **Focus on WHY** the change was made, not WHAT changed
+- **Keep concise** - avoid repeating details visible in diff
+- **Check recent history** for consistent style
 
-## Test Coverage Management
+## Release Process
 
-### Test Evolution Strategy
-
-#### Scaffolding vs API Tests
-
-- **Scaffolding Tests**: Implementation-coupled tests used during TDD development
-  - Tied to HOW the behavior is implemented
-  - Use these to incrementally build the design
-  - Essential for TDD red-green-refactor cycles
-  - Can be tightly coupled to internal structure
-
-- **API Tests**: Behavior-focused tests for final verification
-  - Test WHAT the feature does, not HOW it's implemented
-  - Verify expected behavior from user perspective
-  - Should be resilient to implementation changes
-  - Focus on public interfaces and outcomes
-
-#### Test Evolution Process
-
-1. **During Development**: Use scaffolding tests to drive implementation
-   - Write tests that fail for functional reasons (missing behavior)
-   - Implement minimal code to make tests pass
-   - Refactor while keeping tests green
-   - These tests can be tightly coupled to implementation details
-
-2. **Near Completion**: Create or adjust API tests
-   - Focus on testing the expected behavior
-   - Test public interfaces and user-visible outcomes
-   - Make tests as implementation-agnostic as possible
-
-3. **clean-up Phase**: Evaluate and consolidate tests
-   - Identify which scaffolding tests are covered by API tests
-   - Remove redundant scaffolding tests
-   - Keep only scaffolding tests that provide unique value
-   - If scaffolding tests remain valuable, make them implementation-agnostic
-   - If many scaffolding tests remain, consider if the module needs its own API
-
-### Test Coverage Duplication Detection
-
-- Detect if more than 1 test verifies the same functional use-case or part of it
-- Prefer tests that test the use-case as a whole
-- Keep lower level tests only if:
-  - Too many meaningful variations that would obfuscate API test intent
-  - API test setup/validation becomes too complex
-  - In that case, review the design
-
-## Code Review Process
-
-### When Feature is Complete
-
-1. **Review the tests** - detect test coverage duplication
-2. **Suggest steps to reduce duplication** favoring API tests
-3. **Ask for confirmation** by preparing a commit with a message describing the functionality added
-
-### Code Review
-
-1. **Extract large code blocks** into intent-revealing classes and functions
-2. **Review the tracked files** that were added or edited across multiple commits for this feature
-3. **Break up large files** into smaller files with a single purpose
-4. **Ask for confirmation** by preparing a commit with a message describing the functionality added
-
-## Implementation Details
-
-### Bug Fixes
-
-- (This section will be updated as needed for future bug fixes)
+- Use: `.\scripts\release.ps1 -Platform windows`
+- Automatically runs tests, builds executables, bumps version, commits, pushes, creates GitHub release
+- **Use IDE linter feedback** before release: `read_lints` tool
+- **Fix issues** before running release script again

@@ -53,6 +53,6 @@
 ## Ambiguous Instructions
 
 When instructions don't match well enough, respond with:
-**"Do you mean: <assumption> from the dev-instructions?"**
+**"Do you mean: [assumption] from the dev-instructions?"**
 
 This helps clarify intent and ensures we're on the same page.
