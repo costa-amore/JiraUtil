@@ -196,13 +196,47 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
         elif result['assert_result'] == 'PASS':
             results['passed'] += 1
     
-    # Sort failures by rank (ascending) and add them to results
+    # Group and sort failures hierarchically
     failed_results = [r for r in assertion_results if r['evaluable'] and r['assert_result'] == 'FAIL']
-    failed_results.sort(key=lambda x: x['rank'])
+    results['failed'] = len(failed_results)
+    
+    # Group issues by epic relationships
+    epics = {}
+    orphaned = []
     
     for result in failed_results:
-        results['failed'] += 1
-        # Extract context from summary if present
+        if result['issue_type'] == 'Epic':
+            epics[result['key']] = result
+        elif result.get('parent_epic'):
+            if result['parent_epic'] not in epics:
+                epics[result['parent_epic']] = {'children': []}
+            if 'children' not in epics[result['parent_epic']]:
+                epics[result['parent_epic']]['children'] = []
+            epics[result['parent_epic']]['children'].append(result)
+        else:
+            orphaned.append(result)
+    
+    # Sort epics by rank and add to failures
+    sorted_epics = sorted(epics.values(), key=lambda x: x.get('rank', 0))
+    for epic in sorted_epics:
+        if 'key' in epic:  # This is an actual epic
+            context = f"{epic.get('context', '')} " if epic.get('context', '') else ""
+            results['failures'].append(
+                f"[{epic['issue_type']}] {epic['key']}: {context}expected '{epic['expected_status']}' but is '{epic['status']}'"
+            )
+            
+            # Add children sorted by rank
+            if 'children' in epic:
+                children = sorted(epic['children'], key=lambda x: x.get('rank', 0))
+                for child in children:
+                    context = f"{child.get('context', '')} " if child.get('context', '') else ""
+                    results['failures'].append(
+                        f"  - [{child['issue_type']}] {child['key']}: {context}expected '{child['expected_status']}' but is '{child['status']}'"
+                    )
+    
+    # Add orphaned issues sorted by rank
+    orphaned.sort(key=lambda x: x.get('rank', 0))
+    for result in orphaned:
         context = f"{result.get('context', '')} " if result.get('context', '') else ""
         results['failures'].append(
             f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
