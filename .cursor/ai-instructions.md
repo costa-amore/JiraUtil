@@ -2,6 +2,17 @@
 
 This document contains specific instructions for AI assistants working on this project. Follow these guidelines to ensure consistent, high-quality development practices.
 
+## Quick Reference Files
+
+- **Core Instructions**: `.cursor/ai-instructions-core.md` - Essential rules and commands
+- **Testing Guide**: `.cursor/ai-instructions-testing.md` - Test execution and structure
+- **Refactoring Guide**: `.cursor/ai-instructions-refactoring.md` - Making code testable
+- **Checklist**: `.cursor/ai-instructions-checklist.md` - Step-by-step process
+
+## MANDATORY: Read Core Instructions First
+
+**Before starting any work, read `.cursor/ai-instructions-core.md`**
+
 ## Test-Driven Development (TDD) Process
 
 ### Requirements Definition
@@ -17,12 +28,39 @@ This document contains specific instructions for AI assistants working on this p
 4. **Commit this single use-case**
 5. **Move to next simplest example and repeat**
 
+### Test Execution Requirements
+
+#### ALWAYS use the virtual environment approach for running tests
+
+- **Individual test files**: `.\run.ps1 tests\<test_file.py>`
+- **All tests**: `.\run.ps1 tests\run_tests.py`
+- **Test categories**: `.\run.ps1 tests\run_tests.py <category>`
+
+**NEVER use direct python commands** like `python -m pytest` - always use `.\run.ps1` to ensure proper virtual environment and dependency resolution.
+
+### Scaffolding Test Approach
+
+#### When starting a new feature
+
+1. **Start with ONLY the first (scaffolding) test** that demonstrates the core expected behavior
+2. **Run the test using `.\run.ps1`** to verify it fails for the right functional reasons
+3. **If the test fails for technical reasons** (imports, syntax, etc.), suggest refactoring to make the code more testable first
+4. **Only proceed with implementation** once the test fails for functional reasons (missing behavior)
+
+#### Common refactoring suggestions for testability
+
+- Extract pure business logic functions (no I/O dependencies)
+- Use dependency injection patterns
+- Create interfaces for external dependencies
+- Separate concerns (business logic vs I/O operations)
+- Make functions return data instead of directly printing/outputting
+
 #### python test files organization
 
 1. use the GWT approach in each test
 2. keep the test method small and clean - extract plumbing code
 3. keep a clear mapping between the Given data and the assert data
-4. don't use Docstrings or comments, just extract into intention revealing functions.  
+4. don't use Docstrings or comments, just extract into intention revealing functions.
 5. organize the files in public & private functions, and sort them alphabetically
 6. use the trigger test code as an example
 
@@ -36,24 +74,28 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Running Tests
 
-- **Always use the virtual environment approach**: `.\run.ps1 tests\run_tests.py`
-- **For specific test categories**: `.\run.ps1 tests\run_tests.py <category>`
-- **For individual test files**: `.\run.ps1 tests\run_tests.py <test_file.py>`
-- **For test patterns**: `.\run.ps1 tests\run_tests.py <pattern>`
+#### CRITICAL: Always use the virtual environment approach to avoid import issues
+
+- **Individual test files**: `.\run.ps1 tests\test_file.py`
+- **All tests**: `.\run.ps1 tests\run_tests.py`
+- **Specific test categories**: `.\run.ps1 tests\run_tests.py testfixture`
+- **Test patterns**: `.\run.ps1 tests\run_tests.py pattern`
+
+**NEVER use direct python commands** like `python -m pytest` - this will cause import errors and dependency issues. Always use `.\run.ps1` to ensure proper virtual environment and dependency resolution.
 
 ### Pre-Development Validation
 
-**Before making any changes:**
+#### Before making any changes
 
 1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
-2. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
+2. **Run all tests**: `.\run.ps1 tests\run_tests.py`
 3. **Verify no failures** before starting work
 
-**After making changes:**
+#### After making changes
 
 1. **Run import validation**: `.\run.ps1 scripts\validate-imports.py`
-2. **Run affected test categories**: `.\run.ps1 tests\run_tests.py <category>`
-3. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
+2. **Run affected test categories**: `.\run.ps1 tests\run_tests.py testfixture`
+3. **Run all tests**: `.\run.ps1 tests\run_tests.py`
 4. **Commit only when all tests pass**
 
 ### Test Categories
@@ -71,16 +113,13 @@ This document contains specific instructions for AI assistants working on this p
 
 #### Python Scripts (use .\run.ps1)
 
-- **Markdown linter**: `.\run.ps1 tools\markdown_linter.py --fix <file>`
-- **Python linter**: `.\run.ps1 tools\python_linter.py --fix <file>`
-- **PowerShell linter**: `.\run.ps1 tools\powershell_linter.py --fix <file>`
+- **Linting**: Use IDE `read_lints` tool for real-time feedback
 
 #### PowerShell Scripts (run directly)
 
 - **Build script**: `.\scripts\build.ps1 -Platform windows`
 - **Release script**: `.\scripts\release.ps1 -Platform windows`
-- **Linter wrappers**: `.\scripts\lint-markdown.ps1`, `.\scripts\lint-python.ps1`, `.\scripts\lint-powershell.ps1`
-- **All linters**: `.\scripts\lint-all.ps1` (runs all linters together)
+- **Linting**: Use IDE `read_lints` tool for real-time feedback
 
 ### Dependency Management
 
@@ -93,7 +132,7 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Refactoring Safety
 
-**When renaming functions or moving code:**
+#### When renaming functions or moving code
 
 1. **Search for all usages**: `grep -r "old_function_name" tests/ src/`
 2. **Update all references** before committing
@@ -101,7 +140,7 @@ This document contains specific instructions for AI assistants working on this p
 4. **Run all tests**: `.\run.ps1 tests\run_tests.py all`
 5. **Verify no old references remain**
 
-**Common refactoring patterns:**
+#### Common refactoring patterns
 
 - Function renames: Update all imports and calls
 - Module moves: Update all import paths
@@ -160,11 +199,9 @@ This document contains specific instructions for AI assistants working on this p
 - Add short aliases to the help output
 - Update command reference documentation
 - Test the actual command line interface to verify help output
-- **Linting is now separate from build/release process** due to reliability issues
-- **Run linting manually when needed**:
-  - All linters: `.\scripts\lint-all.ps1 -Fix`
-  - Individual: `.\scripts\lint-markdown.ps1`, `.\scripts\lint-python.ps1 -Fix`, `.\scripts\lint-powershell.ps1 -Fix`
-- **Note**: Linters were removed from build process because they caused false positives and build failures
+- **Linting is handled by IDE** using `read_lints` tool for real-time feedback
+- **No automated linter scripts** - they cause more problems than they solve
+- **Fix linter issues immediately** after editing files using IDE feedback
 
 ### Markdown Formatting Rules
 
@@ -177,7 +214,7 @@ This document contains specific instructions for AI assistants working on this p
 - **Add blank lines around blockquotes and other block elements**
 - **Ensure consistent spacing** - one blank line between sections, two blank lines before major sections
 - **NEVER add trailing spaces** - always trim whitespace at end of lines
-- **Run linting manually** with `.\scripts\lint-all.ps1 -Fix` to catch formatting issues
+- **Use IDE linter feedback** with `read_lints` tool to catch formatting issues
 
 ### PowerShell Scripting Rules
 
@@ -195,7 +232,7 @@ This document contains specific instructions for AI assistants working on this p
 - **Use the colored text enum** from `src/color_system.py` for visual emphasis instead
 - **Keep all output clean and professional** - use clear text labels like "Problem:" and "Solution:"
 - **Provide actionable solutions** - always include specific examples of correct usage
-- **Rely on IDE linting** - don't try to automate linting checks that cause more problems than they solve
+- **Rely on IDE linting** - use `read_lints` tool for precise, real-time feedback
 
 ## Version and Release Management
 
@@ -209,7 +246,7 @@ This document contains specific instructions for AI assistants working on this p
   - Commits version changes
   - Pushes to remote repository
   - Creates GitHub release with feature description
-- Run linting manually before release if desired: `.\scripts\lint-all.ps1 -Fix`
+- Use IDE linter feedback before release: `read_lints` tool
 - If tests fail, fix the issues before running release script again
 - GitHub Actions are already configured in `.github` folder
 
@@ -217,7 +254,13 @@ This document contains specific instructions for AI assistants working on this p
 
 ### Commit Message Prefixes
 
-- Use: `feat`, `fix`, `clean-up`, `chore`, `refactor`
+- Use: `feat`, `fix`, `test`, `refactor`, `release`, `chore`
+  - `feat`: Enhancement of functionality (may include test code)
+  - `fix`: Repair functionality that was released
+  - `test`: Enhancement of test coverage
+  - `refactor`: Change to code structure without changing functionality
+  - `release`: Commit that triggers CI to release
+  - `chore`: Changes to dev, build, release scripts or configurations
 - Keep consistent with recent commit history
 - Focus on WHY the change was made, not WHAT changed (diffs show the what)
 - Keep messages concise and avoid repeating details visible in the diff

@@ -89,14 +89,14 @@ The project includes a comprehensive functional test suite covering all major fu
 
 JiraUtil uses smart versioning that automatically increments build numbers only when code changes are detected.
 
-**Quick Commands:**
+#### Quick Commands:
 
 ```powershell
 .\run.ps1 tools\set-version.py 1.0         # Set version to 1.0.0.0 (build and local will be 0)
 .\run.ps1 tools\set-version.py --current   # Show current version
 ```
 
-**⚠️ Important:**
+#### ⚠️ Important:
 
 - Never edit `scripts/version.json` manually! Use `tools/set-version.py` instead.
 - Only major.minor versions can be set manually (e.g., `1.0`, `2.1`)

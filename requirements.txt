@@ -12,9 +12,4 @@ pandas>=2.0.0
 # Build dependencies
 pyinstaller>=6.0.0
 
-# Documentation linting (custom script in tools/)
-
-# Python linting and formatting
-flake8>=6.0.0
-black>=23.0.0
-isort>=5.12.0
+# Documentation and linting handled by IDE
