@@ -23,11 +23,7 @@ This document contains specific instructions for AI assistants working on this p
 
 ### TDD Process
 
-1. **Write ONE test first** - must fail for functional reasons (missing behavior)
-2. **Run test with `.\run.ps1`** - verify it fails for right reasons
-3. **If fails for technical reasons** (imports, syntax) → suggest refactoring first
-4. **If fails for functional reasons** → implement minimal code to pass
-5. **Repeat with next test**
+**See `.cursor/ai-instructions-core.md` for the complete TDD process.**
 
 ### Bug Fix Process
 

@@ -18,11 +18,31 @@
 
 ## MANDATORY: TDD Process
 
-1. **Write ONE test first** - must fail for functional reasons (missing behavior)
-2. **Run test with `.\run.ps1`** - verify it fails for right reasons
-3. **If fails for technical reasons** (imports, syntax) → suggest refactoring first
-4. **If fails for functional reasons** → implement minimal code to pass
-5. **Repeat with next test**
+### ALWAYS keep the tests green when refactoring - run them regularly
+
+### When not refactoring
+
+#### NEVER change code unless a test shows you need it
+
+### When creating a todo list for a feature (ask for review after each step)
+
+1. **Create a short list of GWT examples** to finetune the specs
+2. **Determine 1st GWT to create test for** (simplest context)
+3. **Find a test to update** if we're adjusting existing behavior
+4. **or Write a scaffolding test** for new behavior (to help us design and write testable code)
+5. **Run the tests** to prove that we can catch this behavior not being there
+6. **Change / add as little code as possible** to make the test pass
+7. **Add more tests or make it a parametrized test** to prove more examples
+8. **Refactoring**: when all examples have been proven to work, check the 4 rules of simple design:
+   8.1 **Keep all tests green** during these steps
+   8.2 **All changed code expresses intent**
+   8.3 **No duplication of concepts** (check changed files and the structures they are part of)
+       8.3.1 **List design smells**
+       8.3.2 **Propose design patterns** that could be appropriate
+   8.4 **Reduce the nr of elements** as much as possible
+       8.4.1 **Reduce test coupled to implementation** by removing scaffolding tests that cover behavior already tested by API tests
+       8.4.2 **Extract code into it's own module** when API tests would become too complex or slow to cover the same behavior as the scaffolding tests. Promote the scaffolding tests to API tests
+9. **Review & update the list of GWTs**
 
 ## MANDATORY: Bug Fix Process (When Asked to 'Fix')
 
