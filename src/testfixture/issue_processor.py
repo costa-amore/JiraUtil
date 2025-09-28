@@ -137,6 +137,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
     current_status = issue['status']
     issue_type = issue.get('issue_type', 'Unknown')
     rank = issue.get('rank', 0)
+    parent_epic = issue.get('parent_epic')
     
     # Parse expectation pattern
     expectation = extract_statuses_from_summary(summary)
@@ -147,7 +148,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
             'status': current_status,
             'assert_result': None,  # Not evaluable
             'issue_type': issue_type,
-            'parent_epic': None,  # Will be enhanced later
+            'parent_epic': parent_epic,
             'rank': rank,
             'evaluable': False
         }
@@ -168,7 +169,7 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         'status': current_status,
         'assert_result': assert_result,
         'issue_type': issue_type,
-        'parent_epic': None,  # Will be enhanced later
+        'parent_epic': parent_epic,
         'rank': rank,
         'evaluable': True,
         'expected_status': expected_status,
@@ -202,45 +203,127 @@ def _aggregate_assertion_results(assertion_results: list) -> dict:
     
     # Group issues by epic relationships
     epics = {}
+    stories = {}  # Track stories for sub-task relationships
     orphaned = []
     
-    for result in failed_results:
+    # First pass: collect all epics and stories (both evaluable and non-evaluable)
+    for result in assertion_results:
         if result['issue_type'] == 'Epic':
             epics[result['key']] = result
+        elif result['issue_type'] == 'Story':
+            stories[result['key']] = result
+    
+    # Second pass: group failed results by epic relationships
+    for result in failed_results:
+        if result['issue_type'] == 'Epic':
+            # Epic itself failed - already collected in first pass
+            pass
         elif result.get('parent_epic'):
             if result['parent_epic'] not in epics:
+                # Parent epic not found in our collection, create placeholder
                 epics[result['parent_epic']] = {'children': []}
             if 'children' not in epics[result['parent_epic']]:
                 epics[result['parent_epic']]['children'] = []
             epics[result['parent_epic']]['children'].append(result)
+        elif result.get('parent_story'):
+            # Sub-task with Story parent
+            if result['parent_story'] not in stories:
+                # Parent story not found in our collection, create placeholder
+                stories[result['parent_story']] = {'children': []}
+            if 'children' not in stories[result['parent_story']]:
+                stories[result['parent_story']]['children'] = []
+            stories[result['parent_story']]['children'].append(result)
         else:
             orphaned.append(result)
+    
+    # Third pass: add non-evaluable items that have children
+    for result in assertion_results:
+        if not result.get('evaluable', False):
+            if result['issue_type'] == 'Story' and result['key'] in stories and 'children' in stories[result['key']]:
+                # Non-evaluable story with children - add to epic's children
+                if result.get('parent_epic'):
+                    if result['parent_epic'] not in epics:
+                        epics[result['parent_epic']] = {'children': []}
+                    if 'children' not in epics[result['parent_epic']]:
+                        epics[result['parent_epic']]['children'] = []
+                    epics[result['parent_epic']]['children'].append(result)
+            elif not result.get('parent_epic') and not result.get('parent_story') and result['issue_type'] != 'Epic':
+                # Non-evaluable orphaned item
+                orphaned.append(result)
     
     # Sort epics by rank and add to failures
     sorted_epics = sorted(epics.values(), key=lambda x: x.get('rank', 0))
     for epic in sorted_epics:
         if 'key' in epic:  # This is an actual epic
-            context = f"{epic.get('context', '')} " if epic.get('context', '') else ""
-            results['failures'].append(
-                f"[{epic['issue_type']}] {epic['key']}: {context}expected '{epic['expected_status']}' but is '{epic['status']}'"
-            )
+            if epic.get('evaluable', False):
+                # Epic has assertion pattern - show assertion format
+                context = f"{epic.get('context', '')} " if epic.get('context', '') else ""
+                results['failures'].append(
+                    f"[{epic['issue_type']}] {epic['key']}: {context}expected '{epic['expected_status']}' but is '{epic['status']}'"
+                )
+            else:
+                # Epic has no assertion pattern - show full summary
+                results['failures'].append(
+                    f"[{epic['issue_type']}] {epic['key']}: {epic['summary']}"
+                )
             
             # Add children sorted by rank
             if 'children' in epic:
                 children = sorted(epic['children'], key=lambda x: x.get('rank', 0))
                 for child in children:
-                    context = f"{child.get('context', '')} " if child.get('context', '') else ""
-                    results['failures'].append(
-                        f"  - [{child['issue_type']}] {child['key']}: {context}expected '{child['expected_status']}' but is '{child['status']}'"
-                    )
+                    if child['issue_type'] == 'Story':
+                        # Story child - check if it has sub-tasks
+                        if child['key'] in stories and 'children' in stories[child['key']]:
+                            # Story with sub-tasks - show story first
+                            if child.get('evaluable', False):
+                                context = f"{child.get('context', '')} " if child.get('context', '') else ""
+                                results['failures'].append(
+                                    f"  - [{child['issue_type']}] {child['key']}: {context}expected '{child['expected_status']}' but is '{child['status']}'"
+                                )
+                            else:
+                                results['failures'].append(
+                                    f"  - [{child['issue_type']}] {child['key']}: {child['summary']}"
+                                )
+                            
+                            # Add sub-tasks indented under story
+                            sub_tasks = sorted(stories[child['key']]['children'], key=lambda x: x.get('rank', 0))
+                            for sub_task in sub_tasks:
+                                context = f"{sub_task.get('context', '')} " if sub_task.get('context', '') else ""
+                                results['failures'].append(
+                                    f"    - [{sub_task['issue_type']}] {sub_task['key']}: {context}expected '{sub_task['expected_status']}' but is '{sub_task['status']}'"
+                                )
+                        else:
+                            # Story without sub-tasks - show normally
+                            if child.get('evaluable', False):
+                                context = f"{child.get('context', '')} " if child.get('context', '') else ""
+                                results['failures'].append(
+                                    f"  - [{child['issue_type']}] {child['key']}: {context}expected '{child['expected_status']}' but is '{child['status']}'"
+                                )
+                            else:
+                                results['failures'].append(
+                                    f"  - [{child['issue_type']}] {child['key']}: {child['summary']}"
+                                )
+                    else:
+                        # Non-story child (shouldn't happen in current logic)
+                        context = f"{child.get('context', '')} " if child.get('context', '') else ""
+                        results['failures'].append(
+                            f"  - [{child['issue_type']}] {child['key']}: {context}expected '{child['expected_status']}' but is '{child['status']}'"
+                        )
     
     # Add orphaned issues sorted by rank
     orphaned.sort(key=lambda x: x.get('rank', 0))
     for result in orphaned:
-        context = f"{result.get('context', '')} " if result.get('context', '') else ""
-        results['failures'].append(
-            f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
-        )
+        if result.get('evaluable', False):
+            # Orphaned item with assertion pattern - show assertion format
+            context = f"{result.get('context', '')} " if result.get('context', '') else ""
+            results['failures'].append(
+                f"[{result['issue_type']}] {result['key']}: {context}expected '{result['expected_status']}' but is '{result['status']}'"
+            )
+        else:
+            # Orphaned item without assertion pattern - show full summary
+            results['failures'].append(
+                f"[{result['issue_type']}] {result['key']}: {result['summary']}"
+            )
     
     return results
 

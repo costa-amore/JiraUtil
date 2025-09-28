@@ -67,12 +67,20 @@ class JiraInstanceManager:
             
             result = []
             for issue in issues:
+                # Extract epic link (parent epic) - common field names for epic link
+                parent_epic = None
+                if hasattr(issue.fields, 'customfield_10014'):  # Epic Link field
+                    parent_epic = issue.fields.customfield_10014
+                elif hasattr(issue.fields, 'parent'):  # Parent field
+                    parent_epic = issue.fields.parent.key if issue.fields.parent else None
+                
                 result.append({
                     'key': issue.key,
                     'summary': issue.fields.summary,
                     'status': issue.fields.status.name,
                     'issue_type': issue.fields.issuetype.name,
-                    'rank': getattr(issue.fields, 'customfield_10016', 0)  # Rank field
+                    'rank': getattr(issue.fields, 'customfield_10016', 0),  # Rank field
+                    'parent_epic': parent_epic
                 })
             return result
         except JIRAError as e:
