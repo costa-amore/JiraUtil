@@ -178,6 +178,146 @@ class TestHierarchicalFailureOrganization:
         # TODO: The sorting by type category may not be working as expected
         assert issue_keys == ['PROJ-1', 'PROJ-3', 'PROJ-2'], f"Issues appear in processing order. Actual: {issue_keys}"
 
+    def test_assert_failures_epics_should_be_sorted_by_rank_like_backlog(self):
+        """Test that epics are sorted by rank like a backlog (highest priority first)."""
+        # Given: Multiple epics with different ranks (like backlog priority)
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic 1 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.LOW_RANK  # 0|i0002: (lowest priority)
+            ),
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Epic 2 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK  # 0|i0000: (highest priority)
+            ),
+            create_mock_issue(
+                key='PROJ-3',
+                summary='Epic 3 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.MID_RANK  # 0|i0001: (middle priority)
+            )
+        ]
+        
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        
+        # Then: Epics should be sorted by rank (highest priority first)
+        issues_to_report = results['issues_to_report']
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
+        
+        # Verify all epics appear in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic 1 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Epic 2 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-3', "Epic 3 should appear in issues_to_report")
+        
+        # Epics should be sorted by rank: HIGH_RANK (PROJ-2), MID_RANK (PROJ-3), LOW_RANK (PROJ-1)
+        assert issue_keys == ['PROJ-2', 'PROJ-3', 'PROJ-1'], f"Epics should be sorted by rank (highest priority first). Expected: ['PROJ-2', 'PROJ-3', 'PROJ-1'], Actual: {issue_keys}"
+
+    def test_assert_failures_stories_within_epic_should_be_sorted_by_rank(self):
+        """Test that stories within the same epic are sorted by rank."""
+        # Given: Epic with multiple stories having different ranks
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='EPIC-1',
+                summary='Epic starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK
+            ),
+            create_mock_issue(
+                key='STORY-3',
+                summary='Story 3 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='EPIC-1',
+                rank=self.LOW_RANK  # Lowest priority
+            ),
+            create_mock_issue(
+                key='STORY-1',
+                summary='Story 1 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='EPIC-1',
+                rank=self.HIGH_RANK  # Highest priority
+            ),
+            create_mock_issue(
+                key='STORY-2',
+                summary='Story 2 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='EPIC-1',
+                rank=self.MID_RANK  # Middle priority
+            )
+        ]
+        
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        
+        # Then: Stories should be sorted by rank within the epic
+        issues_to_report = results['issues_to_report']
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
+        
+        # Verify all items appear in the report
+        verify_issue_in_report(issues_to_report, 'EPIC-1', "Epic should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'STORY-1', "Story 1 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'STORY-2', "Story 2 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'STORY-3', "Story 3 should appear in issues_to_report")
+        
+        # Stories should be sorted by rank: Epic first, then stories by rank (HIGH, MID, LOW)
+        assert issue_keys == ['EPIC-1', 'STORY-1', 'STORY-2', 'STORY-3'], f"Stories should be sorted by rank within epic. Expected: ['EPIC-1', 'STORY-1', 'STORY-2', 'STORY-3'], Actual: {issue_keys}"
+
+    def test_assert_failures_epics_sorted_by_different_rank_letter_formats(self):
+        """Test that epics with different rank letter formats (f, h, i) are sorted correctly."""
+        # Given: Epics with different rank letter formats
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='EPIC-3',
+                summary='Epic 3 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK  # "0|i0000:" (i format)
+            ),
+            create_mock_issue(
+                key='EPIC-1',
+                summary='Epic 1 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGHEST_RANK  # "0|f0000:" (f format - highest)
+            ),
+            create_mock_issue(
+                key='EPIC-2',
+                summary='Epic 2 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGHER_RANK  # "0|h0000:" (h format - higher)
+            )
+        ]
+        
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        
+        # Then: Epics should be sorted by rank letter format (f > h > i)
+        issues_to_report = results['issues_to_report']
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
+        
+        # Verify all epics appear in the report
+        verify_issue_in_report(issues_to_report, 'EPIC-1', "Epic 1 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'EPIC-2', "Epic 2 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'EPIC-3', "Epic 3 should appear in issues_to_report")
+        
+        # Expected order: f format (EPIC-1), h format (EPIC-2), i format (EPIC-3)
+        assert issue_keys == ['EPIC-1', 'EPIC-2', 'EPIC-3'], f"Epics should be sorted by rank letter format (f > h > i). Expected: ['EPIC-1', 'EPIC-2', 'EPIC-3'], Actual: {issue_keys}"
+
     def test_assert_failures_displays_epic_with_failing_child_story(self):
         """Test that epics with failing child stories are displayed hierarchically."""
         # Given: An epic with a failing child story

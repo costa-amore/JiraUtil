@@ -110,13 +110,21 @@ def childrenOf(parent_issue: dict, children: list) -> list:
 
 
 def order_by_type_category(issue: dict):
-    match issue.get('issue_type', 'Unknown'):
+    # Primary sort: by issue type (Sub-task=0, Story=1, Epic=2)
+    issue_type = issue.get('issue_type', 'Unknown')
+    match issue_type:
         case 'Epic':
-            return 2
+            type_priority = 2
         case 'Sub-task':
-            return 0
+            type_priority = 0
         case _:
-            return 1
+            type_priority = 1
+    
+    # Secondary sort: by LexoRank string (lexicographical comparison)
+    # Jira uses LexoRank which should be sorted alphabetically
+    rank_value = issue.get('rank', '0|zzzzz:')
+    
+    return (type_priority, rank_value)
 
 
 def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_label: str) -> Dict:
