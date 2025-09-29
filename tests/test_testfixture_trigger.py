@@ -32,33 +32,8 @@ class TestTestFixtureTrigger:
         error_found = self._extract_error_message(mock_print, expected_error_contains)
         assert error_found, f"Expected error message containing {expected_error_contains} for scenario: {scenario}"
 
-    def test_trigger_operation_logs_info_when_label_added(self):
-        # Given: Issue with no labels
-        issue_with_label = self._create_mock_issue_with_labels([])
-        mock_manager = self._create_mock_jira_manager(issue_with_label)
-        
-        # When: Trigger operation is executed
-        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager, "TransitionSprintItems")
-        
-        # Then: Should log INFO message for add operation only
-        remove_message, add_message = self._extract_messages(mock_print)
-        assert not remove_message, f"Expected no INFO message about label removal"
-        assert add_message, f"Expected INFO message about label addition"
 
-    def test_trigger_operation_logs_info_when_label_removed_and_added(self):
-        # Given: Issue with the trigger label already present
-        issue_with_label = self._create_mock_issue_with_labels(["TransitionSprintItems"])
-        mock_manager = self._create_mock_jira_manager(issue_with_label)
-        
-        # When: Trigger operation is executed
-        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager, "TransitionSprintItems")
-        
-        # Then: Should log INFO messages for remove and add operations
-        remove_message, add_message = self._extract_messages(mock_print)
-        assert remove_message, f"Expected INFO message about label removal"
-        assert add_message, f"Expected INFO message about label addition"
-
-    @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_final_labels,expected_updates", [
+    @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_final_labels,expected_update_calls", [
         ("adds all labels when none present", [],
          "TransitionSprintItems,CloseEpic,UpdateStatus",
          ["TransitionSprintItems", "CloseEpic", "UpdateStatus"], 1),
@@ -66,14 +41,6 @@ class TestTestFixtureTrigger:
         ("adds new labels while preserving existing ones", ["OldLabel", "AnotherLabel"],
          "TransitionSprintItems,CloseEpic",
          ["OldLabel", "AnotherLabel", "TransitionSprintItems", "CloseEpic"], 1),
-        
-        ("preserves existing labels when all trigger labels already present", ["TransitionSprintItems", "CloseEpic", "UpdateStatus", "ExistingLabel"],
-         "TransitionSprintItems,CloseEpic,UpdateStatus",
-         ["TransitionSprintItems", "CloseEpic", "UpdateStatus", "ExistingLabel"], 1),
-        
-        ("adds missing labels while preserving existing ones", ["TransitionSprintItems", "OldLabel"],
-         "TransitionSprintItems,CloseEpic,UpdateStatus",
-         ["TransitionSprintItems", "OldLabel", "CloseEpic", "UpdateStatus"], 1),
         
         ("trims whitespace from labels while preserving existing ones", ["ExistingLabel"],
          " TransitionSprintItems , CloseEpic , UpdateStatus ",
@@ -83,33 +50,89 @@ class TestTestFixtureTrigger:
          "TransitionSprintItems",
          ["TransitionSprintItems"], 1),
         
-        ("single label: removes and adds when present", ["TransitionSprintItems"],
-         "TransitionSprintItems",
-         ["TransitionSprintItems"], 2),
-        
         ("single label: adds while preserving existing ones", ["OldLabel", "AnotherLabel"],
          "TransitionSprintItems",
          ["OldLabel", "AnotherLabel", "TransitionSprintItems"], 1),
-        
-        ("single label: removes and adds while preserving existing ones", ["TransitionSprintItems", "OldLabel"],
-         "TransitionSprintItems",
-         ["TransitionSprintItems", "OldLabel"], 2),
     ])
-    def test_trigger_scenarios(self, scenario, existing_labels, trigger_labels, expected_final_labels, expected_updates):
+    def test_trigger_scenarios_add_only(self, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
+        """Test trigger scenarios where no labels need removing - just add them."""
         # Given: Issue with specific existing labels
         issue = self._create_mock_issue_with_labels(existing_labels)
         mock_manager = self._create_mock_jira_manager(issue)
-        
+
         # When: Trigger operation is executed
-        run_trigger_operation(mock_manager, "TAPS-212", trigger_labels)
-        
+        with patch('builtins.print') as mock_print:
+            run_trigger_operation(mock_manager, "TAPS-211", trigger_labels)
+
         # Then: Should call update the expected number of times
-        assert issue.update.call_count == expected_updates, f"Expected {expected_updates} updates for scenario: {scenario}"
+        assert issue.update.call_count == expected_update_calls, f"Expected {expected_update_calls} updates for scenario: {scenario}"
         
         # Verify the final labels match expectations
         final_call = issue.update.call_args_list[-1]
         actual_labels = final_call[1]["fields"]["labels"]
         assert set(actual_labels) == set(expected_final_labels), f"Expected {expected_final_labels}, got {actual_labels} for scenario: {scenario}"
+        
+        # Verify logging: should log add message only, no remove message
+        remove_message, add_message = self._extract_messages(mock_print)
+        assert not remove_message, f"Expected no INFO message about label removal for scenario: {scenario}"
+        assert add_message, f"Expected INFO message about label addition for scenario: {scenario}"
+
+    @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_after_removal,expected_final_labels", [
+        ("single label: removes and adds when present", ["TransitionSprintItems"],
+         "TransitionSprintItems",
+         [], ["TransitionSprintItems"]),
+
+        ("single label: removes and adds while preserving existing ones", ["TransitionSprintItems", "OldLabel"],
+         "TransitionSprintItems",
+         ["OldLabel"], ["TransitionSprintItems", "OldLabel"]),
+
+        ("multiple labels: removes existing trigger labels then adds all", ["OldLabel", "Trigger-Epic-Transition-rules"],
+         "Trigger-SBI-Transition-rules,Trigger-Epic-Transition-rules",
+         ["OldLabel"], ["OldLabel", "Trigger-SBI-Transition-rules", "Trigger-Epic-Transition-rules"]),
+
+        ("multiple labels: removes all existing trigger labels then adds all", ["OldLabel", "Trigger-SBI-Transition-rules", "Trigger-Epic-Transition-rules"],
+         "Trigger-SBI-Transition-rules,Trigger-Epic-Transition-rules",
+         ["OldLabel"], ["OldLabel", "Trigger-SBI-Transition-rules", "Trigger-Epic-Transition-rules"]),
+
+        ("single label: removes and adds when present (no other labels)", ["TransitionSprintItems"],
+         "TransitionSprintItems",
+         [], ["TransitionSprintItems"]),
+
+        ("multiple labels: preserves existing labels when all trigger labels already present", ["TransitionSprintItems", "CloseEpic", "UpdateStatus", "ExistingLabel"],
+         "TransitionSprintItems,CloseEpic,UpdateStatus",
+         ["ExistingLabel"], ["TransitionSprintItems", "CloseEpic", "UpdateStatus", "ExistingLabel"]),
+
+        ("multiple labels: adds missing labels while preserving existing ones", ["TransitionSprintItems", "OldLabel"],
+         "TransitionSprintItems,CloseEpic,UpdateStatus",
+         ["OldLabel"], ["TransitionSprintItems", "OldLabel", "CloseEpic", "UpdateStatus"]),
+    ])
+    def test_trigger_scenarios_remove_and_add(self, scenario, existing_labels, trigger_labels, expected_after_removal, expected_final_labels):
+        """Test trigger scenarios where labels need removing first, then adding."""
+        # Given: Issue with specific existing labels
+        issue = self._create_mock_issue_with_labels(existing_labels)
+        mock_manager = self._create_mock_jira_manager(issue)
+        
+        # When: Trigger operation is executed
+        with patch('builtins.print') as mock_print:
+            run_trigger_operation(mock_manager, "TAPS-211", trigger_labels)
+        
+        # Then: Should call update exactly twice (remove then add)
+        assert issue.update.call_count == 2, f"Expected 2 updates for scenario: {scenario}"
+        
+        # Verify first call removes existing trigger labels
+        first_call = issue.update.call_args_list[0]
+        actual_after_removal = first_call[1]["fields"]["labels"]
+        assert set(actual_after_removal) == set(expected_after_removal), f"First call should remove trigger labels. Expected {expected_after_removal}, got {actual_after_removal} for scenario: {scenario}"
+        
+        # Verify second call adds all trigger labels
+        second_call = issue.update.call_args_list[1]
+        actual_final_labels = second_call[1]["fields"]["labels"]
+        assert set(actual_final_labels) == set(expected_final_labels), f"Second call should add all trigger labels. Expected {expected_final_labels}, got {actual_final_labels} for scenario: {scenario}"
+        
+        # Verify logging: should log both remove and add messages
+        remove_message, add_message = self._extract_messages(mock_print)
+        assert remove_message, f"Expected INFO message about label removal for scenario: {scenario}"
+        assert add_message, f"Expected INFO message about label addition for scenario: {scenario}"
 
     # Private helper methods (sorted alphabetically)
     def _create_mock_issue_with_labels(self, labels):

@@ -97,9 +97,21 @@ def _set_labels_on_issue(jira_instance, issue_key: str, labels: list) -> Dict:
             
             _add_label_to_issue(issue, label, current_labels)
         else:
-            # Multiple labels: add new labels while preserving existing ones
+            # Multiple labels: toggle behavior (remove existing trigger labels, then add all trigger labels)
+            # First, remove any existing trigger labels
+            labels_to_remove = [label for label in labels if label in current_labels]
+            if labels_to_remove:
+                # Remove all trigger labels in one update
+                new_labels = [label for label in current_labels if label not in labels_to_remove]
+                issue.update(fields={"labels": new_labels})
+                print(f"INFO: Removed labels {labels_to_remove} from {issue.key}")
+                process.mark_label_removed()
+                issue, current_labels = _load_issue_and_labels(jira_instance, issue_key)
+            
+            # Then, add all trigger labels in one update (with logging)
             new_labels = list(set(current_labels + labels))
             issue.update(fields={"labels": new_labels})
+            print(f"INFO: Set labels {new_labels} on {issue.key}")
         
         return process.set_success(issue.fields.summary, current_labels).build_result()
     except Exception as e:
