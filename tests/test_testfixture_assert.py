@@ -70,6 +70,44 @@ class TestTestFixtureAssert:
         assert start_state == expected_start_state, f"Expected start_state '{expected_start_state}', got '{start_state}' for scenario: {scenario}"
         assert end_state == expected_end_state, f"Expected end_state '{expected_end_state}', got '{end_state}' for scenario: {scenario}"
 
+
+    @pytest.mark.parametrize("scenario,issue_type,key,summary,expected_tag", [
+        ("evaluated epic", "Epic", "TAPS-215", "Epic summary", "[FAIL]"),
+        ("evaluated story", "Story", "TAPS-210", "Story summary", "[FAIL]"),
+        ("evaluated subtask", "Sub-task", "TAPS-211", "Subtask summary", "[FAIL]"),
+        ("non-evaluated epic", "Epic", "TAPS-215", "Epic summary", "[INFO]"),
+        ("non-evaluated story", "Story", "TAPS-210", "Story summary", "[INFO]"),
+    ])
+    def test_assertion_report_should_include_color_tags_for_issues(self, scenario, issue_type, key, summary, expected_tag):
+        """Test that assertion report should include proper color tags for different issue types."""
+        # Given: Results with specific issue type
+        from src.testfixture.reporter import _generate_assertion_report_lines
+        
+        results = {
+            'success': True,
+            'processed': 1,
+            'passed': 0,
+            'failed': 1 if "evaluated" in scenario else 0,
+            'not_evaluated': 0 if "evaluated" in scenario else 1,
+            'issues_to_report': [
+                {
+                    'issue_type': issue_type, 
+                    'key': key, 
+                    'summary': summary,
+                    'parent_key': 'Orphan',
+                    'evaluable': "non-evaluated" not in scenario
+                }
+            ]
+        }
+        
+        # When: Generate report lines
+        lines = _generate_assertion_report_lines(results)
+        report_text = '\n'.join(lines)
+        
+        # Then: Verify the expected color tag is present (this will fail until implemented)
+        assert expected_tag in report_text, f"Report should include {expected_tag} tag for {scenario}"
+        assert f'{expected_tag} [{issue_type}] {key}:' in report_text, f"Report should show {expected_tag} [{issue_type}] {key}:"
+
     def test_assert_operation_verifies_rule_automation_worked(self):
         # Given: Issues after automation has run
         mock_jira_manager = create_assert_scenario_with_expectations()

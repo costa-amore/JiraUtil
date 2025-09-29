@@ -1,69 +1,57 @@
-"""
-Result reporting functionality for test fixture management.
-
-This module handles formatting and displaying results from test fixture
-operations including reset and assertion processes.
-"""
-
 from typing import Dict, List
 from utils.colors import colored_print
 
 
-# =============================================================================
-# PUBLIC FUNCTIONS (sorted alphabetically)
-# =============================================================================
-
 def report_assertion_results(results: Dict) -> None:
-    """
-    Report results from the assertion test fixture operation.
-    
-    Args:
-        results: Dictionary containing assertion operation results
-    """
+    """Report results from the assertion test fixture operation."""
+    output_lines = _generate_assertion_report_lines(results)
+    for line in output_lines:
+        colored_print(line)
+
+
+def _generate_assertion_report_lines(results: Dict) -> List[str]:
+    """Generate the lines that would be printed for assertion results."""
+    lines = []
     if results['success']:
-        print(f"\nAssertion process completed:")
-        print(f"  Issues processed: {results['processed']}")
-        print(f"  Assertions passed: {results['passed']}")
-        print(f"  Assertions failed: {results['failed']}")
-        print(f"  Not evaluated: {results['not_evaluated']}")
+        lines.append(f"\nAssertion process completed:")
+        lines.append(f"  Issues processed: {results['processed']}")
+        lines.append(f"  Assertions passed: {results['passed']}")
+        lines.append(f"  Assertions failed: {results['failed']}")
+        lines.append(f"  Not evaluated: {results['not_evaluated']}")
         
         if results.get('issues_to_report'):
-            print(f"  Failures:")
+            lines.append(f"  Failures:")
             for issue in results['issues_to_report']:
                 if issue['issue_type'] == 'Epic':
-                    print(f"    - {_issue_to_list_in_failure_hierarchy(issue)}")
+                    lines.append(f"    - {_issue_to_list_in_failure_hierarchy(issue)}")
                 elif issue['issue_type'] == 'Sub-task':
-                    print(f"        - {_issue_to_list_in_failure_hierarchy(issue)}")
+                    lines.append(f"        - {_issue_to_list_in_failure_hierarchy(issue)}")
                 else:
                   if issue['parent_key'] == 'Orphan':
-                    print(f"    - {_issue_to_list_in_failure_hierarchy(issue)}")
+                    lines.append(f"    - {_issue_to_list_in_failure_hierarchy(issue)}")
                   else:
-                    print(f"      - {_issue_to_list_in_failure_hierarchy(issue)}")
+                    lines.append(f"      - {_issue_to_list_in_failure_hierarchy(issue)}")
         
         if results.get('not_evaluated_keys'):
             keys_str = ", ".join(results['not_evaluated_keys'])
-            print(f"  Not evaluated: {keys_str}")
+            lines.append(f"  Not evaluated: {keys_str}")
         
-        # Clear success/failure summary
-        print(f"\n" + "="*60)
+        lines.append(f"\n" + "="*60)
         if results['failed'] == 0:
-            colored_print(f"[SUCCESS] ALL ASSERTIONS PASSED! [SUCCESS]")
-            colored_print(f"[OK] All {results['passed']} evaluated issues are in their expected status")
+            lines.append(f"[SUCCESS] ALL ASSERTIONS PASSED! [SUCCESS]")
+            lines.append(f"[OK] All {results['passed']} evaluated issues are in their expected status")
         else:
-            colored_print(f"[FAIL] ASSERTION FAILURES DETECTED! [FAIL]")
-            colored_print(f"[WARN]  {results['failed']} out of {results['passed'] + results['failed']} evaluated issues are NOT in their expected status")
-        print(f"="*60)
+            lines.append(f"[FAIL] ASSERTION FAILURES DETECTED! [FAIL]")
+            lines.append(f"[WARN]  {results['failed']} out of {results['passed'] + results['failed']} evaluated issues are NOT in their expected status")
+        lines.append(f"="*60)
     else:
-        print(f"Assertion process failed: {results.get('error', 'Unknown error')}")
+        lines.append(f"Assertion process failed: {results.get('error', 'Unknown error')}")
+    
+    return lines
 
 
 def report_reset_results(results: Dict) -> None:
-    """
-    Report results from the reset test fixture operation.
-    
-    Args:
-        results: Dictionary containing reset operation results
-    """
+    """Report results from the reset test fixture operation."""
     if results['success']:
         print(f"\nRule-testing process completed:")
         print(f"  Issues processed: {results['processed']}")
@@ -79,12 +67,7 @@ def report_reset_results(results: Dict) -> None:
 
 
 def report_trigger_results(results: Dict) -> None:
-    """
-    Report results from the trigger test fixture operation.
-    
-    Args:
-        results: Dictionary containing trigger operation results
-    """
+    """Report results from the trigger test fixture operation."""
     if results['success']:
         print(f"\nTrigger operation completed:")
         print(f"  Issues processed: {results['processed']}")
@@ -105,9 +88,12 @@ def report_trigger_results(results: Dict) -> None:
                 print(f"  - {error}")
 
 
-# =============================================================================
-# PRIVATE FUNCTIONS (sorted alphabetically)
-# =============================================================================
-
 def _issue_to_list_in_failure_hierarchy(issue: dict) -> str:
-        return f"[{issue['issue_type']}] {issue['key']}: {issue['summary']}"
+    """Format issue for display in failure hierarchy."""
+    # Determine color tag based on evaluation status
+    if issue.get('evaluable', True):  # Default to evaluable if not specified
+        color_tag = "[FAIL]"
+    else:
+        color_tag = "[INFO]"
+    
+    return f"{color_tag} [{issue['issue_type']}] {issue['key']}: {issue['summary']}"
