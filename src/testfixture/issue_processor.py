@@ -37,6 +37,9 @@ def assert_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_la
     if not issues:
         return results
     
+    # Sort issues by rank before processing to avoid duplication issues
+    issues.sort(key=order_by_rank_only)
+    
     # Process each issue and collect results
     skipped_issues = []
     issues_to_list = []
@@ -125,6 +128,12 @@ def order_by_type_category(issue: dict):
     rank_value = issue.get('rank', '0|zzzzz:')
     
     return (type_priority, rank_value)
+
+
+def order_by_rank_only(issue: dict):
+    """Sort issues by rank only, for use when type-based sorting is not needed."""
+    rank_value = issue.get('rank', '0|zzzzz:')
+    return rank_value
 
 
 def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_label: str) -> Dict:
