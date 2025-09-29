@@ -212,16 +212,54 @@ class TestHierarchicalFailureOrganization:
 
 
 
-    @pytest.mark.skip(reason="Not currently needed in real-world scenarios")
     def test_assert_failures_displays_epic_with_non_evaluated_story_and_subtask(self):
-        # Given: Epic with non-evaluated story and subtask
-        mock_jira_manager = self._create_epic_with_non_evaluated_story_and_subtask_scenario()
+        """Test 3-level hierarchy: Epic (non-evaluated) -> Story (non-evaluated) -> Subtask (failing)."""
+        # Given: Epic with non-evaluated story and failing subtask (3-level hierarchy)
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic without assertion pattern',
+                status='Closed',
+                issue_type='Epic',
+                rank=self.HIGH_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Story without assertion pattern',
+                status='Closed',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.MID_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-3',
+                summary='Sub-task starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Sub-task',
+                parent_key='PROJ-2',
+                rank=self.LOW_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: Verify epic with non-evaluated story and subtask is displayed correctly
-        self._verify_epic_with_non_evaluated_story_and_subtask_displayed(output, 'PROJ-1', 'PROJ-2', 'PROJ-3')
+        # Then: All three levels should appear in issues_to_report
+        issues_to_report = results['issues_to_report']
+        
+        # Verify all issues appear in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-3', "Sub-task should appear in issues_to_report")
+        
+        # Verify hierarchical order: Epic -> Story -> Subtask
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before Story")
+        verify_issue_order(issues_to_report, 'PROJ-2', 'PROJ-3', "Story should appear before Subtask")
+        
+        # Verify counts
+        assert results['failed'] == 1, f"Should have 1 failed assertion (PROJ-3). Actual: {results['failed']}"
+        assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (PROJ-1, PROJ-2). Actual: {results['not_evaluated']}"
 
     def test_assert_failures_displays_mixed_epics_and_orphaned_items(self):
         # Given: Mix of epics with children and orphaned items
