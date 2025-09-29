@@ -704,136 +704,92 @@ class TestHierarchicalFailureOrganization:
         assert results['not_evaluated'] == 1, f"Should have 1 not evaluated (TAPS-210). Actual: {results['not_evaluated']}"
 
     def test_real_world_bug_three_level_hierarchy(self):
-        """
-        Test the 3-level hierarchy: Epic TAPS-215 -> Story TAPS-210 -> Subtask TAPS-211
-        Based on real production output showing this works correctly.
-        """
-        from unittest.mock import Mock
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock the issues as they would come from Jira
+        """Test 3-level hierarchy: Epic TAPS-215 -> Story TAPS-210 -> Subtask TAPS-211."""
+        # Given: 3-level hierarchy with real production data
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'TAPS-215',
-                'summary': 'Standard workflow',
-                'status': 'Closed',
-                'issue_type': 'Epic',
-                'parent_key': None,  # Epic has no parent
-                'rank': '0|g0000:'
-            },
-            {
-                'key': 'TAPS-210',
-                'summary': 'When parent is CLOSED -> also close the children',
-                'status': 'Closed',
-                'issue_type': 'Story',
-                'parent_key': 'TAPS-215',  # Parent is TAPS-215 (Epic)
-                'rank': '0|h0000:'
-            },
-            {
-                'key': 'TAPS-211',
-                'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                'status': 'SIT/LAB Validated',
-                'issue_type': 'Sub-task',
-                'parent_key': 'TAPS-210',  # Parent is TAPS-210 (Story)
-                'rank': '0|i0000:'
-            }
+            create_mock_issue(
+                key='TAPS-215',
+                summary='Standard workflow',
+                status='Closed',
+                issue_type='Epic',
+                parent_key=None,
+                rank='0|g0000:'
+            ),
+            create_mock_issue(
+                key='TAPS-210',
+                summary='When parent is CLOSED -> also close the children',
+                status='Closed',
+                issue_type='Story',
+                parent_key='TAPS-215',
+                rank='0|h0000:'
+            ),
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key='TAPS-210',
+                rank='0|i0000:'
+            )
         ]
         
-        # Mock get_issues_by_label to return our test data
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the results structure
-        assert 'issues_to_report' in results, "results should contain issues_to_report"
-        
-        # Extract issue keys from issues_to_report
+        # Then: All three levels should appear in hierarchical order
         issues_to_report = results['issues_to_report']
-        issue_keys = []
-        for issue in issues_to_report:
-            if isinstance(issue, dict) and 'key' in issue:
-                issue_keys.append(issue['key'])
-            elif isinstance(issue, str) and '] ' in issue:
-                # Handle formatted string like "[Epic] TAPS-215: ..."
-                key = issue.split('] ')[1].split(':')[0]
-                issue_keys.append(key)
         
-        # Verify TAPS-215 and TAPS-210 appear in issues_to_report (based on real production output)
-        assert 'TAPS-215' in issue_keys, f"TAPS-215 should appear in issues_to_report. Actual: {issue_keys}"
-        assert 'TAPS-210' in issue_keys, f"TAPS-210 should appear in issues_to_report. Actual: {issue_keys}"
+        verify_issue_in_report(issues_to_report, 'TAPS-215', "Epic TAPS-215 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'TAPS-210', "Story TAPS-210 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'TAPS-211', "Subtask TAPS-211 should appear in issues_to_report")
         
-        # TAPS-211 should appear in issues_to_report (the failing subtask) - this works correctly for 3-level hierarchies
-        assert 'TAPS-211' in issue_keys, f"TAPS-211 should appear in issues_to_report for 3-level hierarchy. Actual: {issue_keys}"
+        verify_issue_order(issues_to_report, 'TAPS-215', 'TAPS-210', "Epic should appear before Story")
+        verify_issue_order(issues_to_report, 'TAPS-210', 'TAPS-211', "Story should appear before Subtask")
         
-        # Verify the hierarchical structure in issues_to_report
-        issues_text = ' '.join(str(issue) for issue in issues_to_report)
-        assert 'TAPS-215' in issues_text, "TAPS-215 should be in issues_to_report"
-        assert 'TAPS-210' in issues_text, "TAPS-210 should be in issues_to_report"
-        assert 'TAPS-211' in issues_text, "TAPS-211 should be in issues_to_report"
-        
-        # Verify counts
         assert results['failed'] == 1, f"Should have 1 failed assertion (TAPS-211). Actual: {results['failed']}"
         assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (TAPS-215, TAPS-210). Actual: {results['not_evaluated']}"
 
     def test_trace_issue_processing_through_assertion_pipeline(self):
-        """
-        Test that traces how issues are processed through the entire assertion pipeline
-        using real production code.
-        """
-        from unittest.mock import Mock
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock the issues as they would come from Jira
-        # Based on real production output: TAPS-210 is not evaluable, TAPS-211 is evaluable and fails
+        """Test that traces how issues are processed through the entire assertion pipeline."""
+        # Given: 2-level hierarchy with non-evaluable parent and failing child
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'TAPS-210',
-                'summary': 'When parent is CLOSED -> also close the children',
-                'status': 'Closed',
-                'issue_type': 'Story',
-                'parent_key': None,
-                'rank': self.HIGHER_RANK
-            },
-            {
-                'key': 'TAPS-211',
-                'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                'status': 'SIT/LAB Validated',
-                'issue_type': 'Sub-task',
-                'parent_key': 'TAPS-210',
-                'rank': DEFAULT_RANK_VALUE
-            }
+            create_mock_issue(
+                key='TAPS-210',
+                summary='When parent is CLOSED -> also close the children',
+                status='Closed',
+                issue_type='Story',
+                parent_key=None,
+                rank=self.HIGHER_RANK
+            ),
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key='TAPS-210',
+                rank=DEFAULT_RANK_VALUE
+            )
         ]
         
-        # Mock get_issues_by_label to return our test data
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the processing results
+        # Then: Processing should complete with expected counts
         assert results['success'] == True, "Processing should be successful"
         assert results['processed'] == 2, "Should process 2 issues"
         assert results['failed'] == 1, "Should have 1 failed assertion (TAPS-211)"
         assert results['not_evaluated'] == 1, "Should have 1 not evaluated (TAPS-210)"
         
-        # Verify issues_to_report contains the expected issues
+        # And: Issues should appear in the report
         issues_to_report = results['issues_to_report']
         assert len(issues_to_report) > 0, "issues_to_report should not be empty"
         
-        # Verify the hierarchical structure
-        issues_text = ' '.join(str(issue) for issue in issues_to_report)
-        assert 'TAPS-210' in issues_text, "TAPS-210 should be in issues_to_report"
+        verify_issue_in_report(issues_to_report, 'TAPS-210', "TAPS-210 should appear in issues_to_report")
         # BUG: TAPS-211 should be in issues_to_report but currently isn't for 2-level hierarchies
-        assert 'TAPS-211' not in issues_text, "BUG: TAPS-211 should be in issues_to_report but currently isn't for 2-level hierarchies"
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
+        assert 'TAPS-211' not in issue_keys, f"BUG: TAPS-211 should be in issues_to_report but currently isn't for 2-level hierarchies. Actual: {issue_keys}"
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
@@ -1080,193 +1036,129 @@ class TestHierarchicalFailureOrganization:
 
     def test_assert_testfixture_issues_two_level_hierarchy_with_mock_jira(self):
         """Test 2-level hierarchy: Story TAPS-210 -> Subtask TAPS-211 using mock Jira data."""
-        from unittest.mock import Mock, patch
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock the issues as they would come from Jira
+        # Given: 2-level hierarchy with non-evaluable parent and failing child
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'TAPS-210',
-                'summary': 'When parent is CLOSED -> also close the children',
-                'status': 'Closed',
-                'issue_type': 'Story',
-                'parent_key': None,  # No parent
-                'rank': self.HIGHER_RANK
-            },
-            {
-                'key': 'TAPS-211',
-                'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                'status': 'SIT/LAB Validated',
-                'issue_type': 'Sub-task',
-                'parent_key': 'TAPS-210',  # Parent is TAPS-210
-                'rank': DEFAULT_RANK_VALUE
-            }
+            create_mock_issue(
+                key='TAPS-210',
+                summary='When parent is CLOSED -> also close the children',
+                status='Closed',
+                issue_type='Story',
+                parent_key=None,
+                rank=self.HIGHER_RANK
+            ),
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key='TAPS-210',
+                rank=DEFAULT_RANK_VALUE
+            )
         ]
         
-        # Mock get_issues_by_label to return our test data
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the results structure
-        assert 'issues_to_report' in results, "results should contain issues_to_report"
-        
-        # Extract issue keys from issues_to_report
+        # Then: Parent should appear but child should be missing (current bug)
         issues_to_report = results['issues_to_report']
-        issue_keys = []
-        for issue in issues_to_report:
-            if isinstance(issue, dict) and 'key' in issue:
-                issue_keys.append(issue['key'])
-            elif isinstance(issue, str) and '] ' in issue:
-                # Handle formatted string like "[Story] TAPS-210: ..."
-                key = issue.split('] ')[1].split(':')[0]
-                issue_keys.append(key)
         
-        # BUG: TAPS-211 should appear in issues_to_report (the failing subtask) but currently doesn't
-        # This test documents the current behavior - TAPS-211 is processed but not included in issues_to_report
-        # TODO: Fix the production code to include failing subtasks in issues_to_report
+        verify_issue_in_report(issues_to_report, 'TAPS-210', "TAPS-210 should appear in issues_to_report (has failing child)")
+        
+        # BUG: TAPS-211 should appear in issues_to_report but currently doesn't for 2-level hierarchies
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
         assert 'TAPS-211' not in issue_keys, f"BUG: TAPS-211 should appear in issues_to_report but currently doesn't. Actual: {issue_keys}"
         
-        # Verify TAPS-210 appears in issues_to_report (parent with failing child)
-        assert 'TAPS-210' in issue_keys, f"TAPS-210 should appear in issues_to_report (has failing child). Actual: {issue_keys}"
-        
-        # Verify the hierarchical structure in issues_to_report
-        issues_text = ' '.join(str(issue) for issue in issues_to_report)
-        assert 'TAPS-210' in issues_text, "TAPS-210 should be in issues_to_report"
-        # BUG: TAPS-211 should be in issues_to_report but currently isn't
-        assert 'TAPS-211' not in issues_text, "BUG: TAPS-211 should be in issues_to_report but currently isn't"
-        
-        # Verify counts
         assert results['failed'] == 1, f"Should have 1 failed assertion (TAPS-211). Actual: {results['failed']}"
         assert results['not_evaluated'] == 1, f"Should have 1 not evaluated (TAPS-210). Actual: {results['not_evaluated']}"
 
     def test_assert_testfixture_issues_three_level_hierarchy_with_mock_jira(self):
         """Test 3-level hierarchy: Epic TAPS-215 -> Story TAPS-210 -> Subtask TAPS-211 using mock Jira data."""
-        from unittest.mock import Mock, patch
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock the issues as they would come from Jira
+        # Given: 3-level hierarchy with real production data
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'TAPS-215',
-                'summary': 'Standard workflow',
-                'status': 'Closed',
-                'issue_type': 'Epic',
-                'parent_key': None,  # Epic has no parent
-                'rank': '0|g0000:'
-            },
-            {
-                'key': 'TAPS-210',
-                'summary': 'When parent is CLOSED -> also close the children',
-                'status': 'Closed',
-                'issue_type': 'Story',
-                'parent_key': 'TAPS-215',  # Parent is TAPS-215 (Epic)
-                'rank': '0|h0000:'
-            },
-            {
-                'key': 'TAPS-211',
-                'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                'status': 'SIT/LAB Validated',
-                'issue_type': 'Sub-task',
-                'parent_key': 'TAPS-210',  # Parent is TAPS-210 (Story)
-                'rank': '0|i0000:'
-            }
+            create_mock_issue(
+                key='TAPS-215',
+                summary='Standard workflow',
+                status='Closed',
+                issue_type='Epic',
+                parent_key=None,
+                rank='0|g0000:'
+            ),
+            create_mock_issue(
+                key='TAPS-210',
+                summary='When parent is CLOSED -> also close the children',
+                status='Closed',
+                issue_type='Story',
+                parent_key='TAPS-215',
+                rank='0|h0000:'
+            ),
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key='TAPS-210',
+                rank='0|i0000:'
+            )
         ]
         
-        # Mock get_issues_by_label to return our test data
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the results structure
-        assert 'issues_to_report' in results, "results should contain issues_to_report"
-        
-        # Extract issue keys from issues_to_report
+        # Then: All three levels should appear in hierarchical order
         issues_to_report = results['issues_to_report']
-        issue_keys = []
-        for issue in issues_to_report:
-            if isinstance(issue, dict) and 'key' in issue:
-                issue_keys.append(issue['key'])
-            elif isinstance(issue, str) and '] ' in issue:
-                # Handle formatted string like "[Epic] TAPS-215: ..."
-                key = issue.split('] ')[1].split(':')[0]
-                issue_keys.append(key)
         
-        # Verify all three issues appear in issues_to_report
-        assert 'TAPS-215' in issue_keys, f"TAPS-215 should appear in issues_to_report. Actual: {issue_keys}"
-        assert 'TAPS-210' in issue_keys, f"TAPS-210 should appear in issues_to_report. Actual: {issue_keys}"
-        assert 'TAPS-211' in issue_keys, f"TAPS-211 should appear in issues_to_report. Actual: {issue_keys}"
+        verify_issue_in_report(issues_to_report, 'TAPS-215', "Epic TAPS-215 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'TAPS-210', "Story TAPS-210 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'TAPS-211', "Subtask TAPS-211 should appear in issues_to_report")
         
-        # Verify the hierarchical structure in issues_to_report
-        issues_text = ' '.join(str(issue) for issue in issues_to_report)
-        assert 'TAPS-215' in issues_text, "TAPS-215 should be in issues_to_report"
-        assert 'TAPS-210' in issues_text, "TAPS-210 should be in issues_to_report"
-        assert 'TAPS-211' in issues_text, "TAPS-211 should be in issues_to_report"
+        verify_issue_order(issues_to_report, 'TAPS-215', 'TAPS-210', "Epic should appear before Story")
+        verify_issue_order(issues_to_report, 'TAPS-210', 'TAPS-211', "Story should appear before Subtask")
         
-        # Verify counts
         assert results['failed'] == 1, f"Should have 1 failed assertion (TAPS-211). Actual: {results['failed']}"
         assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (TAPS-215, TAPS-210). Actual: {results['not_evaluated']}"
 
     def test_assert_testfixture_issues_trace_processing_with_mock_jira(self):
         """Test that traces how issues are processed through the entire assertion pipeline using mock Jira data."""
-        from unittest.mock import Mock, patch
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock the issues as they would come from Jira
+        # Given: 2-level hierarchy with non-evaluable parent and failing child
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'TAPS-210',
-                'summary': 'When parent is CLOSED -> also close the children',
-                'status': 'Closed',
-                'issue_type': 'Story',
-                'parent_key': None,
-                'rank': self.HIGHER_RANK
-            },
-            {
-                'key': 'TAPS-211',
-                'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                'status': 'SIT/LAB Validated',
-                'issue_type': 'Sub-task',
-                'parent_key': 'TAPS-210',
-                'rank': DEFAULT_RANK_VALUE
-            }
+            create_mock_issue(
+                key='TAPS-210',
+                summary='When parent is CLOSED -> also close the children',
+                status='Closed',
+                issue_type='Story',
+                parent_key=None,
+                rank=self.HIGHER_RANK
+            ),
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key='TAPS-210',
+                rank=DEFAULT_RANK_VALUE
+            )
         ]
         
-        # Mock get_issues_by_label to return our test data
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the processing results
+        # Then: Processing should complete with expected counts
         assert results['success'] == True, "Processing should be successful"
         assert results['processed'] == 2, "Should process 2 issues"
         assert results['failed'] == 1, "Should have 1 failed assertion (TAPS-211)"
         assert results['not_evaluated'] == 1, "Should have 1 not evaluated (TAPS-210)"
         
-        # Verify issues_to_report contains the expected issues
+        # And: Issues should appear in the report
         issues_to_report = results['issues_to_report']
         assert len(issues_to_report) > 0, "issues_to_report should not be empty"
         
-        # Verify the hierarchical structure
-        issues_text = ' '.join(str(issue) for issue in issues_to_report)
-        assert 'TAPS-210' in issues_text, "TAPS-210 should be in issues_to_report"
+        verify_issue_in_report(issues_to_report, 'TAPS-210', "TAPS-210 should appear in issues_to_report")
         # BUG: TAPS-211 should be in issues_to_report but currently isn't
-        assert 'TAPS-211' not in issues_text, "BUG: TAPS-211 should be in issues_to_report but currently isn't"
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
+        assert 'TAPS-211' not in issue_keys, f"BUG: TAPS-211 should be in issues_to_report but currently isn't. Actual: {issue_keys}"
 
 
 if __name__ == "__main__":
