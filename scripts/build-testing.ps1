@@ -21,9 +21,18 @@ function Invoke-BuildTests {
     Write-Host "All tests must pass before building executables" -ForegroundColor Cyan
 
     try {
+        # Detect Python executable path (same logic as main build script)
+        $PythonExe = "python"
+        if (Test-Path ".\.venv\Scripts\python.exe") {
+            $PythonExe = ".\.venv\Scripts\python.exe"
+            Write-Host "[INFO] Using virtual environment Python for tests" -ForegroundColor Blue
+        } else {
+            Write-Host "[INFO] Using system Python for tests" -ForegroundColor Blue
+        }
+        
         # Run tests directly with pytest for real-time output
         # Use Start-Process to avoid PowerShell output buffering
-        $process = Start-Process -FilePath "python" -ArgumentList "-m", "pytest", "tests/", "-v", "--tb=short" -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath $PythonExe -ArgumentList "-m", "pytest", "tests/", "-v", "--tb=short" -Wait -PassThru -NoNewWindow
         if ($process.ExitCode -ne 0) {
             Write-Host "[FAIL] Unit tests failed! Build aborted." -ForegroundColor Red
             Write-Host "Please fix all test failures before building executables." -ForegroundColor Red
