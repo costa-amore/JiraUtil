@@ -262,34 +262,130 @@ class TestHierarchicalFailureOrganization:
         assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (PROJ-1, PROJ-2). Actual: {results['not_evaluated']}"
 
     def test_assert_failures_displays_mixed_epics_and_orphaned_items(self):
-        # Given: Mix of epics with children and orphaned items
-        mock_jira_manager = self._create_mixed_epics_and_orphaned_scenario()
+        """Test mixed scenario: Epic with child and orphaned item."""
+        # Given: Mix of epic with child and orphaned item
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Story starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.MID_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-3',
+                summary='Orphaned Sub-task starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Sub-task',
+                parent_key=None,  # Orphaned
+                rank=self.LOW_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: Verify epics with children are displayed first, then orphaned items
-        self._verify_mixed_epics_and_orphaned_displayed(output, 'PROJ-1', 'PROJ-2', 'PROJ-3')
+        # Then: All items should appear in issues_to_report
+        issues_to_report = results['issues_to_report']
+        
+        # Verify all items appear in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-3', "Orphaned Sub-task should appear in issues_to_report")
+        
+        # Verify hierarchical order: Epic -> Story, then orphaned item
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before its child Story")
+        verify_issue_order(issues_to_report, 'PROJ-2', 'PROJ-3', "Story should appear before orphaned Sub-task")
 
     def test_assert_failures_displays_multiple_epics_with_children_stories_first(self):
-        # Given: Multiple epics with children, stories should be displayed first
-        mock_jira_manager = self._create_multiple_epics_with_children_scenario()
+        """Test multiple epics with children - stories should be displayed first."""
+        # Given: Multiple epics with children
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic 1 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Story 1 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.MID_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-3',
+                summary='Epic 2 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.LOW_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-4',
+                summary='Story 2 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-3',
+                rank=self.MID_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: Verify epics are displayed with children, stories first
-        self._verify_multiple_epics_with_children_displayed(output, ['PROJ-1', 'PROJ-3'], ['PROJ-2', 'PROJ-4'])
+        # Then: All epics and stories should appear in issues_to_report
+        issues_to_report = results['issues_to_report']
+        
+        # Verify all items appear in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic 1 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story 1 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-3', "Epic 2 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-4', "Story 2 should appear in issues_to_report")
+        
+        # Verify hierarchical order: Epic -> Story for each pair
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic 1 should appear before Story 1")
+        verify_issue_order(issues_to_report, 'PROJ-3', 'PROJ-4', "Epic 2 should appear before Story 2")
 
     def test_assert_failures_displays_orphaned_evaluable_items(self):
-        # Given: Orphaned item with failing assertion (like TAPS-211 Sub-task)
-        mock_jira_manager = self._create_orphaned_evaluable_scenario()
+        """Test that orphaned evaluable items appear in issues_to_report."""
+        # Given: An orphaned Sub-task with failing assertion
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Orphaned Sub-task starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Sub-task',
+                parent_key=None,  # Orphaned (no parent)
+                rank=self.HIGH_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: Verify orphaned evaluable item appears in failures
-        self._verify_orphaned_evaluable_displayed(output, 'PROJ-1')
+        # Then: The orphaned evaluable item should appear in issues_to_report
+        issues_to_report = results['issues_to_report']
+        
+        # Verify the orphaned item appears in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Orphaned evaluable item should appear in issues_to_report")
+        
+        # Verify counts
+        assert results['failed'] == 1, f"Should have 1 failed assertion (PROJ-1). Actual: {results['failed']}"
+        assert results['not_evaluated'] == 0, f"Should have 0 not evaluated. Actual: {results['not_evaluated']}"
 
     def test_assert_failures_skips_orphaned_non_evaluable_items(self):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
@@ -321,34 +417,112 @@ class TestHierarchicalFailureOrganization:
         assert results['failed'] == 0, f"Should have 0 failed assertions. Actual: {results['failed']}"
 
     def test_assert_failures_displays_orphaned_with_real_jira_format(self):
-        # Given: Orphaned item with real Jira summary format (like TAPS-211)
-        mock_jira_manager = self._create_orphaned_real_jira_format_scenario()
+        """Test that orphaned item with real Jira format appears in issues_to_report."""
+        # Given: An orphaned Sub-task with real Jira summary format (like TAPS-211)
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key=None,  # Orphaned (no parent)
+                rank=self.HIGH_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: Verify orphaned item with real Jira format appears in failures
-        self._verify_orphaned_real_jira_format_displayed(output, 'TAPS-211')
+        # Then: The orphaned item with real Jira format should appear in issues_to_report
+        issues_to_report = results['issues_to_report']
+        
+        # Verify the orphaned item appears in the report
+        verify_issue_in_report(issues_to_report, 'TAPS-211', "Orphaned item with real Jira format should appear in issues_to_report")
+        
+        # Verify counts
+        assert results['failed'] == 1, f"Should have 1 failed assertion (TAPS-211). Actual: {results['failed']}"
+        assert results['not_evaluated'] == 0, f"Should have 0 not evaluated. Actual: {results['not_evaluated']}"
 
     def test_assert_failures_groups_children_under_epics_not_globally_sorted(self):
-        # Given: Epic with children that should be grouped under epic, not globally sorted
-        mock_jira_manager = self._create_epic_with_children_grouping_scenario()
+        """Test that children are grouped under their epic, not globally sorted."""
+        # Given: Epic with multiple children
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Story 1 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.LOW_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-3',
+                summary='Story 2 starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.MID_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: Verify children are grouped under epic, not globally sorted
-        self._verify_children_grouped_under_epic_not_globally_sorted(output, 'PROJ-1', 'PROJ-3', 'PROJ-2')
+        # Then: All items should appear in issues_to_report with epic first
+        issues_to_report = results['issues_to_report']
+        
+        # Verify all items appear in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story 1 should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-3', "Story 2 should appear in issues_to_report")
+        
+        # Verify hierarchical order: Epic first, then children
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before Story 1")
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-3', "Epic should appear before Story 2")
 
     def test_assert_failures_handles_children_found_before_parents(self):
+        """Test that hierarchical structure is maintained even when children appear before parents in input."""
         # Given: Child story appears before parent epic in the issue list
-        mock_jira_manager = self._create_children_before_parents_scenario()
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Story starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.MID_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Epic',
+                rank=self.HIGH_RANK
+            )
+        ]
         
-        # When: Assert operation is executed and captures print output
-        output = self._execute_assert_operation_with_print_capture(mock_jira_manager)
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
         # Then: Should still display hierarchical structure correctly
-        self._verify_epic_with_child_displayed(output, 'PROJ-1', 'PROJ-2')
+        issues_to_report = results['issues_to_report']
+        
+        # Verify all items appear in the report
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
+        
+        # Verify hierarchical order: Epic should appear before its child Story
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before its child Story")
 
     def test_evaluated_subtask_with_non_evaluated_parent_story_missing_from_failures(self):
         """Test 2-level hierarchy: Story TAPS-210 -> Subtask TAPS-211 using real production code."""
