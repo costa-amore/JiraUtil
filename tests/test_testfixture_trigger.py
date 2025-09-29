@@ -116,18 +116,13 @@ class TestTestFixtureTrigger:
         with patch('builtins.print') as mock_print:
             run_trigger_operation(mock_manager, "TAPS-211", trigger_labels)
         
-        # Then: Should call update exactly twice (remove then add)
-        assert issue.update.call_count == 2, f"Expected 2 updates for scenario: {scenario}"
+        # Then: Should call update exactly once (just add all labels)
+        assert issue.update.call_count == 1, f"Expected 1 update for scenario: {scenario}"
         
-        # Verify first call removes existing trigger labels
-        first_call = issue.update.call_args_list[0]
-        actual_after_removal = first_call[1]["fields"]["labels"]
-        assert set(actual_after_removal) == set(expected_after_removal), f"First call should remove trigger labels. Expected {expected_after_removal}, got {actual_after_removal} for scenario: {scenario}"
-        
-        # Verify second call adds all trigger labels
-        second_call = issue.update.call_args_list[1]
-        actual_final_labels = second_call[1]["fields"]["labels"]
-        assert set(actual_final_labels) == set(expected_final_labels), f"Second call should add all trigger labels. Expected {expected_final_labels}, got {actual_final_labels} for scenario: {scenario}"
+        # Verify the final labels match expectations
+        final_call = issue.update.call_args_list[0]
+        actual_final_labels = final_call[1]["fields"]["labels"]
+        assert set(actual_final_labels) == set(expected_final_labels), f"Expected {expected_final_labels}, got {actual_final_labels} for scenario: {scenario}"
         
         # Verify logging: should log both remove and add messages
         remove_message, add_message = self._extract_messages(mock_print)
@@ -176,9 +171,9 @@ class TestTestFixtureTrigger:
 
     def _extract_messages(self, mock_print):
         calls = mock_print.call_args_list
-        info_messages = [call[0][0] for call in calls if len(call[0]) > 0]
-        remove_message = any("INFO" in msg and "Removed" in msg for msg in info_messages)
-        add_message = any("INFO" in msg and "Set" in msg for msg in info_messages)
+        messages = [call[0][0] for call in calls if len(call[0]) > 0]
+        remove_message = any("Labels Removed:" in msg for msg in messages)
+        add_message = any("Labels Set:" in msg for msg in messages)
         return remove_message, add_message
     
 

@@ -38,12 +38,10 @@ class JiraInstanceManager:
             True if connection successful, False otherwise
         """
         try:
-            print(f"DEBUG: Attempting to connect to {self.jira_url} with user {self.username}")
             self.jira = JIRA(
                 server=self.jira_url,
                 basic_auth=(self.username, self.password)
             )
-            print("DEBUG: Successfully connected to Jira")
             return True
         except JIRAError as e:
             print(f"Failed to connect to Jira: {e}")

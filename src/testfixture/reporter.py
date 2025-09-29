@@ -93,7 +93,9 @@ def report_trigger_results(results: Dict) -> None:
         if results.get('trigger_results'):
             for trigger_result in results['trigger_results']:
                 print(f"  Issue: {trigger_result['key']}")
-                print(f"  Labels set: {', '.join(trigger_result['trigger_labels'])}")
+                if trigger_result.get('was_removed'):
+                    print(f"  Labels Removed: {', '.join(trigger_result['trigger_labels'])}")
+                print(f"  Labels Set: {', '.join(trigger_result['trigger_labels'])}")
                 if trigger_result.get('summary'):
                     print(f"  Summary: {trigger_result['summary']}")
     else:
