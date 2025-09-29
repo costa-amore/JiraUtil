@@ -30,15 +30,20 @@ class TestTestFixtureAssert:
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
-    def test_assert_failure_message_extracts_context_from_summary(self):
-        """Test that context is extracted from issue summaries in failure messages."""
-        # Given: An issue with context in its summary
+    @pytest.mark.parametrize("scenario,summary,expected_context,expected_start_state,expected_end_state", [
+        ("extracts context from summary", "When in this context, starting in To Do - expected to be in Done", "When in this context,", "To Do", "Done"),
+        ("handles summary without context", "I was in SIT/LAB VALIDATED - expected to be in CLOSED", None, "SIT/LAB VALIDATED", "CLOSED"),
+        ("handles whitespace around states", "I was in    To Do    - expected to be in    CLOSED   ", None, "To Do", "CLOSED"),
+    ])
+    def test_assert_failure_message_extracts_context_and_states(self, scenario, summary, expected_context, expected_start_state, expected_end_state):
+        """Test that context and states are extracted correctly from issue summaries."""
+        # Given: An issue with specific summary
         mock_jira_manager = create_mock_manager()
         mock_issues = [
             create_mock_issue(
-                key='PROJ-2',
-                summary='When in this context, starting in To Do - expected to be in Done',
-                status='To Do',
+                key='PROJ-TEST',
+                summary=summary,
+                status=expected_start_state,
                 issue_type='Bug'
             )
         ]
@@ -46,33 +51,24 @@ class TestTestFixtureAssert:
         # When: The assert operation is executed
         results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Then: The issue should appear in the report with context extracted
+        # Then: The issue should be processed correctly
         issues_to_report = results['issues_to_report']
-        verify_context_extraction(issues_to_report, 'When in this context,')
-
-    def test_assert_failure_message_handles_summary_without_context(self):
-        """Test that issues without context are still processed correctly."""
-        # Given: An issue without context in its summary
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-3',
-                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                status='SIT/LAB Validated',
-                issue_type='Story'
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: The issue should be processed correctly with no context
-        issues_to_report = results['issues_to_report']
-        assert len(issues_to_report) > 0, "Should have issues in report"
+        assert len(issues_to_report) > 0, f"Should have issues in report for scenario: {scenario}"
         
         issue = issues_to_report[0]
-        assert issue['key'] == 'PROJ-3', "Should process issue without context"
-        assert issue['context'] is None, "Context should be None when not present in summary"
+        assert issue['key'] == 'PROJ-TEST', f"Should process issue for scenario: {scenario}"
+        
+        # Verify context extraction
+        if expected_context:
+            verify_context_extraction(issues_to_report, expected_context)
+        else:
+            assert issue['context'] is None, f"Context should be None for scenario: {scenario}"
+        
+        # Verify state extraction
+        from src.testfixture.patterns import extract_statuses_from_summary
+        start_state, end_state = extract_statuses_from_summary(issue['summary'])
+        assert start_state == expected_start_state, f"Expected start_state '{expected_start_state}', got '{start_state}' for scenario: {scenario}"
+        assert end_state == expected_end_state, f"Expected end_state '{expected_end_state}', got '{end_state}' for scenario: {scenario}"
 
     def test_assert_operation_verifies_rule_automation_worked(self):
         # Given: Issues after automation has run
