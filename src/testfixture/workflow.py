@@ -65,13 +65,26 @@ def _set_labels_on_issue(jira_instance, issue_key: str, labels: list) -> Dict:
         issue, current_labels = _load_issue_and_labels(jira_instance, issue_key)
         
         # Check if any trigger labels were already present (for reporting)
-        was_removed = any(label in current_labels for label in labels)
+        needs_toggle = any(label in current_labels for label in labels)
         
-        # Simply add all labels
+        if needs_toggle:
+            # toggle OFF: Remove existing trigger labels first
+            labels_after_removal = [label for label in current_labels if label not in labels]
+            issue.update(fields={"labels": labels_after_removal})
+            
+            # Wait for JIRA to digest the toggle
+            print("Waiting for JIRA to digest the toggle...")
+            import time
+            FIVE_SECONDS = 5
+            time.sleep(FIVE_SECONDS)
+
+            # proceed with toggle ON
+        
+        # Add all labels
         new_labels = list(set(current_labels + labels))
         issue.update(fields={"labels": new_labels})
         
-        return _build_trigger_result(issue_key, labels, success=True, issue_summary=issue.fields.summary, was_removed=was_removed)
+        return _build_trigger_result(issue_key, labels, success=True, issue_summary=issue.fields.summary, was_removed=needs_toggle)
     except Exception as e:
         print(f"FATAL ERROR: {str(e)}")
         return _build_trigger_result(issue_key, labels, success=False, error=str(e))

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import pytest
 from unittest.mock import Mock, patch
-from testfixture.workflow import run_trigger_operation
+from testfixture.workflow import run_trigger_operation, _parse_labels_string
 
 
 class TestTestFixtureTrigger:
@@ -116,11 +116,12 @@ class TestTestFixtureTrigger:
         with patch('builtins.print') as mock_print:
             run_trigger_operation(mock_manager, "TAPS-211", trigger_labels)
         
-        # Then: Should call update exactly once (just add all labels)
-        assert issue.update.call_count == 1, f"Expected 1 update for scenario: {scenario}"
+        # Then: Should call update twice when labels need removing (remove + add), once when just adding
+        expected_calls = 2 if any(label in existing_labels for label in _parse_labels_string(trigger_labels)) else 1
+        assert issue.update.call_count == expected_calls, f"Expected {expected_calls} update calls for scenario: {scenario}"
         
-        # Verify the final labels match expectations
-        final_call = issue.update.call_args_list[0]
+        # Verify the final labels match expectations (check the last call)
+        final_call = issue.update.call_args_list[-1]
         actual_final_labels = final_call[1]["fields"]["labels"]
         assert set(actual_final_labels) == set(expected_final_labels), f"Expected {expected_final_labels}, got {actual_final_labels} for scenario: {scenario}"
         
