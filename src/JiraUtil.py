@@ -1,6 +1,6 @@
 from cli import build_parser
-from csv_export import handle_csv_export_commands
-from test_fixture import handle_test_fixture_commands
+from csv_export_cli import handle_csv_export_commands
+from testfixture_cli import handle_test_fixture_commands
 from utility import handle_list_command, handle_status_command
 
 

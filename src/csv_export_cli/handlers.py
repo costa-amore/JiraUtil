@@ -5,6 +5,10 @@ from csv_utils import run_extract_field_values
 from jira_dates_eu import run as run_jira_dates_eu
 
 
+# =============================================================================
+# PUBLIC METHODS (sorted alphabetically)
+# =============================================================================
+
 def handle_csv_export_commands(args, result: dict) -> dict:
     """Handle csv-export commands."""
     csv_handlers = {
@@ -25,11 +29,9 @@ def handle_csv_export_commands(args, result: dict) -> dict:
     parser.error("Unknown csv-export command")
 
 
-def remove_newlines(args, result: dict) -> dict:
-    input_path = Path(args.input)
-    run_remove_newlines(input_path, args.output)
-    return result
-
+# =============================================================================
+# PRIVATE METHODS (sorted alphabetically)
+# =============================================================================
 
 def extract_field_values(args, result: dict) -> dict:
     input_path = Path(args.input)
@@ -40,4 +42,10 @@ def extract_field_values(args, result: dict) -> dict:
 def fix_dates_eu(args, result: dict) -> dict:
     input_path = Path(args.input)
     run_jira_dates_eu(input_path, args.output)
+    return result
+
+
+def remove_newlines(args, result: dict) -> dict:
+    input_path = Path(args.input)
+    run_remove_newlines(input_path, args.output)
     return result

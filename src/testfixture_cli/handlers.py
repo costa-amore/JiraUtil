@@ -3,6 +3,10 @@ from testfixture import run_TestFixture_Reset, run_assert_expectations, run_trig
 from cli.parser import DEFAULT_TEST_FIXTURE_LABEL
 
 
+# =============================================================================
+# PUBLIC METHODS (sorted alphabetically)
+# =============================================================================
+
 def handle_test_fixture_commands(args, result: dict) -> dict:
     """Handle test-fixture commands with support for chaining."""
     jira_url, username, password = get_jira_credentials(args)
@@ -35,6 +39,10 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
     
     return result
 
+
+# =============================================================================
+# PRIVATE METHODS (sorted alphabetically)
+# =============================================================================
 
 def execute_with_jira_manager(jira_url: str, username: str, password: str, workflow_function, *args):
     """Execute a workflow function with a connected Jira manager."""

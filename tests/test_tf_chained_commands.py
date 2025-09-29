@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from cli.parser import build_parser
-from test_fixture.handlers import handle_test_fixture_commands
+from testfixture_cli.handlers import handle_test_fixture_commands
 
 
 class TestTFChainedCommands(unittest.TestCase):
@@ -63,8 +63,8 @@ class TestTFChainedCommands(unittest.TestCase):
         self.assertEqual(args.commands, ['r', 'a'])
         self.assertIsNone(args.label)
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_reset_trigger(self, mock_get_creds, mock_execute):
         """Test handling chained commands: reset then trigger."""
         # Setup mocks
@@ -95,8 +95,8 @@ class TestTFChainedCommands(unittest.TestCase):
         self.assertEqual(second_call[0][4], 'TEST-123')    # key argument (args[4])
         self.assertEqual(second_call[0][5], 'test-label')  # label argument (args[5])
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_reset_assert_trigger(self, mock_get_creds, mock_execute):
         """Test handling chained commands: reset, assert, then trigger."""
         # Setup mocks
@@ -125,8 +125,8 @@ class TestTFChainedCommands(unittest.TestCase):
         self.assertEqual(calls[2][0][4], 'TEST-123')    # trigger key (args[4])
         self.assertEqual(calls[2][0][5], 'test-label')  # trigger label (args[5])
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_with_default_label(self, mock_get_creds, mock_execute):
         """Test handling chained commands with default label for reset/assert."""
         # Setup mocks
@@ -152,8 +152,8 @@ class TestTFChainedCommands(unittest.TestCase):
         calls = mock_execute.call_args_list
         # The default label should be used (this will be tested when we implement the handler)
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_unknown_command_fails(self, mock_get_creds, mock_execute):
         """Test that unknown commands in chain fail."""
         mock_get_creds.return_value = ('http://test.com', 'user', 'pass')
@@ -170,8 +170,8 @@ class TestTFChainedCommands(unittest.TestCase):
         with self.assertRaises(SystemExit):
             handle_test_fixture_commands(args, {})
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_trigger_without_label_fails(self, mock_get_creds, mock_execute):
         """Test that trigger command without label fails."""
         mock_get_creds.return_value = ('http://test.com', 'user', 'pass')
@@ -206,8 +206,8 @@ class TestTFChainedCommands(unittest.TestCase):
         self.assertEqual(args.label, 'test-label')
         self.assertEqual(args.key, 'TEST-456')
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_same_command_multiple_times(self, mock_get_creds, mock_execute):
         """Test handling chained commands with same command repeated multiple times."""
         # Setup mocks
@@ -238,8 +238,8 @@ class TestTFChainedCommands(unittest.TestCase):
         self.assertEqual(calls[3][0][4], 'TEST-123')    # key argument
         self.assertEqual(calls[3][0][5], 'test-label')  # label argument
 
-    @patch('test_fixture.handlers.execute_with_jira_manager')
-    @patch('test_fixture.handlers.get_jira_credentials')
+    @patch('testfixture_cli.handlers.execute_with_jira_manager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_complex_mixed_commands(self, mock_get_creds, mock_execute):
         """Test handling complex chained commands with mixed repeated commands."""
         # Setup mocks
