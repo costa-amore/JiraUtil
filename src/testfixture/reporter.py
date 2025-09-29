@@ -44,10 +44,18 @@ def report_assertion_results(results: Dict) -> None:
         print(f"  Assertions failed: {results['failed']}")
         print(f"  Not evaluated: {results['not_evaluated']}")
         
-        if results.get('failures'):
+        if results.get('issues_to_report'):
             print(f"  Failures:")
-            for failure in results['failures']:
-                print(f"    - {failure}")
+            for issue in results['issues_to_report']:
+                if issue['issue_type'] == 'Epic':
+                    print(f"    - {_issue_to_list_in_failure_hierarchy(issue)}")
+                elif issue['issue_type'] == 'Sub-task':
+                    print(f"        - {_issue_to_list_in_failure_hierarchy(issue)}")
+                else:
+                  if issue['parent_key'] == 'Orphan':
+                    print(f"    - {_issue_to_list_in_failure_hierarchy(issue)}")
+                  else:
+                    print(f"      - {_issue_to_list_in_failure_hierarchy(issue)}")
         
         if results.get('not_evaluated_keys'):
             keys_str = ", ".join(results['not_evaluated_keys'])
@@ -65,6 +73,10 @@ def report_assertion_results(results: Dict) -> None:
     else:
         print(f"Assertion process failed: {results.get('error', 'Unknown error')}")
 
+
+def _issue_to_list_in_failure_hierarchy(issue: dict) -> str:
+        return f"[{issue['issue_type']}] {issue['key']}: {issue['summary']}"
+        
 
 def report_trigger_results(results: Dict) -> None:
     """
