@@ -17,7 +17,11 @@ from tests.fixtures import (
     create_assert_scenario_with_expectations,
     create_mock_manager
 )
-from jira_manager import DEFAULT_RANK_VALUE
+from tests.fixtures.base_fixtures import (
+    create_mock_issue, execute_assert_testfixture_issues, 
+    extract_issue_keys_from_report, verify_issue_in_report, 
+    verify_issue_order, verify_context_extraction, DEFAULT_RANK_VALUE
+)
 
 
 class TestTestFixtureAssert:
@@ -28,66 +32,44 @@ class TestTestFixtureAssert:
 
     def test_assert_failure_message_extracts_context_from_summary(self):
         """Test that context is extracted from issue summaries in failure messages."""
-        from unittest.mock import Mock
-        from src.testfixture.issue_processor import assert_testfixture_issues
+        # Given: An issue with context in its summary
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-2',
+                summary='When in this context, starting in To Do - expected to be in Done',
+                status='To Do',
+                issue_type='Bug'
+            )
+        ]
         
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Mock issue with context in summary
-        mock_issues = [{
-            'key': 'PROJ-2',
-            'summary': 'When in this context, starting in To Do - expected to be in Done',
-            'status': 'To Do',
-            'issue_type': 'Bug',
-            'parent_key': None,
-            'rank': DEFAULT_RANK_VALUE
-        }]
-        
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
-        
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the issue appears in issues_to_report with context
+        # Then: The issue should appear in the report with context extracted
         issues_to_report = results['issues_to_report']
-        assert len(issues_to_report) > 0, "Should have issues in report"
-        
-        # Check that the issue contains context information
-        issue = issues_to_report[0]
-        assert 'context' in issue, "Issue should have context extracted"
-        assert issue['context'] == 'When in this context,', f"Expected context 'When in this context,', got '{issue['context']}'"
+        verify_context_extraction(issues_to_report, 'When in this context,')
 
     def test_assert_failure_message_handles_summary_without_context(self):
         """Test that issues without context are still processed correctly."""
-        from unittest.mock import Mock
-        from src.testfixture.issue_processor import assert_testfixture_issues
+        # Given: An issue without context in its summary
+        mock_jira_manager = create_mock_manager()
+        mock_issues = [
+            create_mock_issue(
+                key='PROJ-3',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Story'
+            )
+        ]
         
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Mock issue without context in summary
-        mock_issues = [{
-            'key': 'PROJ-3',
-            'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-            'status': 'SIT/LAB Validated',
-            'issue_type': 'Story',
-            'parent_key': None,
-            'rank': DEFAULT_RANK_VALUE
-        }]
-        
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
-        
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the issue appears in issues_to_report
+        # Then: The issue should be processed correctly with no context
         issues_to_report = results['issues_to_report']
         assert len(issues_to_report) > 0, "Should have issues in report"
         
-        # Check that the issue is processed correctly even without context
         issue = issues_to_report[0]
         assert issue['key'] == 'PROJ-3', "Should process issue without context"
         assert issue['context'] is None, "Context should be None when not present in summary"
@@ -139,6 +121,7 @@ class TestTestFixtureAssert:
             assert failure_message == expected_format, f"Expected format '{expected_format}', got '{failure_message}'"
 
 
+
 class TestHierarchicalFailureOrganization:
     HIGHEST_RANK = "0|f0000:"
     HIGHER_RANK = "0|h0000:"
@@ -168,49 +151,34 @@ class TestHierarchicalFailureOrganization:
 
     def test_assert_failures_displays_epic_with_failing_child_story(self):
         """Test that epics with failing child stories are displayed hierarchically."""
-        from unittest.mock import Mock
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock epic with failing child story
+        # Given: An epic with a failing child story
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'PROJ-1',
-                'summary': 'Epic summary',
-                'status': 'Closed',
-                'issue_type': 'Epic',
-                'parent_key': None,
-                'rank': self.HIGHEST_RANK
-            },
-            {
-                'key': 'PROJ-2',
-                'summary': 'Story starting in NEW - expected to be in READY',
-                'status': 'New',
-                'issue_type': 'Story',
-                'parent_key': 'PROJ-1',
-                'rank': self.HIGHER_RANK
-            }
+            create_mock_issue(
+                key='PROJ-1',
+                summary='Epic summary',
+                status='Closed',
+                issue_type='Epic',
+                rank=self.HIGHEST_RANK
+            ),
+            create_mock_issue(
+                key='PROJ-2',
+                summary='Story starting in NEW - expected to be in READY',
+                status='New',
+                issue_type='Story',
+                parent_key='PROJ-1',
+                rank=self.HIGHER_RANK
+            )
         ]
         
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify both epic and story appear in issues_to_report
+        # Then: Both epic and story should appear in hierarchical order
         issues_to_report = results['issues_to_report']
-        issue_keys = [issue['key'] for issue in issues_to_report]
-        
-        assert 'PROJ-1' in issue_keys, "Epic should appear in issues_to_report"
-        assert 'PROJ-2' in issue_keys, "Failing child story should appear in issues_to_report"
-        
-        # Verify hierarchical structure (epic appears before story)
-        epic_index = issue_keys.index('PROJ-1')
-        story_index = issue_keys.index('PROJ-2')
-        assert epic_index < story_index, "Epic should appear before its child story"
+        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
+        verify_issue_in_report(issues_to_report, 'PROJ-2', "Failing child story should appear in issues_to_report")
+        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before its child story")
 
 
 
@@ -299,67 +267,38 @@ class TestHierarchicalFailureOrganization:
 
     def test_evaluated_subtask_with_non_evaluated_parent_story_missing_from_failures(self):
         """Test 2-level hierarchy: Story TAPS-210 -> Subtask TAPS-211 using real production code."""
-        from unittest.mock import Mock
-        from src.testfixture.issue_processor import assert_testfixture_issues
-        
-        # Create mock Jira manager
-        mock_jira_manager = Mock()
-        mock_jira_manager.jira = Mock()
-        
-        # Mock the issues as they would come from Jira
-        # Based on real production output: TAPS-210 is not evaluable, TAPS-211 is evaluable and fails
+        # Given: A story with a failing subtask (2-level hierarchy)
+        mock_jira_manager = create_mock_manager()
         mock_issues = [
-            {
-                'key': 'TAPS-210',
-                'summary': 'When parent is CLOSED -> also close the children',
-                'status': 'Closed',
-                'issue_type': 'Story',
-                'parent_key': None,  # No parent
-                'rank': self.HIGHER_RANK
-            },
-            {
-                'key': 'TAPS-211',
-                'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                'status': 'SIT/LAB Validated',
-                'issue_type': 'Sub-task',
-                'parent_key': 'TAPS-210',  # Parent is TAPS-210
-                'rank': DEFAULT_RANK_VALUE
-            }
+            create_mock_issue(
+                key='TAPS-210',
+                summary='When parent is CLOSED -> also close the children',
+                status='Closed',
+                issue_type='Story',
+                rank=self.HIGHER_RANK
+            ),
+            create_mock_issue(
+                key='TAPS-211',
+                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
+                status='SIT/LAB Validated',
+                issue_type='Sub-task',
+                parent_key='TAPS-210',
+                rank=DEFAULT_RANK_VALUE
+            )
         ]
         
-        # Mock get_issues_by_label to return our test data
-        mock_jira_manager.get_issues_by_label.return_value = mock_issues
+        # When: The assert operation is executed
+        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
         
-        # Execute the function
-        results = assert_testfixture_issues(mock_jira_manager, "test-label")
-        
-        # Verify the results structure
-        assert 'issues_to_report' in results, "results should contain issues_to_report"
-        
-        # Extract issue keys from issues_to_report
+        # Then: The story should appear but subtask should be missing (current bug)
         issues_to_report = results['issues_to_report']
-        issue_keys = []
-        for issue in issues_to_report:
-            if isinstance(issue, dict) and 'key' in issue:
-                issue_keys.append(issue['key'])
-            elif isinstance(issue, str) and '] ' in issue:
-                # Handle formatted string like "[Story] TAPS-210: ..."
-                key = issue.split('] ')[1].split(':')[0]
-                issue_keys.append(key)
-        
-        # Verify TAPS-210 appears in issues_to_report (parent with failing child)
-        assert 'TAPS-210' in issue_keys, f"TAPS-210 should appear in issues_to_report. Actual: {issue_keys}"
+        verify_issue_in_report(issues_to_report, 'TAPS-210', "TAPS-210 should appear in issues_to_report")
         
         # BUG: TAPS-211 should appear in issues_to_report (the failing subtask) but currently doesn't
         # This test documents the current behavior - TAPS-211 is processed but not included in issues_to_report
         # TODO: Fix the production code to include failing subtasks in issues_to_report
+        issue_keys = extract_issue_keys_from_report(issues_to_report)
         assert 'TAPS-211' not in issue_keys, f"BUG: TAPS-211 should appear in issues_to_report but currently doesn't. Actual: {issue_keys}"
-        
-        # Verify the hierarchical structure in issues_to_report
-        issues_text = ' '.join(str(issue) for issue in issues_to_report)
-        assert 'TAPS-210' in issues_text, "TAPS-210 should be in issues_to_report"
-        # BUG: TAPS-211 should be in issues_to_report but currently isn't for 2-level hierarchies
-        assert 'TAPS-211' not in issues_text, "BUG: TAPS-211 should be in issues_to_report but currently isn't for 2-level hierarchies"
         
         # Verify counts
         assert results['failed'] == 1, f"Should have 1 failed assertion (TAPS-211). Actual: {results['failed']}"
@@ -500,6 +439,7 @@ class TestHierarchicalFailureOrganization:
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
+
 
     def _create_children_before_parents_scenario(self):
         story = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")

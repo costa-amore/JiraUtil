@@ -245,3 +245,61 @@ def run_version_command(command, version_file, cwd=None):
 # Pre-generated config content for convenience
 TEMPLATE_CONFIG_CONTENT = create_template_config_content()
 CONFIGURED_CONFIG_CONTENT = create_configured_config_content()
+
+# Default rank value for test issues
+DEFAULT_RANK_VALUE = "0|i0000:"
+
+
+def create_mock_issue(key, summary, status, issue_type, parent_key=None, rank=DEFAULT_RANK_VALUE):
+    """Create a mock issue dictionary with standard structure."""
+    return {
+        'key': key,
+        'summary': summary,
+        'status': status,
+        'issue_type': issue_type,
+        'parent_key': parent_key,
+        'rank': rank
+    }
+
+
+def execute_assert_testfixture_issues(mock_jira_manager, mock_issues):
+    """Execute assert_testfixture_issues with mock data and return results."""
+    from src.testfixture.issue_processor import assert_testfixture_issues
+    
+    mock_jira_manager.get_issues_by_label.return_value = mock_issues
+    return assert_testfixture_issues(mock_jira_manager, "test-label")
+
+
+def extract_issue_keys_from_report(issues_to_report):
+    """Extract issue keys from issues_to_report, handling both dict and string formats."""
+    issue_keys = []
+    for issue in issues_to_report:
+        if isinstance(issue, dict) and 'key' in issue:
+            issue_keys.append(issue['key'])
+        elif isinstance(issue, str) and '] ' in issue:
+            # Handle formatted string like "[Story] TAPS-210: ..."
+            key = issue.split('] ')[1].split(':')[0]
+            issue_keys.append(key)
+    return issue_keys
+
+
+def verify_issue_in_report(issues_to_report, expected_key, description):
+    """Verify that an issue with the expected key appears in the report."""
+    issue_keys = extract_issue_keys_from_report(issues_to_report)
+    assert expected_key in issue_keys, f"{description}. Actual keys: {issue_keys}"
+
+
+def verify_issue_order(issues_to_report, first_key, second_key, description):
+    """Verify that first_key appears before second_key in the report."""
+    issue_keys = extract_issue_keys_from_report(issues_to_report)
+    first_index = issue_keys.index(first_key)
+    second_index = issue_keys.index(second_key)
+    assert first_index < second_index, f"{description}. Order: {issue_keys}"
+
+
+def verify_context_extraction(issues_to_report, expected_context):
+    """Verify that context is correctly extracted from issue summaries."""
+    assert len(issues_to_report) > 0, "Should have issues in report"
+    issue = issues_to_report[0]
+    assert 'context' in issue, "Issue should have context extracted"
+    assert issue['context'] == expected_context, f"Expected context '{expected_context}', got '{issue['context']}'"
