@@ -35,8 +35,11 @@ def get_version() -> str:
             build = version_info['FileVersionLS'] >> 16
             revision = version_info['FileVersionLS'] & 0xFFFF
             
-            # Format as M.m.bld (ignore revision)
-            return f"{major}.{minor}.{build}"
+            # Format as M.m.bld.r (include revision if not zero)
+            if revision > 0:
+                return f"{major}.{minor}.{build}.{revision}"
+            else:
+                return f"{major}.{minor}.{build}"
         except ImportError:
             # pywin32 not available, fall back to version.json
             pass
