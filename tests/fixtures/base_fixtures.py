@@ -264,7 +264,7 @@ def create_mock_issue(key, summary, status, issue_type, parent_key=None, rank=DE
 
 def execute_assert_testfixture_issues(mock_jira_manager, mock_issues):
     """Execute assert_testfixture_issues with mock data and return results."""
-    from src.testfixture.issue_processor import assert_testfixture_issues
+    from src.testfixture.assert_processor import assert_testfixture_issues
     
     mock_jira_manager.get_issues_by_label.return_value = mock_issues
     return assert_testfixture_issues(mock_jira_manager, "test-label")

@@ -8,7 +8,8 @@ test fixture operations including reset and assertion processes.
 from typing import Dict
 from jira_manager import JiraInstanceManager
 from auth import get_jira_credentials
-from .issue_processor import reset_testfixture_issues, assert_testfixture_issues
+from .reset_processor import reset_testfixture_issues
+from .assert_processor import assert_testfixture_issues
 from .reporter import report_reset_results, report_assertion_results, report_trigger_results
 
 

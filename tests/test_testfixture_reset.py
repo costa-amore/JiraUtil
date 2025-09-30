@@ -47,6 +47,7 @@ class TestTestFixtureReset:
         mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'Done')   # First transition: To Do → Done
         mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')  # Second transition: Done → To Do
 
+
     def test_reset_operation_handles_jira_connection_failure(self):
         # Given: Jira connection failure scenario
         scenario_with_connection_failure = create_connection_failure_scenario_with_expectations()
@@ -115,6 +116,7 @@ class TestTestFixtureReset:
         mock_jira_instance.get_issues_by_label.return_value = [issue_data]
         mock_jira_instance.update_issue_status.return_value = True
         mock_jira_instance.connect.return_value = True
+        
         return mock_jira_instance
 
     def _execute_cli_command_with_force_update(self, command_args, force_update_via=None):
@@ -127,6 +129,7 @@ class TestTestFixtureReset:
         
         with patch('builtins.print'):
             handle_test_fixture_commands(args, {})
+
 
     def _execute_reset_operation(self, mock_manager):
         from testfixture.workflow import run_TestFixture_Reset

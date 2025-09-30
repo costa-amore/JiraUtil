@@ -130,6 +130,7 @@ class TestTestFixtureTrigger:
         assert remove_message, f"Expected INFO message about label removal for scenario: {scenario}"
         assert add_message, f"Expected INFO message about label addition for scenario: {scenario}"
 
+
     # Private helper methods (sorted alphabetically)
     def _create_mock_issue_with_labels(self, labels):
         mock_issue = Mock()
@@ -176,6 +177,7 @@ class TestTestFixtureTrigger:
         remove_message = any("Labels Removed:" in msg for msg in messages)
         add_message = any("Labels Set:" in msg for msg in messages)
         return remove_message, add_message
+
     
 
 
