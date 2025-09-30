@@ -19,7 +19,15 @@ def generate_spec_file():
     with open(version_file, 'r') as f:
         version_data = json.load(f)
     
-    version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
+    # Use 4-component version for local builds, 3-component for releases
+    local_build = version_data.get('local', 0)
+    if local_build > 0:
+        # Local build: use full 4-component version
+        version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}.{local_build}"
+    else:
+        # Release build: use 3-component version
+        version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
+    
     description = version_data.get('description', 'JiraUtil - Jira Administration Tool')
     
     # Generate spec file content
@@ -106,8 +114,8 @@ VSVersionInfo(
   ffi=FixedFileInfo(
     # filevers and prodvers should be always a tuple with four items: (1, 2, 3, 4)
     # Set not needed items to zero 0.
-    filevers=({version_data['major']},{version_data['minor']},{version_data['build']},0),
-    prodvers=({version_data['major']},{version_data['minor']},{version_data['build']},0),
+    filevers=({version_data['major']},{version_data['minor']},{version_data['build']},{local_build}),
+    prodvers=({version_data['major']},{version_data['minor']},{version_data['build']},{local_build}),
     # Contains a bitmask that specifies the valid bits 'flags'r
     mask=0x3f,
     # Contains a bitmask that specifies the Boolean attributes of the file.

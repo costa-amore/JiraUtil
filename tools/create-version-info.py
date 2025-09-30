@@ -36,9 +36,14 @@ def create_version_info(version_file_path=None, output_file_path=None):
     with open(version_file, 'r') as f:
         version_data = json.load(f)
     
-    # Use 4-component version for display but 3-component for Windows file version
-    version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
+    # Use 4-component version for local builds, 3-component for releases
     local_build = version_data.get('local', 0)
+    if local_build > 0:
+        # Local build: use full 4-component version
+        version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}.{local_build}"
+    else:
+        # Release build: use 3-component version
+        version_string = f"{version_data['major']}.{version_data['minor']}.{version_data['build']}"
     description = version_data.get('description', 'JiraUtil - Jira Administration Tool')
     
     # Create version info content

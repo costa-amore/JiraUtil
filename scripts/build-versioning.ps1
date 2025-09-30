@@ -37,7 +37,7 @@ function Invoke-VersionManagement {
         Write-Host "[OK] Release build incremented: $version" -ForegroundColor Green
         
         # Update all files to new version
-        python tools\update-dev-version.py
+        python tools\update-dev-version.py | Out-Null
         # Mark version update as complete to update hashes
         python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
     } elseif ($IsCI) {
@@ -54,7 +54,7 @@ function Invoke-VersionManagement {
         if ($VersionResult -match "incremented") {
             Write-Host "[OK] Local build incremented: $version" -ForegroundColor Green
             # Update all files to new version
-            python tools\update-dev-version.py
+            python tools\update-dev-version.py | Out-Null
             # Mark version update as complete to update hashes
             python -c "import sys; sys.path.insert(0, 'tools'); from version_manager import VersionManager; VersionManager('scripts/version.json').mark_version_update_complete()"
         } else {
