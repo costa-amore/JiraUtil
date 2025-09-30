@@ -91,12 +91,6 @@ function New-WindowsLauncher {
     
     $LauncherContent = @"
 @echo off
-echo JiraUtil - Jira Administration Tool
-echo ===================================
-echo.
-echo Edit jira_config.env with your Jira credentials, then run the tool.
-echo.
-pause
 $ExecutableName.exe %*
 "@
     $LauncherContent | Out-File -FilePath "$OutputDir\run.bat" -Encoding ASCII

@@ -34,6 +34,46 @@ See [Configuration Reference](shared/configuration.md) for detailed setup instru
 2. Use API tokens instead of passwords for better security
 3. The tool will prompt you if template values are detected
 
+## 🔧 Custom Batch Files
+
+The included `run.bat` file provides a simple launcher for JiraUtil. You can create custom batch files for frequently used commands.
+
+### Creating Custom Batch Files
+
+1. **Copy `run.bat`** as a starting template
+2. **Rename** your custom files to start with `_` (underscore) so they appear at the top in Windows Explorer
+3. **Modify** the command to include your specific parameters
+
+### Examples
+
+**`_reset-test-fixtures.bat`:**
+```batch
+@echo off
+JiraUtil.exe test-fixture reset --tsl my-test-label
+pause
+```
+
+**`_trigger-automation.bat`:**
+```batch
+@echo off
+JiraUtil.exe test-fixture trigger --tl "automation-label1,automation-label2" -k PROJECT-123
+pause
+```
+
+**`_csv-cleanup.bat`:**
+```batch
+@echo off
+JiraUtil.exe csv-export remove-newlines "%~1"
+pause
+```
+
+### Benefits
+
+- **Quick access** to frequently used commands
+- **Consistent parameters** without typing them each time
+- **Easy sharing** of common workflows with team members
+- **File Explorer sorting** with underscore prefix
+
 ## 📖 Command Examples
 
 See [Command Examples Reference](shared/command-examples.md) for comprehensive examples and usage patterns.
