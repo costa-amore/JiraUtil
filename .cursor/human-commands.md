@@ -1,4 +1,6 @@
-# Dev Instructions - Short Commands
+# Human Commands - Short Commands
+
+> **⚠️ IMPORTANT FOR AI: This file contains HUMAN instructions for using short commands in this project. Do NOT use this file as instructions for how to run tests or other commands. Always refer to the actual documentation (README.md, run_tests.py) for correct command syntax.**
 
 ## Short Command Patterns
 
@@ -10,9 +12,9 @@
 
 ### Testing
 
-- `"test this"` → Run `.\run.ps1` with appropriate test file
-- `"test all"` → Run all tests
-- `"test first"` → Run only the first/scaffolding test
+- `"test this"` → Run appropriate test command (see README.md for correct syntax)
+- `"test all"` → Run all tests (see README.md for correct syntax)
+- `"test first"` → Run first/scaffolding test (see README.md for correct syntax)
 
 ### Development
 
@@ -46,9 +48,12 @@
 
 ### Test Command Detection
 
-- If working on specific test file → run that file
-- If working on feature → run related tests
-- If no context → run all tests
+- If working on specific test file → run appropriate test command (see README.md)
+- If working on testfixture feature → run appropriate test command (see README.md)
+- If working on csv feature → run appropriate test command (see README.md)
+- If no context → run all tests (see README.md)
+
+**IMPORTANT**: Always refer to README.md for correct test command syntax!
 
 ## Ambiguous Instructions
 
