@@ -42,6 +42,7 @@ This document contains specific instructions for AI assistants working on this p
 - **All tests**: `.\run.ps1 tests\run_tests.py`
 - **Categories**: `.\run.ps1 tests\run_tests.py testfixture`
 - **NEVER use** `python -m pytest` directly
+- **For refactoring**: Test after each individual change, not just at the end
 
 ### Test File Structure
 
@@ -62,6 +63,60 @@ When creating new test files, follow the existing patterns:
 - `cli` - Command line interface
 - `build` - Build system tests
 - `functional` - End-to-end functionality tests
+
+## Refactoring Guidelines
+
+When asked to refactor code (move, extract, inline, rename functions/classes/files):
+
+### Step-by-Step Approach
+1. **Make ONE change at a time** - never perform multiple refactoring operations simultaneously
+2. **Test after each change** - run relevant tests immediately after each operation
+3. **Stop on red** - if tests fail, immediately roll back the last step
+4. **Update ALL references simultaneously** - when changing something, update all files that reference it in the same step
+5. **Understand failures** - analyze why a change failed before retrying
+6. **Roll back only the last step** - don't roll back all changes, just the problematic operation
+
+### Rollback Strategy
+- If tests go red: undo only the last refactoring operation
+- Restore the code to its state before the last change
+- Update references back to original state
+- Verify tests are green again
+- Analyze the failure and try a different approach
+
+### Reference Management
+- When changing something, identify ALL files that reference it
+- Update ALL references in the same step as the change
+- This includes imports, function calls, class instantiations, file paths, etc.
+- Check test files, workflow files, and any other dependencies
+
+### Success Criteria
+- All tests remain green throughout the process
+- No functionality changes - only structural reorganization
+- Clear separation of concerns achieved
+- Code is more maintainable and organized
+- All references are updated consistently
+
+### Common Refactoring Operations
+
+#### Moving Functions/Classes
+1. Move function/class from `source.py` to `target.py`
+2. Update all imports and references to point to new location
+3. Test - if green, continue; if red, roll back and analyze
+
+#### Extracting Functions
+1. Extract code into new function in same file
+2. Replace original code with function call
+3. Test - if green, continue; if red, roll back and analyze
+
+#### Inlining Functions
+1. Replace function call with function body
+2. Remove function definition
+3. Test - if green, continue; if red, roll back and analyze
+
+#### Renaming Functions/Classes/Files
+1. Rename the function/class/file
+2. Update all references to use new name
+3. Test - if green, continue; if red, roll back and analyze
 
 ## Code Quality Guidelines
 
@@ -85,6 +140,7 @@ When creating new test files, follow the existing patterns:
 - **ALWAYS sort both groups alphabetically**
 - **Extract large functions** (>10 lines) and classes (>50 lines)
 - **Split large files** (>100 lines) into single-purpose files
+- **Exception**: For refactoring tasks, follow the specific refactoring guidelines instead
 
 ### Test Consistency
 

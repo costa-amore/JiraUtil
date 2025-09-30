@@ -1,8 +1,10 @@
 # Human Commands - Short Commands
 
-> **⚠️ IMPORTANT FOR AI: This file contains HUMAN instructions for using short commands in this project. Do NOT use this file as instructions for how to run tests or other commands. Always refer to the actual documentation (README.md, run_tests.py) for correct command syntax.**
+> **⚠️ IMPORTANT FOR AI: This file contains HUMAN instructions for using short commands in this project. Do NOT use this file as instructions for how to run tests or other commands. Always refer to the actual documentation (README.md) for correct command syntax.**
 
 ## Short Command Patterns
+
+use these commands to help the AI follow instructions
 
 ### Commits
 
@@ -20,7 +22,7 @@
 
 - `"start feature: description"` → Begin TDD with failing test
 - `"refactor this"` → Make code more testable
-- `"check lints"` → Use `read_lints` tool
+- `"check lints"` → Use the linter capabilities available to the IDE
 
 ### General
 
@@ -54,10 +56,3 @@
 - If no context → run all tests (see README.md)
 
 **IMPORTANT**: Always refer to README.md for correct test command syntax!
-
-## Ambiguous Instructions
-
-When instructions don't match well enough, respond with:
-**"Do you mean: [assumption] from the dev-instructions?"**
-
-This helps clarify intent and ensures we're on the same page.
