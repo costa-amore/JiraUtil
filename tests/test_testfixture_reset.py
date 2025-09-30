@@ -39,7 +39,7 @@ class TestTestFixtureReset:
         mock_jira_class.return_value = mock_jira_instance
         
         # When: CLI command is executed with --force-update-via parameter
-        self._execute_cli_command_with_force_update(['tf', 'r', '-l', 'test-label'], 'Done')
+        self._execute_cli_command_with_force_update(['tf', 'r', '--tsl', 'test-label'], 'Done')
         
         # Then: Verify the actual Jira API calls
         mock_jira_instance.get_issues_by_label.assert_called_once_with('test-label')

@@ -93,25 +93,25 @@ JiraUtil ae my-test-label
 ```bash
 
 # Reset then trigger
-JiraUtil tf r t -l my-label
+JiraUtil tf r t --tsl my-test-set-label --tl my-trigger-label
 
 # Reset, assert, then trigger
-JiraUtil tf r a t -l my-label
+JiraUtil tf r a t --tsl my-test-set-label --tl my-trigger-label
 
 # Multiple resets before trigger
-JiraUtil tf r r r t -l my-label
+JiraUtil tf r r r t --tsl my-test-set-label --tl my-trigger-label
 
 # Complex mixed sequence
-JiraUtil tf a r a t a a a a -l my-label
+JiraUtil tf a r a t a a a a --tsl my-test-set-label --tl my-trigger-label
 
 # With custom issue key
-JiraUtil tf r t -l my-label -k PROJECT-123
+JiraUtil tf r t --tsl my-test-set-label --tl my-trigger-label -k PROJECT-123
 
-# Multiple labels (use double quotes for comma-separated values)
-JiraUtil tf r a t -l "label1,label2"
+# Multiple trigger-labels (use double quotes for comma-separated values)
+JiraUtil tf r a t --tsl test-set-label --tl "trigger-label1,trigger-label2"
 
 # With custom credentials
-JiraUtil tf r t -l my-label --jira-url https://company.atlassian.net --username user@company.com --password token
+JiraUtil tf r t --tsl my-test-set-label --tl my-trigger-label --jira-url https://company.atlassian.net --username user@company.com --password token
 ```
 
 ## Help Commands

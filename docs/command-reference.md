@@ -199,9 +199,9 @@ JiraUtil tf t -l <label> [-k <issue_key>] [--jira-url <url>] [--username <user>]
 
 **Arguments:**
 
-- `-l`, `--label` - Label(s) to trigger automation rules (comma-separated for multiple labels) (required)
-  - For multiple labels, use double quotes: `-l "label1,label2,label3"`
-  - For single labels, quotes are optional: `-l "single-label"` or `-l single-label`
+- `--tl`, `--trigger-label` - Trigger Label(s) to trigger automation rules (comma-separated for multiple labels) (required)
+  - For multiple trigger-labels, use double quotes: `--tl "trigger-label1,trigger-label2,trigger-label3"`
+  - For single trigger-labels, quotes are optional: `--tl "single-trigger-label"` or `--tl single-trigger-label`
 - `-k`, `--key` - Issue key to trigger (default: "TAPS-212")
 
 **Options:**

@@ -12,65 +12,64 @@ from .issue_processor import reset_testfixture_issues, assert_testfixture_issues
 from .reporter import report_reset_results, report_assertion_results, report_trigger_results
 
 
-def run_TestFixture_Reset(jira_instance, testfixture_label: str, force_update_via=None) -> None:
-    print(f"Starting process for issues with label '{testfixture_label}'...")
+def run_TestFixture_Reset(jira_instance, test_set_label: str, force_update_via=None) -> None:
+    print(f"Starting process for issues with test-set-label '{test_set_label}'...")
     
-    results = reset_testfixture_issues(jira_instance, testfixture_label, force_update_via)
+    results = reset_testfixture_issues(jira_instance, test_set_label, force_update_via)
     report_reset_results(results)
 
 
-def run_assert_expectations(jira_instance, testfixture_label: str) -> None:
-    print(f"Starting assertion process for issues with label '{testfixture_label}'...")
+def run_assert_expectations(jira_instance, test_set_label: str) -> None:
+    print(f"Starting assertion process for issues with test-set-label '{test_set_label}'...")
     
-    results = assert_testfixture_issues(jira_instance, testfixture_label)
+    results = assert_testfixture_issues(jira_instance, test_set_label)
     report_assertion_results(results)
 
 
 def run_trigger_operation(jira_instance, issue_key: str, trigger_labels) -> None:
-    labels = _parse_labels_string(trigger_labels)        
-    print(f"Starting trigger operation for issue '{issue_key}' with labels {labels}...")
-
-    results = _set_labels_on_issue(jira_instance, issue_key, labels)    
+    trigger_labels_list = _parse_labels_string(trigger_labels)        
+    print(f"Starting trigger operation for issue '{issue_key}' with trigger-labels {trigger_labels_list}...")
+    
+    results = _set_labels_on_issue(jira_instance, issue_key, trigger_labels_list)
     report_trigger_results(results)
-
 
 def _load_issue_and_labels(jira_instance, issue_key: str):
     issue = jira_instance.jira.issue(issue_key)
-    current_labels = issue.fields.labels or []
-    return issue, current_labels
+    current_trigger_labels = issue.fields.labels or []
+    return issue, current_trigger_labels
 
 
-def _parse_labels_string(labels_input) -> list:
-    if not labels_input:
+def _parse_labels_string(trigger_labels_input) -> list:
+    if not trigger_labels_input:
         return []
     
     # Convert to string if not already
-    labels_string = str(labels_input).strip()
-    if not labels_string:
+    trigger_labels_string = str(trigger_labels_input).strip()
+    if not trigger_labels_string:
         return []
     
     # Split by comma and strip whitespace
-    labels = [label.strip() for label in labels_string.split(',')]
+    trigger_labels = [trigger_label.strip() for trigger_label in trigger_labels_string.split(',')]
     
     # Filter out empty strings
-    return [label for label in labels if label]
+    return [trigger_label for trigger_label in trigger_labels if trigger_label]
 
 
-def _set_labels_on_issue(jira_instance, issue_key: str, labels: list) -> Dict:
-    if not labels or (len(labels) == 1 and not labels[0].strip()):
-        print("FATAL ERROR: No valid labels provided")
-        return _build_trigger_result(issue_key, labels, success=False, error="No valid labels provided")
+def _set_labels_on_issue(jira_instance, issue_key: str, trigger_labels: list) -> Dict:
+    if not trigger_labels or (len(trigger_labels) == 1 and not trigger_labels[0].strip()):
+        print("FATAL ERROR: No valid trigger-labels provided")
+        return _build_trigger_result(issue_key, trigger_labels, success=False, error="No valid trigger-labels provided")
     
     try:
-        issue, current_labels = _load_issue_and_labels(jira_instance, issue_key)
+        issue, current_trigger_labels = _load_issue_and_labels(jira_instance, issue_key)
         
-        # Check if any trigger labels were already present (for reporting)
-        needs_toggle = any(label in current_labels for label in labels)
+        # Check if any trigger-labels were already present (for reporting)
+        needs_toggle = any(trigger_label in current_trigger_labels for trigger_label in trigger_labels)
         
         if needs_toggle:
-            # toggle OFF: Remove existing trigger labels first
-            labels_after_removal = [label for label in current_labels if label not in labels]
-            issue.update(fields={"labels": labels_after_removal})
+            # toggle OFF: Remove existing trigger-labels first
+            trigger_labels_after_removal = [trigger_label for trigger_label in current_trigger_labels if trigger_label not in trigger_labels]
+            issue.update(fields={"labels": trigger_labels_after_removal})
             
             # Wait for JIRA to digest the toggle
             print("Waiting for JIRA to digest the toggle...")
@@ -80,17 +79,17 @@ def _set_labels_on_issue(jira_instance, issue_key: str, labels: list) -> Dict:
 
             # proceed with toggle ON
         
-        # Add all labels
-        new_labels = list(set(current_labels + labels))
-        issue.update(fields={"labels": new_labels})
+        # Add all trigger-labels
+        new_trigger_labels = list(set(current_trigger_labels + trigger_labels))
+        issue.update(fields={"labels": new_trigger_labels})
         
-        return _build_trigger_result(issue_key, labels, success=True, issue_summary=issue.fields.summary, was_removed=needs_toggle)
+        return _build_trigger_result(issue_key, trigger_labels, success=True, issue_summary=issue.fields.summary, was_removed=needs_toggle)
     except Exception as e:
         print(f"FATAL ERROR: {str(e)}")
-        return _build_trigger_result(issue_key, labels, success=False, error=str(e))
+        return _build_trigger_result(issue_key, trigger_labels, success=False, error=str(e))
 
 
-def _build_trigger_result(issue_key: str, labels: list, success: bool, issue_summary: str = None, was_removed: bool = False, error: str = None) -> Dict:
+def _build_trigger_result(issue_key: str, trigger_labels: list, success: bool, issue_summary: str = None, was_removed: bool = False, error: str = None) -> Dict:
     """Build a simple trigger result dictionary."""
     return {
         'success': success,
@@ -100,7 +99,7 @@ def _build_trigger_result(issue_key: str, labels: list, success: bool, issue_sum
         'trigger_results': [{
             'key': issue_key,
             'summary': issue_summary or 'Unknown',
-            'trigger_labels': labels,
+            'trigger_labels': trigger_labels,
             'success': success,
             'error': error,
             'was_removed': was_removed

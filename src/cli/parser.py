@@ -73,9 +73,10 @@ def build_parser() -> argparse.ArgumentParser:
     fixdates.add_argument("--output", "-o", help="Optional output CSV path; defaults to <input-stem>-eu-dates.csv next to input")
     
     # test-fixture subcommand group (alias: tf) - supports chained commands
-    test_fixture = subparsers.add_parser("test-fixture", aliases=["tf"], help="Test fixture management commands (supports chaining: tf r t -l label)")
-    test_fixture.add_argument("commands", nargs='+', help="Chained commands: r (reset), a (assert), t (trigger). Use -l for labels, -k for issue key")
-    test_fixture.add_argument("-l", "--label", type=validate_label_argument, help="Label(s) to use for reset/assert commands (comma-separated for multiple labels)")
+    test_fixture = subparsers.add_parser("test-fixture", aliases=["tf"], help="Test fixture management commands (supports chaining: tf r t --tsl test-set-label --tl trigger-label)")
+    test_fixture.add_argument("commands", nargs='+', help="Chained commands: r (reset), a (assert), t (trigger). Use --tsl for test-set-labels, --tl for trigger-labels, -k for issue key")
+    test_fixture.add_argument("--tsl", "--test-set-label", type=validate_label_argument, help="Test Set Label(s) to use for reset/assert commands (comma-separated for multiple labels)")
+    test_fixture.add_argument("--tl", "--trigger-label", type=validate_label_argument, help="Trigger Label(s) to use for trigger command (comma-separated for multiple labels)")
     test_fixture.add_argument("-k", "--key", default="TAPS-212", help="Issue key for trigger command (default: TAPS-212)")
     test_fixture.add_argument("--force-update-via", help="Force status update when issue to reset already is the reset_state (using an extra update to the status provided)")
     test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")

@@ -11,28 +11,27 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
     """Handle test-fixture commands with support for chaining."""
     jira_url, username, password = get_jira_credentials(args)
     
-    # Get the label to use for reset/assert commands
-    label = args.label if args.label else DEFAULT_TEST_FIXTURE_LABEL
+    # Get the test-set-label to use for reset/assert commands
+    test_set_label = getattr(args, 'tsl', None) or DEFAULT_TEST_FIXTURE_LABEL
     
     # Process each command in the chain sequentially
     for command in args.commands:
         if command in ["reset", "r"]:
-            print(f"[CHAIN] Executing reset with label: {label}")
+            print(f"[CHAIN] Executing reset with test-set-label: {test_set_label}")
             force_update_via = getattr(args, 'force_update_via', None)
-            execute_with_jira_manager(jira_url, username, password, run_TestFixture_Reset, label, force_update_via)
+            execute_with_jira_manager(jira_url, username, password, run_TestFixture_Reset, test_set_label, force_update_via)
         elif command in ["assert", "a"]:
-            print(f"[CHAIN] Executing assert with label: {label}")
-            execute_with_jira_manager(jira_url, username, password, run_assert_expectations, label)
+            print(f"[CHAIN] Executing assert with test-set-label: {test_set_label}")
+            execute_with_jira_manager(jira_url, username, password, run_assert_expectations, test_set_label)
         elif command in ["trigger", "t"]:
-            # For trigger, use the label from args.label (required for trigger)
-            if not args.label:
+            trigger_label = getattr(args, 'tl', None)
+            if not trigger_label:
                 from cli.parser import build_parser
                 parser = build_parser()
-                parser.error("Trigger command requires -l/--label argument")
+                parser.error("Trigger command requires --tl/--trigger-label argument")
             
-            print(f"[CHAIN] Executing trigger with label: {args.label}, key: {args.key}")
-            # Use unified trigger function (handles both single and multiple labels)
-            execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.key, args.label)
+            print(f"[CHAIN] Executing trigger with trigger-label: {trigger_label}, key: {args.key}")
+            execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.key, trigger_label)
         else:
             from cli.parser import build_parser
             parser = build_parser()

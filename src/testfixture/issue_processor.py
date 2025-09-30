@@ -15,7 +15,7 @@ from utils.colors import colored_print
 # PUBLIC FUNCTIONS (sorted alphabetically)
 # =============================================================================
 
-def assert_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_label: str) -> Dict:
+def assert_testfixture_issues(jira_instance: JiraInstanceManager, test_set_label: str) -> Dict:
     # Initialize results structure with report_data
     results = {
         'success': True,

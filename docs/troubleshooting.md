@@ -19,13 +19,13 @@ Common issues and solutions for JiraUtil.
 **Use double quotes for multiple labels:**
 
 ```bash
-# ❌ Wrong - creates space-separated labels
-JiraUtil tf t -l label1,label2
-JiraUtil tf r a t -l label1,label2
+# ❌ Wrong - creates space-separated trigger-labels
+JiraUtil tf t --tl trigger-label1,trigger-label2
+JiraUtil tf r a t --tsl test-set-label --tl trigger-label1,trigger-label2
 
-# ✅ Correct - creates comma-separated labels
-JiraUtil tf t -l "label1,label2"
-JiraUtil tf r a t -l "label1,label2"
+# ✅ Correct - creates comma-separated trigger-labels
+JiraUtil tf t --tl "trigger-label1,trigger-label2"
+JiraUtil tf r a t --tsl test-set-label --tl "trigger-label1,trigger-label2"
 ```
 
 **Root Cause:** Shell command line parsing treats commas as argument separators unless the entire string is quoted.
