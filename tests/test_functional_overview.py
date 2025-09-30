@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, Mock
-from .fixtures import (
+from tests.fixtures import (
     create_reset_result, 
     create_assert_result,
     create_temp_csv_file,
@@ -102,11 +102,9 @@ class TestJiraUtilAPI:
         from testfixture.workflow import run_TestFixture_Reset
         
         # When: User runs test fixture reset operation
-        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
-             patch('testfixture.issue_processor._get_issues_for_processing') as mock_get_issues:
+        with patch('testfixture.reset_processor._get_issues_for_processing') as mock_get_issues:
             
             mock_manager = Mock()
-            mock_manager_class.return_value = mock_manager
             mock_get_issues.return_value = {'success': True, 'issues': []}
             
             with patch('builtins.print'):
@@ -121,11 +119,9 @@ class TestJiraUtilAPI:
         from testfixture.workflow import run_assert_expectations
         
         # When: User runs test fixture assert operation
-        with patch('testfixture.workflow.JiraInstanceManager') as mock_manager_class, \
-             patch('testfixture.issue_processor._get_issues_for_processing') as mock_get_issues:
+        with patch('testfixture.assert_processor._get_issues_for_processing') as mock_get_issues:
             
             mock_manager = Mock()
-            mock_manager_class.return_value = mock_manager
             mock_get_issues.return_value = {'success': True, 'issues': []}
             
             with patch('builtins.print'):

@@ -44,17 +44,17 @@ TEST_FIXTURE_ASSERT_ISSUES = [
 
 # Test fixture command test data
 TEST_FIXTURE_SINGLE_COMMANDS = [
-    (['test-fixture', 'reset', '-l', 'custom-label'], 'test-fixture', 'reset', 'custom-label'),
-    (['tf', 'r', '-l', 'rule-testing'], 'tf', 'r', 'rule-testing'),
-    (['test-fixture', 'assert', '-l', 'custom-label'], 'test-fixture', 'assert', 'custom-label'),
-    (['tf', 'a', '-l', 'rule-testing'], 'tf', 'a', 'rule-testing'),
+    (['test-fixture', 'reset', '--tsl', 'custom-label'], 'test-fixture', 'reset', 'custom-label'),
+    (['tf', 'r', '--tsl', 'rule-testing'], 'tf', 'r', 'rule-testing'),
+    (['test-fixture', 'assert', '--tsl', 'custom-label'], 'test-fixture', 'assert', 'custom-label'),
+    (['tf', 'a', '--tsl', 'rule-testing'], 'tf', 'a', 'rule-testing'),
 ]
 
 TEST_FIXTURE_CHAINED_COMMANDS = [
-    (['test-fixture', 'r', 't', '-l', 'custom-label'], 'test-fixture', ['r', 't'], 'custom-label'),
-    (['tf', 'r', 'a', 't', '-l', 'rule-testing'], 'tf', ['r', 'a', 't'], 'rule-testing'),
-    (['test-fixture', 'r', 'r', 'r', 't', '-l', 'custom-label'], 'test-fixture', ['r', 'r', 'r', 't'], 'custom-label'),
-    (['tf', 'a', 'r', 'a', 't', 'a', 'a', 'a', 'a', '-l', 'rule-testing'], 'tf', ['a', 'r', 'a', 't', 'a', 'a', 'a', 'a'], 'rule-testing'),
+    (['test-fixture', 'r', 't', '--tsl', 'custom-label', '--tl', 'trigger-label'], 'test-fixture', ['r', 't'], 'custom-label'),
+    (['tf', 'r', 'a', 't', '--tsl', 'rule-testing', '--tl', 'trigger-label'], 'tf', ['r', 'a', 't'], 'rule-testing'),
+    (['test-fixture', 'r', 'r', 'r', 't', '--tsl', 'custom-label', '--tl', 'trigger-label'], 'test-fixture', ['r', 'r', 'r', 't'], 'custom-label'),
+    (['tf', 'a', 'r', 'a', 't', 'a', 'a', 'a', 'a', '--tsl', 'rule-testing', '--tl', 'trigger-label'], 'tf', ['a', 'r', 'a', 't', 'a', 'a', 'a', 'a'], 'rule-testing'),
 ]
 
 

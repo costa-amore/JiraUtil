@@ -16,7 +16,7 @@ from cli.parser import build_parser
 from cli.commands import show_list, show_status
 from version.manager import get_version
 from config.validator import check_config_file_for_template_values, get_config_file_status_message
-from .fixtures import (create_temp_config_file, create_temp_env_file, generate_env_content, 
+from tests.fixtures import (create_temp_config_file, create_temp_env_file, generate_env_content, 
                        TEMPLATE_CONFIG_CONTENT, CONFIGURED_CONFIG_CONTENT, 
                        CSV_EXPORT_COMMANDS, TEST_FIXTURE_SINGLE_COMMANDS, TEST_FIXTURE_CHAINED_COMMANDS, UTILITY_COMMANDS)
 
@@ -67,7 +67,7 @@ class TestCLICommands:
         
         # Verify basic information is displayed
         expected_content = [
-            "JiraUtil Status", "Status: Ready", "Configuration:", "Default test fixture label: rule-testing"
+            "JiraUtil Status", "Status: Ready", "Configuration:", "Default test-set-label: rule-testing"
         ]
         for content in expected_content:
             assert content in printed_content, f"Missing content: {content}"
@@ -149,7 +149,7 @@ class TestCLICommands:
             args = parser.parse_args(args_list)
             assert args.command == expected_command
             assert args.commands == [expected_subcommand]
-            assert args.label == expected_label
+            assert args.tsl == expected_label
     
     def test_testfixture_chained_command_parsing(self):
         """Test test fixture chained command parsing."""
@@ -159,7 +159,7 @@ class TestCLICommands:
             args = parser.parse_args(args_list)
             assert args.command == expected_command
             assert args.commands == expected_subcommands
-            assert args.label == expected_label
+            assert args.tsl == expected_label
     
     def test_utility_command_parsing(self):
         """Test utility command parsing."""

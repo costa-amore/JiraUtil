@@ -27,7 +27,7 @@ class TestTestFixtureReset:
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
-    @patch('jira_manager.JiraInstanceManager')
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_reset_operation_with_force_update(self, mock_jira_class):
         # Given: Mock Jira manager with test issue that would normally be skipped
         issue_data = {

@@ -23,37 +23,41 @@ class TestTFChainedCommands(unittest.TestCase):
 
     def test_parse_chained_commands_reset_trigger(self):
         """Test parsing chained commands: reset then trigger."""
-        args = self.parser.parse_args(['tf', 'r', 't', '-l', 'test-label'])
+        args = self.parser.parse_args(['tf', 'r', 't', '--tsl', 'test-label', '--tl', 'trigger-label'])
         
         self.assertEqual(args.command, 'tf')  # alias is preserved
         self.assertEqual(args.commands, ['r', 't'])
-        self.assertEqual(args.label, 'test-label')
+        self.assertEqual(args.tsl, 'test-label')
+        self.assertEqual(args.tl, 'trigger-label')
         self.assertEqual(args.key, 'TAPS-212')  # default
 
     def test_parse_chained_commands_reset_assert_trigger(self):
         """Test parsing chained commands: reset, assert, then trigger."""
-        args = self.parser.parse_args(['tf', 'r', 'a', 't', '-l', 'test-label', '-k', 'TEST-123'])
+        args = self.parser.parse_args(['tf', 'r', 'a', 't', '--tsl', 'test-label', '--tl', 'trigger-label', '-k', 'TEST-123'])
         
         self.assertEqual(args.command, 'tf')  # alias is preserved
         self.assertEqual(args.commands, ['r', 'a', 't'])
-        self.assertEqual(args.label, 'test-label')
+        self.assertEqual(args.tsl, 'test-label')
+        self.assertEqual(args.tl, 'trigger-label')
         self.assertEqual(args.key, 'TEST-123')
 
     def test_parse_chained_commands_with_multiple_labels(self):
         """Test parsing chained commands with multiple labels."""
-        args = self.parser.parse_args(['tf', 'r', 'a', 't', '-l', 'label1,label2'])
+        args = self.parser.parse_args(['tf', 'r', 'a', 't', '--tsl', 'label1,label2', '--tl', 'trigger1,trigger2'])
         
         self.assertEqual(args.command, 'tf')  # alias is preserved
         self.assertEqual(args.commands, ['r', 'a', 't'])
-        self.assertEqual(args.label, 'label1,label2')
+        self.assertEqual(args.tsl, 'label1,label2')
+        self.assertEqual(args.tl, 'trigger1,trigger2')
 
     def test_parse_chained_commands_without_label_fails(self):
         """Test that chained commands without label fail for trigger."""
         # This should parse successfully, but fail at runtime
-        args = self.parser.parse_args(['tf', 'r', 't'])  # Missing -l for trigger
+        args = self.parser.parse_args(['tf', 'r', 't'])  # Missing --tl for trigger
         self.assertEqual(args.command, 'tf')
         self.assertEqual(args.commands, ['r', 't'])
-        self.assertIsNone(args.label)
+        self.assertIsNone(args.tsl)
+        self.assertIsNone(args.tl)
 
     def test_parse_chained_commands_reset_assert_only(self):
         """Test parsing chained commands without trigger (no label required)."""
@@ -61,7 +65,8 @@ class TestTFChainedCommands(unittest.TestCase):
         
         self.assertEqual(args.command, 'tf')  # alias is preserved
         self.assertEqual(args.commands, ['r', 'a'])
-        self.assertIsNone(args.label)
+        self.assertIsNone(args.tsl)
+        self.assertIsNone(args.tl)
 
     @patch('testfixture_cli.handlers.execute_with_jira_manager')
     @patch('testfixture_cli.handlers.get_jira_credentials')
@@ -74,7 +79,8 @@ class TestTFChainedCommands(unittest.TestCase):
         # Create mock args
         args = MagicMock()
         args.commands = ['r', 't']
-        args.label = 'test-label'
+        args.tsl = 'test-label'
+        args.tl = 'trigger-label'
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
@@ -93,7 +99,7 @@ class TestTFChainedCommands(unittest.TestCase):
         # Check second call (trigger)
         second_call = mock_execute.call_args_list[1]
         self.assertEqual(second_call[0][4], 'TEST-123')    # key argument (args[4])
-        self.assertEqual(second_call[0][5], 'test-label')  # label argument (args[5])
+        self.assertEqual(second_call[0][5], 'trigger-label')  # trigger-label argument (args[5])
 
     @patch('testfixture_cli.handlers.execute_with_jira_manager')
     @patch('testfixture_cli.handlers.get_jira_credentials')
@@ -106,7 +112,8 @@ class TestTFChainedCommands(unittest.TestCase):
         # Create mock args
         args = MagicMock()
         args.commands = ['r', 'a', 't']
-        args.label = 'test-label'
+        args.tsl = 'test-label'
+        args.tl = 'trigger-label'
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
@@ -123,7 +130,7 @@ class TestTFChainedCommands(unittest.TestCase):
         self.assertEqual(calls[0][0][4], 'test-label')  # reset (args[4])
         self.assertEqual(calls[1][0][4], 'test-label')  # assert (args[4])
         self.assertEqual(calls[2][0][4], 'TEST-123')    # trigger key (args[4])
-        self.assertEqual(calls[2][0][5], 'test-label')  # trigger label (args[5])
+        self.assertEqual(calls[2][0][5], 'trigger-label')  # trigger label (args[5])
 
     @patch('testfixture_cli.handlers.execute_with_jira_manager')
     @patch('testfixture_cli.handlers.get_jira_credentials')
@@ -136,7 +143,8 @@ class TestTFChainedCommands(unittest.TestCase):
         # Create mock args (no label provided)
         args = MagicMock()
         args.commands = ['r', 'a']
-        args.label = None
+        args.tsl = None
+        args.tl = None
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
@@ -161,7 +169,8 @@ class TestTFChainedCommands(unittest.TestCase):
         
         args = MagicMock()
         args.commands = ['r', 'unknown', 't']
-        args.label = 'test-label'
+        args.tsl = 'test-label'
+        args.tl = 'trigger-label'
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
@@ -179,7 +188,8 @@ class TestTFChainedCommands(unittest.TestCase):
         
         args = MagicMock()
         args.commands = ['r', 't']
-        args.label = None  # No label provided
+        args.tsl = None
+        args.tl = None  # No label provided
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
@@ -190,20 +200,22 @@ class TestTFChainedCommands(unittest.TestCase):
 
     def test_parse_chained_commands_same_command_multiple_times(self):
         """Test parsing chained commands with same command repeated multiple times."""
-        args = self.parser.parse_args(['tf', 'r', 'r', 'r', 't', '-l', 'test-label'])
+        args = self.parser.parse_args(['tf', 'r', 'r', 'r', 't', '--tsl', 'test-label', '--tl', 'trigger-label'])
         
         self.assertEqual(args.command, 'tf')
         self.assertEqual(args.commands, ['r', 'r', 'r', 't'])
-        self.assertEqual(args.label, 'test-label')
+        self.assertEqual(args.tsl, 'test-label')
+        self.assertEqual(args.tl, 'trigger-label')
         self.assertEqual(args.key, 'TAPS-212')  # default
 
     def test_parse_chained_commands_complex_mixed_commands(self):
         """Test parsing complex chained commands with mixed repeated commands."""
-        args = self.parser.parse_args(['tf', 'a', 'r', 'a', 't', 'a', 'a', 'a', 'a', '-l', 'test-label', '-k', 'TEST-456'])
+        args = self.parser.parse_args(['tf', 'a', 'r', 'a', 't', 'a', 'a', 'a', 'a', '--tsl', 'test-label', '--tl', 'trigger-label', '-k', 'TEST-456'])
         
         self.assertEqual(args.command, 'tf')
         self.assertEqual(args.commands, ['a', 'r', 'a', 't', 'a', 'a', 'a', 'a'])
-        self.assertEqual(args.label, 'test-label')
+        self.assertEqual(args.tsl, 'test-label')
+        self.assertEqual(args.tl, 'trigger-label')
         self.assertEqual(args.key, 'TEST-456')
 
     @patch('testfixture_cli.handlers.execute_with_jira_manager')
@@ -217,7 +229,8 @@ class TestTFChainedCommands(unittest.TestCase):
         # Create mock args - reset 3 times then trigger
         args = MagicMock()
         args.commands = ['r', 'r', 'r', 't']
-        args.label = 'test-label'
+        args.tsl = 'test-label'
+        args.tl = 'trigger-label'
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
@@ -236,7 +249,7 @@ class TestTFChainedCommands(unittest.TestCase):
         
         # Last call should be trigger
         self.assertEqual(calls[3][0][4], 'TEST-123')    # key argument
-        self.assertEqual(calls[3][0][5], 'test-label')  # label argument
+        self.assertEqual(calls[3][0][5], 'trigger-label')  # trigger-label argument
 
     @patch('testfixture_cli.handlers.execute_with_jira_manager')
     @patch('testfixture_cli.handlers.get_jira_credentials')
@@ -249,7 +262,8 @@ class TestTFChainedCommands(unittest.TestCase):
         # Create mock args - a, r, a, t, a, a, a, a
         args = MagicMock()
         args.commands = ['a', 'r', 'a', 't', 'a', 'a', 'a', 'a']
-        args.label = 'test-label'
+        args.tsl = 'test-label'
+        args.tl = 'trigger-label'
         args.key = 'TEST-456'
         args.jira_url = None
         args.username = None
@@ -266,7 +280,7 @@ class TestTFChainedCommands(unittest.TestCase):
         for i in range(8):
             if i == 3:  # Trigger command (4th call, index 3)
                 self.assertEqual(calls[i][0][4], 'TEST-456')    # key argument
-                self.assertEqual(calls[i][0][5], 'test-label')  # label argument
+                self.assertEqual(calls[i][0][5], 'trigger-label')  # trigger-label argument
             else:  # All other commands (assert or reset)
                 self.assertEqual(calls[i][0][4], 'test-label')  # label argument
 
