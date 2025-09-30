@@ -77,6 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     test_fixture.add_argument("commands", nargs='+', help="Chained commands: r (reset), a (assert), t (trigger). Use -l for labels, -k for issue key")
     test_fixture.add_argument("-l", "--label", type=validate_label_argument, help="Label(s) to use for reset/assert commands (comma-separated for multiple labels)")
     test_fixture.add_argument("-k", "--key", default="TAPS-212", help="Issue key for trigger command (default: TAPS-212)")
+    test_fixture.add_argument("--force-update-via", help="Force status update when issue to reset already is the reset_state (using an extra update to the status provided)")
     test_fixture.add_argument("--jira-url", help="Jira instance URL (can also be set via JIRA_URL environment variable)")
     test_fixture.add_argument("--username", help="Jira username (can also be set via JIRA_USERNAME environment variable)")
     test_fixture.add_argument("--password", help="Jira password/API token (can also be set via JIRA_PASSWORD environment variable)")

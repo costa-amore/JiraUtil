@@ -38,7 +38,7 @@ def assert_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_la
         return results
     
     # Sort issues by rank before processing to avoid duplication issues
-    issues.sort(key=order_by_rank_only)
+    issues.sort(key=_order_by_rank_only)
     
     # Process each issue and collect results
     skipped_issues = []
@@ -58,7 +58,7 @@ def assert_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_la
                 skipped_issues.append(assertion_result)
 
     # Sort issues by type category (sub-tasks first, then stories, then epics)
-    issues_to_list.sort(key=order_by_type_category)
+    issues_to_list.sort(key=_order_by_type_category)
     
     # Separate issues by type and identify orphans
     epics = []
@@ -80,9 +80,9 @@ def assert_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_la
     # Build hierarchical report structure
     for epic_to_report in epics:
         results['issues_to_report'].append(epic_to_report)
-        for story_to_report in childrenOf(epic_to_report, stories):
+        for story_to_report in _childrenOf(epic_to_report, stories):
             results['issues_to_report'].append(story_to_report)
-            for subtask_to_report in childrenOf(story_to_report, subtasks):
+            for subtask_to_report in _childrenOf(story_to_report, subtasks):
                 results['issues_to_report'].append(subtask_to_report)
     
     for orphan_to_report in orphans:
@@ -108,34 +108,9 @@ def assert_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_la
     return results
 
 
-def childrenOf(parent_issue: dict, children: list) -> list:
-    return [child for child in children if child.get('parent_key') == parent_issue['key']]
 
 
-def order_by_type_category(issue: dict):
-    # Primary sort: by issue type (Sub-task=0, Story=1, Epic=2)
-    issue_type = issue.get('issue_type', 'Unknown')
-    match issue_type:
-        case 'Epic':
-            type_priority = 2
-        case 'Sub-task':
-            type_priority = 0
-        case _:
-            type_priority = 1
-    
-    # Secondary sort: by LexoRank string (lexicographical comparison)
-    # Jira uses LexoRank which should be sorted alphabetically
-    rank_value = issue.get('rank', '0|zzzzz:')
-    
-    return (type_priority, rank_value)
-
-
-def order_by_rank_only(issue: dict):
-    rank_value = issue.get('rank', '0|zzzzz:')
-    return rank_value
-
-
-def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_label: str) -> Dict:
+def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_label: str, force_update_via=None) -> Dict:
     issues_result = _get_issues_for_processing(jira_instance, testfixture_label)
     if not issues_result['success']:
         return issues_result
@@ -143,87 +118,7 @@ def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_lab
     if not issues_result['issues']:
         return _create_empty_reset_results()
     
-    return _process_issues_for_reset(issues_result['issues'], jira_instance)
-
-
-def _process_issues_for_reset(issues, jira_instance):
-    results = _initialize_reset_results(len(issues))
-    
-    for issue in issues:
-        _process_single_issue_reset(issue, results, jira_instance)
-    
-    return results
-
-
-def _process_single_issue_reset(issue, results, jira_instance):
-    issue_info = _extract_issue_info(issue)
-    _print_issue_processing_info(issue_info)
-    
-    parse_result = extract_statuses_from_summary(issue_info['summary'])
-    if not parse_result:
-        _skip_issue_with_reason(issue_info, "summary doesn't match expected pattern", results)
-        return
-    
-    starting_status, target_status = parse_result
-    
-    if _should_skip_issue(issue_info['current_status'], starting_status):
-        _skip_issue_with_reason(issue_info, f"current status '{issue_info['current_status']}' already matches starting status '{starting_status}'", results)
-        return
-    
-    _perform_normal_status_update(issue_info, starting_status, results, jira_instance)
-
-
-def _should_skip_issue(current_status, starting_status):
-    return current_status.upper() == starting_status.upper()
-
-
-def _perform_normal_status_update(issue_info, starting_status, results, jira_instance):
-    print(f"  Starting status: {starting_status}")
-    
-    if _update_issue_status_safely(jira_instance, issue_info['key'], starting_status):
-        results['updated'] += 1
-    else:
-        results['errors'].append(f"Failed to update {issue_info['key']}")
-
-
-def _update_issue_status_safely(jira_instance, key, status):
-    try:
-        return jira_instance.update_issue_status(key, status)
-    except Exception as e:
-        print(f"  Error updating {key} to {status}: {e}")
-        return False
-
-
-def _extract_issue_info(issue):
-    return {
-        'key': issue['key'],
-        'summary': issue['summary'],
-        'current_status': issue['status']
-    }
-
-
-def _print_issue_processing_info(issue_info):
-    print(f"Processing {issue_info['key']}: {issue_info['summary']}")
-    print(f"  Current status: {issue_info['current_status']}")
-
-
-def _skip_issue_with_reason(issue_info, reason, results):
-    print(f"  Skipping - {reason}")
-    results['skipped'] += 1
-
-
-def _initialize_reset_results(issue_count):
-    return {
-        'success': True,
-        'processed': issue_count,
-        'updated': 0,
-        'skipped': 0,
-        'errors': []
-    }
-
-
-def _create_empty_reset_results():
-    return _initialize_reset_results(0)
+    return _process_issues_for_reset(issues_result['issues'], jira_instance, force_update_via)
 
 
 # =============================================================================
@@ -243,6 +138,33 @@ def _build_assertion_result(issue: dict, evaluable: bool, assert_result: str = N
         'expected_status': expected_status,
         'context': context
     }
+
+
+def _could_skip_issue(current_status, starting_status):
+    return current_status.upper() == starting_status.upper()
+
+
+def _create_empty_reset_results():
+    return _initialize_reset_results(0)
+
+
+def _extract_issue_info(issue):
+    return {
+        'key': issue['key'],
+        'summary': issue['summary'],
+        'current_status': issue['status']
+    }
+
+
+def _force_update(issue_info, starting_status, intermediate_status, results, jira_instance):
+    print(f"  Force updating via intermediate state '{intermediate_status}'")
+    
+    # First transition: current → intermediate
+    if _perform_status_update(issue_info, intermediate_status, results, jira_instance):
+        # Second transition: intermediate → starting
+        if _perform_status_update(issue_info, starting_status, results, jira_instance):
+            # correct for 2 updates for 1 issue
+            results['updated'] -= 1 
 
 
 def _get_issues_for_processing(jira_instance: JiraInstanceManager, testfixture_label: str) -> Dict:
@@ -279,6 +201,32 @@ def _i_am_an_orphan(issue_to_list: dict, issues_to_list: list, skipped_issues: l
     return True
 
 
+def _initialize_reset_results(issue_count):
+    return {
+        'success': True,
+        'processed': issue_count,
+        'updated': 0,
+        'skipped': 0,
+        'errors': []
+    }
+
+
+def _perform_status_update(issue_info, starting_status, results, jira_instance):
+    print(f"  Starting status: {starting_status}")
+    
+    if _update_issue_status_safely(jira_instance, issue_info['key'], starting_status):
+        results['updated'] += 1
+        return True
+
+    results['errors'].append(f"Failed to update {issue_info['key']}")
+    return False
+
+
+def _print_issue_processing_info(issue_info):
+    print(f"Processing {issue_info['key']}: {issue_info['summary']}")
+    print(f"  Current status: {issue_info['current_status']}")
+
+
 def _print_single_issue_progress(result: dict) -> None:
     key = result['key']
     summary = result['summary']
@@ -297,6 +245,15 @@ def _print_single_issue_progress(result: dict) -> None:
             colored_print(f"  [OK] PASS - Current status matches expected status")
         else:
             colored_print(f"  [FAIL] FAIL - Current status '{current_status}' does not match expected status '{expected_status}'")
+
+
+def _process_issues_for_reset(issues, jira_instance, force_update_via):
+    results = _initialize_reset_results(len(issues))
+    
+    for issue in issues:
+        _process_single_issue_reset(issue, results, jira_instance, force_update_via)
+    
+    return results
 
 
 def _process_single_issue_assertion(issue: dict) -> dict:
@@ -321,3 +278,64 @@ def _process_single_issue_assertion(issue: dict) -> dict:
         expected_status=expected_status, 
         context=context
     )
+
+
+def _process_single_issue_reset(issue, results, jira_instance, force_update_via):
+    issue_info = _extract_issue_info(issue)
+    _print_issue_processing_info(issue_info)
+    
+    parse_result = extract_statuses_from_summary(issue_info['summary'])
+    if not parse_result:
+        _skip_issue_with_reason(issue_info, "summary doesn't match expected pattern", results)
+        return
+    
+    starting_status, target_status = parse_result
+    
+    if _could_skip_issue(issue_info['current_status'], starting_status):
+        if force_update_via:
+            _force_update(issue_info, starting_status, force_update_via, results, jira_instance)
+        else:
+            _skip_issue_with_reason(issue_info, f"current status '{issue_info['current_status']}' already matches starting status '{starting_status}'", results)
+        return
+    
+    _perform_status_update(issue_info, starting_status, results, jira_instance)
+
+
+def _skip_issue_with_reason(issue_info, reason, results):
+    print(f"  Skipping - {reason}")
+    results['skipped'] += 1
+
+
+def _update_issue_status_safely(jira_instance, key, status):
+    try:
+        return jira_instance.update_issue_status(key, status)
+    except Exception as e:
+        print(f"  Error updating {key} to {status}: {e}")
+        return False
+
+
+def _childrenOf(parent_issue: dict, children: list) -> list:
+    return [child for child in children if child.get('parent_key') == parent_issue['key']]
+
+
+def _order_by_rank_only(issue: dict):
+    rank_value = issue.get('rank', '0|zzzzz:')
+    return rank_value
+
+
+def _order_by_type_category(issue: dict):
+    # Primary sort: by issue type (Sub-task=0, Story=1, Epic=2)
+    issue_type = issue.get('issue_type', 'Unknown')
+    match issue_type:
+        case 'Epic':
+            type_priority = 2
+        case 'Sub-task':
+            type_priority = 0
+        case _:
+            type_priority = 1
+    
+    # Secondary sort: by LexoRank string (lexicographical comparison)
+    # Jira uses LexoRank which should be sorted alphabetically
+    rank_value = issue.get('rank', '0|zzzzz:')
+    
+    return (type_priority, rank_value)

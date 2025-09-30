@@ -152,6 +152,7 @@ JiraUtil tf r [label] [--jira-url <url>] [--username <user>] [--password <pass>]
 
 **Options:**
 
+- `--force-update-via <status>` - Force status update when issue to reset already is the reset_state (using an extra update to the status provided)
 - `--jira-url` - Jira instance URL
 - `--username` - Jira username
 - `--password` - Jira password/API token

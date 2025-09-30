@@ -15,7 +15,7 @@ from .reporter import report_reset_results, report_assertion_results, report_tri
 def run_TestFixture_Reset(jira_instance, testfixture_label: str, force_update_via=None) -> None:
     print(f"Starting process for issues with label '{testfixture_label}'...")
     
-    results = reset_testfixture_issues(jira_instance, testfixture_label)
+    results = reset_testfixture_issues(jira_instance, testfixture_label, force_update_via)
     report_reset_results(results)
 
 

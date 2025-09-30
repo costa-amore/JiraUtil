@@ -18,7 +18,8 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
     for command in args.commands:
         if command in ["reset", "r"]:
             print(f"[CHAIN] Executing reset with label: {label}")
-            execute_with_jira_manager(jira_url, username, password, run_TestFixture_Reset, label)
+            force_update_via = getattr(args, 'force_update_via', None)
+            execute_with_jira_manager(jira_url, username, password, run_TestFixture_Reset, label, force_update_via)
         elif command in ["assert", "a"]:
             print(f"[CHAIN] Executing assert with label: {label}")
             execute_with_jira_manager(jira_url, username, password, run_assert_expectations, label)
