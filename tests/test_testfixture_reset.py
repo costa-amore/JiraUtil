@@ -15,7 +15,8 @@ from tests.fixtures import (
     create_reset_scenario_with_expectations,
     create_empty_scenario_with_expectations,
     create_connection_failure_scenario_with_expectations,
-    create_skip_scenario_with_expectations
+    create_skip_scenario_with_expectations,
+    reset_scenario_with
 )
 
 
@@ -81,10 +82,31 @@ class TestTestFixtureReset:
         mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
         mock_jira_manager.update_issue_status.assert_called()
 
+    @pytest.mark.skip(reason="Feature not yet implemented - force update via intermediate state")
+    def test_reset_operation_force_update_via_intermediate_state(self):
+        # Given: Issue "PROJ-1" with current status "To Do" and starting status "To Do" (would normally be skipped)
+        mock_jira_manager = reset_scenario_with("PROJ-1").and_starting_state("To Do").and_current_state("To Do").create_scenario()
+        
+        # When: Reset operation is executed with --force-update-via "Done" parameter
+        self._execute_reset_operation_with_force_update(mock_jira_manager, intermediate_state="Done")
+        
+        # Then: Issue "PROJ-1" should transition to "Done" then back to "To Do"
+        mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
+        assert mock_jira_manager.update_issue_status.call_count == 2
+        mock_jira_manager.update_issue_status.assert_any_call("PROJ-1", "Done")      # First transition: To Do → Done
+        mock_jira_manager.update_issue_status.assert_any_call("PROJ-1", "To Do")     # Second transition: Done → To Do
+
     def _execute_reset_operation(self, mock_manager):
         from testfixture.workflow import run_TestFixture_Reset
         with patch('builtins.print'):
             run_TestFixture_Reset(mock_manager, "rule-testing")
+
+    def _execute_reset_operation_with_force_update(self, mock_manager, intermediate_state=None):
+        from testfixture.workflow import run_TestFixture_Reset
+        with patch('builtins.print'):
+            # This would need to be updated to accept the new parameters
+            # For now, just call the regular reset operation
+            run_TestFixture_Reset(mock_manager, "rule-testing", force_update_via=intermediate_state)
 
 
 if __name__ == "__main__":

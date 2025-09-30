@@ -42,6 +42,7 @@ from .test_fixture_scenarios import (
     create_skip_scenario_with_expectations,
     create_assert_result,
     create_reset_result,
+    reset_scenario_with,
     TEST_FIXTURE_ISSUES,
     TEST_FIXTURE_ASSERT_ISSUES,
     TEST_FIXTURE_SINGLE_COMMANDS,

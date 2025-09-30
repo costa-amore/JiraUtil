@@ -58,7 +58,23 @@ TEST_FIXTURE_CHAINED_COMMANDS = [
 ]
 
 
-# Public functions (sorted alphabetically)
+# =============================================================================
+# PUBLIC FUNCTIONS (sorted alphabetically)
+# =============================================================================
+
+def create_assert_result(processed=0, passed=0, failed=0, not_evaluated=0, failures=None, not_evaluated_keys=None, success=True):
+    """Create a standard assert result dictionary."""
+    return {
+        'success': success,
+        'processed': processed,
+        'passed': passed,
+        'failed': failed,
+        'not_evaluated': not_evaluated,
+        'failures': failures or [],
+        'not_evaluated_keys': not_evaluated_keys or []
+    }
+
+
 def create_assert_scenario(issue_type="Story", issue_key="PROJ-1", summary="I have a dream", rank=None):
     """Create a custom assert scenario with specific issue parameters."""
     from unittest.mock import Mock
@@ -125,6 +141,17 @@ def create_empty_scenario_with_expectations():
     )
 
 
+def create_reset_result(processed=0, updated=0, skipped=0, errors=None, success=True):
+    """Create a standard reset result dictionary."""
+    return {
+        'success': success,
+        'processed': processed,
+        'updated': updated,
+        'skipped': skipped,
+        'errors': errors or []
+    }
+
+
 def create_reset_scenario_with_expectations():
     """Create a complete reset scenario with both test data and expected results."""
     # Test data: 2 issues that need status reset
@@ -157,25 +184,53 @@ def create_skip_scenario_with_expectations():
     )
 
 
-def create_assert_result(processed=0, passed=0, failed=0, not_evaluated=0, failures=None, not_evaluated_keys=None, success=True):
-    """Create a standard assert result dictionary."""
-    return {
-        'success': success,
-        'processed': processed,
-        'passed': passed,
-        'failed': failed,
-        'not_evaluated': not_evaluated,
-        'failures': failures or [],
-        'not_evaluated_keys': not_evaluated_keys or []
-    }
+def reset_scenario_with(issue_key):
+    """Create a reset scenario builder for the given issue key."""
+    return ResetScenarioBuilder(issue_key)
 
 
-def create_reset_result(processed=0, updated=0, skipped=0, errors=None, success=True):
-    """Create a standard reset result dictionary."""
-    return {
-        'success': success,
-        'processed': processed,
-        'updated': updated,
-        'skipped': skipped,
-        'errors': errors or []
-    }
+# =============================================================================
+# CLASSES (sorted alphabetically)
+# =============================================================================
+
+class ResetScenarioBuilder:
+    """Builder for creating reset test scenarios with explicit data."""
+    
+    def __init__(self, issue_key):
+        self.issue_key = issue_key
+        self.starting_state = None
+        self.current_state = None
+        self.summary = None
+    
+    def and_current_state(self, state):
+        self.current_state = state
+        return self
+    
+    def and_starting_state(self, state):
+        self.starting_state = state
+        return self
+    
+    def create_scenario(self):
+        """Create a mock manager with the configured scenario."""
+        from unittest.mock import Mock
+        
+        # Generate summary if not provided
+        if not self.summary:
+            self.summary = f"I was in {self.starting_state} - expected to be in In Progress"
+        
+        issue = {
+            'key': self.issue_key,
+            'summary': self.summary,
+            'status': self.current_state
+        }
+        
+        # Create mock manager with the issue
+        mock_manager = Mock()
+        mock_manager.get_issues_by_label.return_value = [issue]
+        mock_manager.update_issue_status.return_value = True
+        
+        return mock_manager
+    
+    def with_summary(self, summary):
+        self.summary = summary
+        return self
