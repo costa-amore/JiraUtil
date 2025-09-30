@@ -10,7 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import pytest
 from unittest.mock import Mock, patch
-from testfixture.workflow import run_trigger_operation, _parse_labels_string
+from testfixture.workflow import run_trigger_operation
+from testfixture.trigger_processor import _parse_labels_string
 
 
 class TestTestFixtureTrigger:
