@@ -51,4 +51,7 @@ version_info.txt
 # Temporary files for development
 .temp/
 
+# Workplace folder
+.workplace/
+
 
