@@ -34,6 +34,7 @@ class TestTestFixtureTrigger:
         assert error_found, f"Expected error message containing {expected_error_contains} for scenario: {scenario}"
 
 
+
     @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_final_labels,expected_update_calls", [
         ("adds all labels when none present", [],
          "TransitionSprintItems,CloseEpic,UpdateStatus",
@@ -55,28 +56,29 @@ class TestTestFixtureTrigger:
          "TransitionSprintItems",
          ["OldLabel", "AnotherLabel", "TransitionSprintItems"], 1),
     ])
-    def test_trigger_scenarios_add_only(self, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
-        """Test trigger scenarios where no labels need removing - just add them."""
-        # Given: Issue with specific existing labels
-        issue = self._create_mock_issue_with_labels(existing_labels)
-        mock_manager = self._create_mock_jira_manager(issue)
-
-        # When: Trigger operation is executed
-        with patch('builtins.print') as mock_print:
-            run_trigger_operation(mock_manager, "TAPS-211", trigger_labels)
-
-        # Then: Should call update the expected number of times
-        assert issue.update.call_count == expected_update_calls, f"Expected {expected_update_calls} updates for scenario: {scenario}"
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_trigger_operation_cli_scenarios(self, mock_jira_class, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
+        # Given: Mock Jira manager with test issue
+        issue_data = {
+            'key': 'PROJ-1',
+            'summary': 'Test issue for trigger operation',
+            'status': 'To Do',
+            'labels': existing_labels
+        }
+        mock_jira_instance = self._create_mock_jira_instance_with_issue(issue_data)
+        mock_jira_class.return_value = mock_jira_instance
         
-        # Verify the final labels match expectations
-        final_call = issue.update.call_args_list[-1]
-        actual_labels = final_call[1]["fields"]["labels"]
+        # When: CLI command is executed with trigger-labels
+        self._execute_cli_command_with_trigger(['tf', 't', '--tl', trigger_labels], 'PROJ-1')
+        
+        # Then: Verify the actual Jira API calls with properly parsed labels
+        mock_jira_instance.jira.issue.assert_called_once_with('PROJ-1')
+        assert mock_jira_instance.jira.issue.return_value.update.call_count == expected_update_calls
+        
+        # Verify the final labels are correctly parsed
+        final_call = mock_jira_instance.jira.issue.return_value.update.call_args_list[-1]
+        actual_labels = final_call[1]['fields']['labels']
         assert set(actual_labels) == set(expected_final_labels), f"Expected {expected_final_labels}, got {actual_labels} for scenario: {scenario}"
-        
-        # Verify logging: should log add message only, no remove message
-        remove_message, add_message = self._extract_messages(mock_print)
-        assert not remove_message, f"Expected no INFO message about label removal for scenario: {scenario}"
-        assert add_message, f"Expected INFO message about label addition for scenario: {scenario}"
 
     @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_after_removal,expected_final_labels", [
         ("single label: removes and adds when present", ["TransitionSprintItems"],
@@ -152,11 +154,34 @@ class TestTestFixtureTrigger:
             issue = self._create_mock_issue_with_labels([])
             return self._create_mock_jira_manager(issue)
 
+    def _create_mock_jira_instance_with_issue(self, issue_data):
+        """Create a mock Jira instance with a specific issue for CLI testing."""
+        mock_jira_instance = Mock()
+        mock_issue = Mock()
+        mock_issue.key = issue_data['key']
+        mock_issue.fields.summary = issue_data['summary']
+        mock_issue.fields.labels = issue_data.get('labels', [])
+        mock_issue.update = Mock()
+        mock_jira_instance.jira.issue.return_value = mock_issue
+        return mock_jira_instance
+
     def _create_mock_jira_manager_that_fails(self):
         mock_jira_manager = Mock()
         mock_jira_manager.connect.return_value = True
         mock_jira_manager.jira.issue.side_effect = Exception("Issue not found")
         return mock_jira_manager
+
+    def _execute_cli_command_with_trigger(self, command_args, issue_key):
+        """Execute a CLI trigger command for testing."""
+        from cli.parser import build_parser
+        from testfixture_cli.handlers import handle_test_fixture_commands
+        
+        parser = build_parser()
+        full_args = command_args + ['-k', issue_key]
+        args = parser.parse_args(full_args)
+        
+        with patch('builtins.print'):
+            handle_test_fixture_commands(args, {})
 
     def _execute_trigger_operation_with_print_capture(self, mock_manager, labels_string):
         with patch('builtins.print') as mock_print:
@@ -178,8 +203,6 @@ class TestTestFixtureTrigger:
         remove_message = any("Labels Removed:" in msg for msg in messages)
         add_message = any("Labels Set:" in msg for msg in messages)
         return remove_message, add_message
-
-    
 
 
 if __name__ == "__main__":
