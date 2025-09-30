@@ -131,61 +131,99 @@ def order_by_type_category(issue: dict):
 
 
 def order_by_rank_only(issue: dict):
-    """Sort issues by rank only, for use when type-based sorting is not needed."""
     rank_value = issue.get('rank', '0|zzzzz:')
     return rank_value
 
 
 def reset_testfixture_issues(jira_instance: JiraInstanceManager, testfixture_label: str) -> Dict:
-    # Get issues with proper error handling
     issues_result = _get_issues_for_processing(jira_instance, testfixture_label)
     if not issues_result['success']:
         return issues_result
     
-    issues = issues_result['issues']
-    if not issues:
-        return {'success': True, 'processed': 0, 'updated': 0, 'skipped': 0}
+    if not issues_result['issues']:
+        return _create_empty_reset_results()
     
-    results = {
+    return _process_issues_for_reset(issues_result['issues'], jira_instance)
+
+
+def _process_issues_for_reset(issues, jira_instance):
+    results = _initialize_reset_results(len(issues))
+    
+    for issue in issues:
+        _process_single_issue_reset(issue, results, jira_instance)
+    
+    return results
+
+
+def _process_single_issue_reset(issue, results, jira_instance):
+    issue_info = _extract_issue_info(issue)
+    _print_issue_processing_info(issue_info)
+    
+    parse_result = extract_statuses_from_summary(issue_info['summary'])
+    if not parse_result:
+        _skip_issue_with_reason(issue_info, "summary doesn't match expected pattern", results)
+        return
+    
+    starting_status, target_status = parse_result
+    
+    if _should_skip_issue(issue_info['current_status'], starting_status):
+        _skip_issue_with_reason(issue_info, f"current status '{issue_info['current_status']}' already matches starting status '{starting_status}'", results)
+        return
+    
+    _perform_normal_status_update(issue_info, starting_status, results, jira_instance)
+
+
+def _should_skip_issue(current_status, starting_status):
+    return current_status.upper() == starting_status.upper()
+
+
+def _perform_normal_status_update(issue_info, starting_status, results, jira_instance):
+    print(f"  Starting status: {starting_status}")
+    
+    if _update_issue_status_safely(jira_instance, issue_info['key'], starting_status):
+        results['updated'] += 1
+    else:
+        results['errors'].append(f"Failed to update {issue_info['key']}")
+
+
+def _update_issue_status_safely(jira_instance, key, status):
+    try:
+        return jira_instance.update_issue_status(key, status)
+    except Exception as e:
+        print(f"  Error updating {key} to {status}: {e}")
+        return False
+
+
+def _extract_issue_info(issue):
+    return {
+        'key': issue['key'],
+        'summary': issue['summary'],
+        'current_status': issue['status']
+    }
+
+
+def _print_issue_processing_info(issue_info):
+    print(f"Processing {issue_info['key']}: {issue_info['summary']}")
+    print(f"  Current status: {issue_info['current_status']}")
+
+
+def _skip_issue_with_reason(issue_info, reason, results):
+    print(f"  Skipping - {reason}")
+    results['skipped'] += 1
+
+
+def _initialize_reset_results(issue_count):
+    return {
         'success': True,
-        'processed': len(issues),
+        'processed': issue_count,
         'updated': 0,
         'skipped': 0,
         'errors': []
     }
-    
-    for issue in issues:
-        key = issue['key']
-        summary = issue['summary']
-        current_status = issue['status']
-        
-        print(f"Processing {key}: {summary}")
-        print(f"  Current status: {current_status}")
-        
-        # Parse summary pattern
-        parse_result = extract_statuses_from_summary(summary)
-        if not parse_result:
-            print(f"  Skipping - summary doesn't match expected pattern")
-            results['skipped'] += 1
-            continue
-        
-        starting_status, target_status = parse_result
-        
-        # Check if current status already matches starting status
-        if current_status.upper() == starting_status.upper():
-            print(f"  Skipping - current status '{current_status}' already matches starting status '{starting_status}'")
-            results['skipped'] += 1
-            continue
-        
-        print(f"  Starting status: {starting_status}")
-        
-        # Update status using the jira_instance
-        if jira_instance.update_issue_status(key, starting_status):
-            results['updated'] += 1
-        else:
-            results['errors'].append(f"Failed to update {key}")
-    
-    return results
+
+
+def _create_empty_reset_results():
+    return _initialize_reset_results(0)
 
 
 # =============================================================================
