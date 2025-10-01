@@ -14,8 +14,7 @@ from unittest.mock import Mock, patch
 from tests.fixtures import (
     create_reset_scenario_with_expectations,
     create_empty_scenario_with_expectations,
-    create_connection_failure_scenario_with_expectations,
-    create_skip_scenario_with_expectations
+    create_connection_failure_scenario_with_expectations
 )
 
 
@@ -84,17 +83,19 @@ class TestTestFixtureReset:
         mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')  # Reset to starting status
         mock_jira_instance.update_issue_status.assert_any_call('PROJ-2', 'In Progress')  # Reset to starting status
 
-    def test_reset_operation_skips_issues_already_in_starting_status(self):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_reset_operation_skips_issues_already_in_starting_status(self, mock_jira_class):
         # Given: Issues already in starting status
-        scenario_with_issues_already_in_starting_status = create_skip_scenario_with_expectations()
-        mock_jira_manager = scenario_with_issues_already_in_starting_status
+        mock_jira_instance = self._create_scenario_with_issues_needing_reset_from_spec(mock_jira_class, [
+            {'key': 'PROJ-3', 'current': 'To Do', 'reset_to': 'To Do'}
+        ])
         
-        # When: Reset operation is executed
-        self._execute_reset_operation(mock_jira_manager)
+        # When: CLI command is executed
+        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
         
         # Then: Should skip issues already in starting status
-        mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
-        mock_jira_manager.update_issue_status.assert_not_called()
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
+        mock_jira_instance.update_issue_status.assert_not_called()
 
     def test_reset_workflow_command_orchestrates_rule_testing_preparation(self):
         # Given: Reset workflow command with mock manager
