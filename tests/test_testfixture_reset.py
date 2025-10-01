@@ -12,8 +12,6 @@ import pytest
 from unittest.mock import Mock, patch
 
 from tests.fixtures import (
-    create_reset_scenario_with_expectations,
-    create_empty_scenario_with_expectations,
     create_connection_failure_scenario_with_expectations
 )
 
@@ -97,43 +95,27 @@ class TestTestFixtureReset:
         mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
         mock_jira_instance.update_issue_status.assert_not_called()
 
-    def test_reset_workflow_command_orchestrates_rule_testing_preparation(self):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_reset_workflow_command_orchestrates_rule_testing_preparation(self, mock_jira_class):
         # Given: Reset workflow command with mock manager
-        mock_jira_manager = create_reset_scenario_with_expectations()
+        mock_jira_instance = self._create_scenario_with_issues_needing_reset_from_spec(mock_jira_class, [
+            {'key': 'PROJ-1', 'current': 'In Progress', 'reset_to': 'To Do'},
+            {'key': 'PROJ-2', 'current': 'Done', 'reset_to': 'In Progress', 'context': 'Bug fix'}
+        ])
         
-        # When: Reset workflow command is executed
-        self._execute_reset_operation(mock_jira_manager)
+        # When: CLI command is executed
+        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
         
         # Then: Rule testing preparation should be orchestrated
-        mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
-        mock_jira_manager.update_issue_status.assert_called()
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
+        assert mock_jira_instance.update_issue_status.call_count == 2
+        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')
+        mock_jira_instance.update_issue_status.assert_any_call('PROJ-2', 'In Progress')
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
 
-    def _create_mock_jira_instance_with_issue(self, issue_data):
-        mock_jira_instance = Mock()
-        mock_jira_instance.get_issues_by_label.return_value = [issue_data]
-        mock_jira_instance.update_issue_status.return_value = True
-        mock_jira_instance.connect.return_value = True
-        
-        return mock_jira_instance
-
-    def _create_scenario_with_issue_in_starting_status(self, mock_jira_class, issue_data):
-        """Create a mock Jira instance with an issue in starting status for force-update testing."""
-        mock_jira_instance = self._create_mock_jira_instance_with_issue(issue_data)
-        mock_jira_class.return_value = mock_jira_instance
-        return mock_jira_instance
-
-    def _create_scenario_with_issues_needing_reset(self, mock_jira_class, issue_data_list):
-        """Create a mock Jira instance with issues that need resetting for rule testing."""
-        mock_jira_instance = Mock()
-        mock_jira_instance.get_issues_by_label.return_value = issue_data_list
-        mock_jira_instance.update_issue_status.return_value = True
-        mock_jira_instance.connect.return_value = True
-        mock_jira_class.return_value = mock_jira_instance
-        return mock_jira_instance
 
     def _create_scenario_with_issues_needing_reset_from_spec(self, mock_jira_class, issue_specs):
         issue_data_list = []
