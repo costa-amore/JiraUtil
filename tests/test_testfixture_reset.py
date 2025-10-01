@@ -11,8 +11,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 import pytest
 from unittest.mock import Mock, patch
 
+from tests.base_test_jira_utils_command import TestJiraUtilsCommand
 
-class TestTestFixtureReset:
+
+class TestTestFixtureReset(TestJiraUtilsCommand):
 
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
@@ -119,20 +121,11 @@ class TestTestFixtureReset:
         mock_jira_class.return_value = mock_jira_instance
         return mock_jira_instance
 
-    def _execute_cli_with_args(self, *args):
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-        from JiraUtil import run_cli
-        with patch('sys.argv', ['JiraUtil.py'] + list(args)):
-            with patch('builtins.print'):
-                run_cli()
-
     def _execute_reset_operation(self, test_set_label="test-set-label"):
-        self._execute_cli_with_args('tf', 'r', '--tsl', test_set_label)
+        self._execute_JiraUtil_with_args('tf', 'r', '--tsl', test_set_label)
 
     def _execute_reset_operation_with_force_update(self, test_set_label="test-set-label", force_update_via="Done"):
-        self._execute_cli_with_args('tf', 'r', '--tsl', test_set_label, '--force-update-via', force_update_via)
+        self._execute_JiraUtil_with_args('tf', 'r', '--tsl', test_set_label, '--force-update-via', force_update_via)
 
 
 if __name__ == "__main__":
