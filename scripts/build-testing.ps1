@@ -30,9 +30,9 @@ function Invoke-BuildTests {
             Write-Host "[INFO] Using system Python for tests" -ForegroundColor Blue
         }
         
-        # Run tests directly with pytest for real-time output
-        # Use Start-Process to avoid PowerShell output buffering
-        $process = Start-Process -FilePath $PythonExe -ArgumentList "-m", "pytest", "tests/", "-v", "--tb=short" -Wait -PassThru -NoNewWindow
+        # Use the documented test runner for consistent behavior
+        # This ensures the same test environment as local development
+        $process = Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "run.ps1", "tests/run_tests.py" -Wait -PassThru -NoNewWindow
         if ($process.ExitCode -ne 0) {
             Write-Host "[FAIL] Unit tests failed! Build aborted." -ForegroundColor Red
             Write-Host "Please fix all test failures before building executables." -ForegroundColor Red
