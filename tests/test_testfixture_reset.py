@@ -11,10 +11,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 import pytest
 from unittest.mock import Mock, patch
 
-from tests.fixtures import (
-    create_connection_failure_scenario_with_expectations
-)
-
 
 class TestTestFixtureReset:
     """Test cases for reset operations."""
@@ -40,17 +36,21 @@ class TestTestFixtureReset:
         mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')  # Second transition: Done → To Do
 
 
-    def test_reset_operation_handles_jira_connection_failure(self):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_reset_operation_handles_jira_connection_failure(self, mock_jira_class):
         # Given: Jira connection failure scenario
-        scenario_with_connection_failure = create_connection_failure_scenario_with_expectations()
-        mock_jira_manager = scenario_with_connection_failure
+        mock_jira_instance = Mock()
+        mock_jira_instance.connect.return_value = False  # Connection fails
+        mock_jira_instance.get_issues_by_label.return_value = []
+        mock_jira_instance.update_issue_status.return_value = False
+        mock_jira_class.return_value = mock_jira_instance
         
-        # When: Reset operation is executed
-        self._execute_reset_operation(mock_jira_manager)
+        # When: CLI command is executed
+        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
         
         # Then: Should handle connection failure gracefully
         # Connection failure means get_issues_by_label might not be called
-        mock_jira_manager.connect.assert_called()
+        mock_jira_instance.connect.assert_called()
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_reset_operation_handles_no_issues_found(self, mock_jira_class):
@@ -150,11 +150,6 @@ class TestTestFixtureReset:
         with patch('sys.argv', ['JiraUtil.py'] + list(args)):
             with patch('builtins.print'):
                 run_cli()
-
-    def _execute_reset_operation(self, mock_manager):
-        from testfixture.workflow import run_TestFixture_Reset
-        with patch('builtins.print'):
-            run_TestFixture_Reset(mock_manager, "rule-testing")
 
 
 if __name__ == "__main__":
