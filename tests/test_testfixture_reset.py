@@ -15,8 +15,7 @@ from tests.fixtures import (
     create_reset_scenario_with_expectations,
     create_empty_scenario_with_expectations,
     create_connection_failure_scenario_with_expectations,
-    create_skip_scenario_with_expectations,
-    reset_scenario_with
+    create_skip_scenario_with_expectations
 )
 
 
@@ -39,7 +38,7 @@ class TestTestFixtureReset:
         mock_jira_class.return_value = mock_jira_instance
         
         # When: CLI command is executed with --force-update-via parameter
-        self._execute_cli_command_with_force_update(['tf', 'r', '--tsl', 'test-label'], 'Done')
+        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-label', '--force-update-via', 'Done')
         
         # Then: Verify the actual Jira API calls
         mock_jira_instance.get_issues_by_label.assert_called_once_with('test-label')
@@ -119,17 +118,15 @@ class TestTestFixtureReset:
         
         return mock_jira_instance
 
-    def _execute_cli_command_with_force_update(self, command_args, force_update_via=None):
-        from cli.parser import build_parser
-        from testfixture_cli.handlers import handle_test_fixture_commands
-        
-        parser = build_parser()
-        full_args = command_args + (['--force-update-via', force_update_via] if force_update_via else [])
-        args = parser.parse_args(full_args)
-        
-        with patch('builtins.print'):
-            handle_test_fixture_commands(args, {})
-
+    def _execute_cli_with_args(self, *args):
+        """Execute CLI commands using production entry point with given arguments."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+        from JiraUtil import run_cli
+        with patch('sys.argv', ['JiraUtil.py'] + list(args)):
+            with patch('builtins.print'):
+                run_cli()
 
     def _execute_reset_operation(self, mock_manager):
         from testfixture.workflow import run_TestFixture_Reset
