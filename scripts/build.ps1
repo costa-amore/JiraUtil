@@ -91,7 +91,15 @@ function New-WindowsLauncher {
     
     $LauncherContent = @"
 @echo off
-$ExecutableName.exe %*
+echo JiraUtil - Jira Administration Tool
+echo ===================================
+echo.
+$ExecutableName.exe st
+echo.
+echo. Make your own copies of this file for each specific use-case and it's specific arguments.  
+echo. Give a t good name, starting with '_', then you can easily find them back.
+echo.
+pause
 "@
     $LauncherContent | Out-File -FilePath "$OutputDir\run.bat" -Encoding ASCII
 }
