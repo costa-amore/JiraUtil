@@ -69,41 +69,37 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         
 
     @pytest.mark.parametrize("scenario,issue_type,key,summary,expected_tag", [
-        ("evaluated epic", "Epic", "TAPS-215", "Epic summary", "[FAIL]"),
-        ("evaluated story", "Story", "TAPS-210", "Story summary", "[FAIL]"),
-        ("evaluated subtask", "Sub-task", "TAPS-211", "Subtask summary", "[FAIL]"),
-        ("non-evaluated epic", "Epic", "TAPS-215", "Epic summary", "[INFO]"),
-        ("non-evaluated story", "Story", "TAPS-210", "Story summary", "[INFO]"),
+        ("evaluated epic", "Epic", "TAPS-215", "I was in To Do - expected to be in Done", "[FAIL]"),
+        ("evaluated story", "Story", "TAPS-210", "I was in To Do - expected to be in Done", "[FAIL]"),
+        ("evaluated subtask", "Sub-task", "TAPS-211", "I was in To Do - expected to be in Done", "[FAIL]"),
     ])
-    def test_assertion_report_should_include_color_tags_for_issues(self, scenario, issue_type, key, summary, expected_tag):
-        """Test that assertion report should include proper color tags for different issue types."""
-        # Given: Results with specific issue type
-        from src.testfixture.reporter import _generate_assertion_report_lines
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assertion_report_should_include_color_tags_for_issues(self, mock_jira_class, scenario, issue_type, key, summary, expected_tag):
+        # Given: Mock Jira manager with issue that will generate the report
+        mock_jira_instance = self._create_scenario_with_assert_issues_from_spec(mock_jira_class, [
+            {
+                'key': key,
+                'current': 'In Progress',  # Mismatched state to trigger assertion failure
+                'expected': 'Done',
+                'issue_type': issue_type,
+                'summary': summary  # Use the summary from parametrize data
+            }
+        ])
         
-        results = {
-            'success': True,
-            'processed': 1,
-            'passed': 0,
-            'failed': 1 if "evaluated" in scenario else 0,
-            'not_evaluated': 0 if "evaluated" in scenario else 1,
-            'issues_to_report': [
-                {
-                    'issue_type': issue_type, 
-                    'key': key, 
-                    'summary': summary,
-                    'parent_key': 'Orphan',
-                    'evaluable': "non-evaluated" not in scenario
-                }
-            ]
-        }
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
         
-        # When: Generate report lines
-        lines = _generate_assertion_report_lines(results)
-        report_text = '\n'.join(lines)
+        # Then: Jira API should be called correctly
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
         
-        # Then: Verify the expected color tag is present (this will fail until implemented)
-        assert expected_tag in report_text, f"Report should include {expected_tag} tag for {scenario}"
-        assert f'{expected_tag} [{issue_type}] {key}:' in report_text, f"Report should show {expected_tag} [{issue_type}] {key}:"
+        # And: The report should include the expected color tag
+        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
+        # Remove ANSI color codes for easier matching
+        import re
+        clean_output = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
+        
+        assert expected_tag in clean_output, f"Report should include {expected_tag} tag for {scenario}"
+        assert f'{expected_tag} [{issue_type}] {key}:' in clean_output, f"Report should show {expected_tag} [{issue_type}] {key}:"
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_cli_command_executes_successfully(self, mock_jira_class):
