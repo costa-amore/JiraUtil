@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import pytest
 from unittest.mock import Mock, patch
 
+from tests.base_test_jira_utils_command import TestJiraUtilsCommand
 from tests.fixtures import (
     create_assert_scenario,
-    create_assert_scenario_with_expectations,
     create_mock_manager
 )
 from tests.fixtures.base_fixtures import (
@@ -24,7 +24,7 @@ from tests.fixtures.base_fixtures import (
 )
 
 
-class TestTestFixtureAssert:
+class TestTestFixtureAssert(TestJiraUtilsCommand):
 
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
@@ -108,34 +108,49 @@ class TestTestFixtureAssert:
         assert expected_tag in report_text, f"Report should include {expected_tag} tag for {scenario}"
         assert f'{expected_tag} [{issue_type}] {key}:' in report_text, f"Report should show {expected_tag} [{issue_type}] {key}:"
 
-    def test_assert_operation_verifies_rule_automation_worked(self):
-        # Given: Issues after automation has run
-        mock_jira_manager = create_assert_scenario_with_expectations()
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_cli_command_executes_successfully(self, mock_jira_class):
+        # Given: Mock Jira manager with test issues for assertion testing
+        mock_jira_instance = self._create_scenario_with_assert_issues_from_spec(mock_jira_class, [
+            {'key': 'PROJ-1', 'current': 'In Progress', 'expected': 'Done'},
+            {'key': 'PROJ-2', 'current': 'Done', 'expected': 'Done'}
+        ])
         
-        # When: Assert operation is executed
-        self._execute_assert_operation(mock_jira_manager)
+        # When: Assert CLI command is executed
+        self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
         
-        # Then: Rule automation should be verified
-        mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
-
-    def test_assert_workflow_command_orchestrates_rule_verification(self):
-        # Given: Assert workflow command with mock manager
-        mock_jira_manager = create_assert_scenario_with_expectations()
-        
-        # When: Assert workflow command is executed
-        self._execute_assert_operation(mock_jira_manager)
-        
-        # Then: Rule verification should be orchestrated
-        mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
+        # Then: Jira API should be called correctly
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
 
-    def _execute_assert_operation(self, mock_manager):
-        from testfixture.workflow import run_assert_expectations
-        with patch('builtins.print'):
-            run_assert_expectations(mock_manager, "rule-testing")
+    def _create_scenario_with_assert_issues_from_spec(self, mock_jira_class, issue_specs):
+        issue_data_list = []
+        
+        for i, spec in enumerate(issue_specs):
+            context_prefix = f"{spec.get('context', '')} - " if spec.get('context') else ""
+            if i == 0:
+                summary = f"{context_prefix}I was in {spec['current']} - expected to be in {spec['expected']}"
+            else:
+                summary = f"{context_prefix}starting in {spec['current']} - expected to be in {spec['expected']}"
+            
+            issue_data = {
+                'key': spec['key'],
+                'summary': summary,
+                'status': spec['current'],
+                'issue_type': spec.get('issue_type', 'Story'),
+                'parent_key': spec.get('parent_key'),
+                'rank': spec.get('rank', '0|i0000:')
+            }
+            issue_data_list.append(issue_data)
+        
+        mock_jira_instance = Mock()
+        mock_jira_instance.get_issues_by_label.return_value = issue_data_list
+        mock_jira_instance.connect.return_value = True
+        mock_jira_class.return_value = mock_jira_instance
+        return mock_jira_instance
 
     def _execute_assert_operation_with_print_capture(self, mock_manager):
         from testfixture.workflow import run_assert_expectations
