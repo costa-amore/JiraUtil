@@ -69,7 +69,7 @@
   ".workplace\\update-workspace.ps1": "4497908d5533e78be62292edf24c4860ccfd46a59da467e9ec9727532c3428e4",
   "scripts\\build-documentation.ps1": "5cc9f931b5d172efde63b8098b2798eff467b6dbd63777029dda79867e9ed653",
   "scripts\\build-packaging.ps1": "1592b06e005d39d4d36a1a85e11938fd7f76d7b3d3fe7ade9bfa22ade16d4a80",
-  "scripts\\build-testing.ps1": "42912160e53470f9a6b6cb4da4925fd8c0fed66712513440b76fc5352635128a",
+  "scripts\\build-testing.ps1": "69a3b1d583a9a557f83bc4bec02364f111b5dc557ce6c6bfc04735e8f3a43079",
   "scripts\\build-versioning.ps1": "2e636619b82ae6f091375b0418ccee2afc13e720a1f6a5742d24cf89c18b5173",
   "scripts\\build-windows.ps1": "3e506c93c40cdde8c2ef21197c369e5ad46e9d0404f4163fae4fab49f8759a24",
   "scripts\\build.ps1": "a1ca44d0dacb371f3a2823dacf0b4600ae4261be5991af34432cb9bb3c603499",
