@@ -13,28 +13,27 @@ from unittest.mock import Mock, patch
 
 
 class TestTestFixtureReset:
-    """Test cases for reset operations."""
 
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_reset_operation_with_force_update(self, mock_jira_class):
-        # Given: Mock Jira manager with test issue that would normally be skipped
+    def test_reset_operation_handles_issues_to_reset(self, mock_jira_class):
+        # Given: Issues that need to be reset for rule testing
         mock_jira_instance = self._create_scenario_with_issues_needing_reset_from_spec(mock_jira_class, [
-            {'key': 'PROJ-1', 'current': 'To Do', 'reset_to': 'To Do'}
+            {'key': 'PROJ-1', 'current': 'In Progress', 'reset_to': 'To Do'},
+            {'key': 'PROJ-2', 'current': 'Done',        'reset_to': 'In Progress', 'context': 'Bug fix'}
         ])
         
-        # When: CLI command is executed with --force-update-via parameter
-        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label', '--force-update-via', 'Done')
+        # When: Reset operation is executed
+        self._execute_reset_operation("test-set-label")
         
-        # Then: Verify the actual Jira API calls
-        mock_jira_instance.get_issues_by_label.assert_called_once_with('test-set-label')
+        # Then: Both issues should be found and reset to starting status
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
         assert mock_jira_instance.update_issue_status.call_count == 2
-        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'Done')   # First transition: To Do → Done
-        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')  # Second transition: Done → To Do
-
+        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')
+        mock_jira_instance.update_issue_status.assert_any_call('PROJ-2', 'In Progress')
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_reset_operation_handles_jira_connection_failure(self, mock_jira_class):
@@ -45,8 +44,8 @@ class TestTestFixtureReset:
         mock_jira_instance.update_issue_status.return_value = False
         mock_jira_class.return_value = mock_jira_instance
         
-        # When: CLI command is executed
-        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
+        # When: Reset operation is executed
+        self._execute_reset_operation()
         
         # Then: Should handle connection failure gracefully
         # Connection failure means get_issues_by_label might not be called
@@ -57,29 +56,11 @@ class TestTestFixtureReset:
         # Given: Mock Jira instance that returns no issues
         mock_jira_instance = self._create_scenario_with_issues_needing_reset_from_spec(mock_jira_class, [])
         
-        # When: CLI command is executed
-        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
+        # When: Reset operation is executed
+        self._execute_reset_operation()
         
         # Then: Should handle empty scenario gracefully
-        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
         mock_jira_instance.update_issue_status.assert_not_called()
-
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_reset_operation_prepares_issues_for_rule_testing(self, mock_jira_class):
-        # Given: Issues that need to be reset for rule testing
-        mock_jira_instance = self._create_scenario_with_issues_needing_reset_from_spec(mock_jira_class, [
-            {'key': 'PROJ-1', 'current': 'In Progress', 'reset_to': 'To Do'},
-            {'key': 'PROJ-2', 'current': 'Done',        'reset_to': 'In Progress', 'context': 'Bug fix'}
-        ])
-        
-        # When: CLI command is executed
-        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
-        
-        # Then: Both issues should be found and reset to starting status
-        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
-        assert mock_jira_instance.update_issue_status.call_count == 2
-        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')  # Reset to starting status
-        mock_jira_instance.update_issue_status.assert_any_call('PROJ-2', 'In Progress')  # Reset to starting status
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_reset_operation_skips_issues_already_in_starting_status(self, mock_jira_class):
@@ -88,29 +69,26 @@ class TestTestFixtureReset:
             {'key': 'PROJ-3', 'current': 'To Do', 'reset_to': 'To Do'}
         ])
         
-        # When: CLI command is executed
-        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
+        # When: Reset operation is executed
+        self._execute_reset_operation()
         
         # Then: Should skip issues already in starting status
-        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
         mock_jira_instance.update_issue_status.assert_not_called()
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_reset_workflow_command_orchestrates_rule_testing_preparation(self, mock_jira_class):
-        # Given: Reset workflow command with mock manager
+    def test_reset_operation_with_force_update(self, mock_jira_class):
+        # Given: Mock Jira manager with test issue that would normally be skipped
         mock_jira_instance = self._create_scenario_with_issues_needing_reset_from_spec(mock_jira_class, [
-            {'key': 'PROJ-1', 'current': 'In Progress', 'reset_to': 'To Do'},
-            {'key': 'PROJ-2', 'current': 'Done', 'reset_to': 'In Progress', 'context': 'Bug fix'}
+            {'key': 'PROJ-1', 'current': 'To Do', 'reset_to': 'To Do'}
         ])
         
-        # When: CLI command is executed
-        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-set-label')
+        # When: Reset operation is executed with force update
+        self._execute_reset_operation_with_force_update()
         
-        # Then: Rule testing preparation should be orchestrated
-        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-set-label")
+        # Then: Verify the actual Jira API calls
         assert mock_jira_instance.update_issue_status.call_count == 2
-        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')
-        mock_jira_instance.update_issue_status.assert_any_call('PROJ-2', 'In Progress')
+        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'Done')   # First transition: To Do → Done
+        mock_jira_instance.update_issue_status.assert_any_call('PROJ-1', 'To Do')  # Second transition: Done → To Do
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
@@ -142,7 +120,6 @@ class TestTestFixtureReset:
         return mock_jira_instance
 
     def _execute_cli_with_args(self, *args):
-        """Execute CLI commands using production entry point with given arguments."""
         import sys
         from pathlib import Path
         sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -150,6 +127,12 @@ class TestTestFixtureReset:
         with patch('sys.argv', ['JiraUtil.py'] + list(args)):
             with patch('builtins.print'):
                 run_cli()
+
+    def _execute_reset_operation(self, test_set_label="test-set-label"):
+        self._execute_cli_with_args('tf', 'r', '--tsl', test_set_label)
+
+    def _execute_reset_operation_with_force_update(self, test_set_label="test-set-label", force_update_via="Done"):
+        self._execute_cli_with_args('tf', 'r', '--tsl', test_set_label, '--force-update-via', force_update_via)
 
 
 if __name__ == "__main__":
