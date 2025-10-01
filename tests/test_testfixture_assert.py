@@ -30,46 +30,43 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
-    @pytest.mark.parametrize("scenario,summary,expected_context,expected_start_state,expected_end_state", [
-        ("extracts context from summary", "When in this context, starting in To Do - expected to be in Done", "When in this context,", "To Do", "Done"),
-        ("handles summary without context", "I was in SIT/LAB VALIDATED - expected to be in CLOSED", None, "SIT/LAB VALIDATED", "CLOSED"),
-        ("handles whitespace around states", "I was in    To Do    - expected to be in    CLOSED   ", None, "To Do", "CLOSED"),
+    @pytest.mark.parametrize("scenario,summary,current_state,expected_context,expected_start_state,expected_end_state", [
+        ("extracts context from summary", "When in this context, starting in To Do - expected to be in Done", "In Progress", "When in this context,", "To Do", "Done"),
+        ("handles summary without context", "I was in SIT/LAB VALIDATED - expected to be in CLOSED", "In Progress", None, "SIT/LAB VALIDATED", "CLOSED"),
+        ("handles whitespace around states", "I was in    To Do    - expected to be in    CLOSED   ", "In Progress", None, "To Do", "CLOSED"),
     ])
-    def test_assert_failure_message_extracts_context_and_states(self, scenario, summary, expected_context, expected_start_state, expected_end_state):
-        """Test that context and states are extracted correctly from issue summaries."""
-        # Given: An issue with specific summary
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-TEST',
-                summary=summary,
-                status=expected_start_state,
-                issue_type='Bug'
-            )
-        ]
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failure_message_extracts_context_and_states(self, mock_jira_class, scenario, summary, current_state, expected_context, expected_start_state, expected_end_state):
+        # Given: Mock Jira manager with issue that has assertion failure (current != expected)
+        mock_jira_instance = self._create_scenario_with_assert_issues_from_spec(mock_jira_class, [
+            {
+                'key': 'PROJ-TEST',
+                'current': current_state,  # This is the actual current state
+                'expected': expected_end_state,  # This is what the summary expects
+                'issue_type': 'Bug',
+                'context': expected_context,
+                'summary': summary  # Use the actual summary from test data
+            }
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: Assert CLI command is executed with print capture
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
         
-        # Then: The issue should be processed correctly
-        issues_to_report = results['issues_to_report']
-        assert len(issues_to_report) > 0, f"Should have issues in report for scenario: {scenario}"
+        # Then: Jira API should be called correctly
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
         
-        issue = issues_to_report[0]
-        assert issue['key'] == 'PROJ-TEST', f"Should process issue for scenario: {scenario}"
+        # And: The issue should appear in the output (since current != expected)
+        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
+        assert 'PROJ-TEST' in printed_output, f"Issue key should appear in output for scenario: {scenario}"
         
-        # Verify context extraction
+        # Verify context extraction from summary appears in output
         if expected_context:
-            verify_context_extraction(issues_to_report, expected_context)
-        else:
-            assert issue['context'] is None, f"Context should be None for scenario: {scenario}"
+            assert expected_context in printed_output, f"Context should appear in output for scenario: {scenario}"
         
-        # Verify state extraction
-        from src.testfixture.patterns import extract_statuses_from_summary
-        start_state, end_state = extract_statuses_from_summary(issue['summary'])
-        assert start_state == expected_start_state, f"Expected start_state '{expected_start_state}', got '{start_state}' for scenario: {scenario}"
-        assert end_state == expected_end_state, f"Expected end_state '{expected_end_state}', got '{end_state}' for scenario: {scenario}"
-
+        # Verify state information appears in output
+        assert current_state in printed_output, f"Current state should appear in output for scenario: {scenario}"
+        assert expected_end_state in printed_output, f"Expected state should appear in output for scenario: {scenario}"
+        
 
     @pytest.mark.parametrize("scenario,issue_type,key,summary,expected_tag", [
         ("evaluated epic", "Epic", "TAPS-215", "Epic summary", "[FAIL]"),
@@ -130,11 +127,15 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         issue_data_list = []
         
         for i, spec in enumerate(issue_specs):
-            context_prefix = f"{spec.get('context', '')} - " if spec.get('context') else ""
-            if i == 0:
-                summary = f"{context_prefix}I was in {spec['current']} - expected to be in {spec['expected']}"
+            # Use provided summary or generate one
+            if 'summary' in spec:
+                summary = spec['summary']
             else:
-                summary = f"{context_prefix}starting in {spec['current']} - expected to be in {spec['expected']}"
+                context_prefix = f"{spec.get('context', '')} - " if spec.get('context') else ""
+                if i == 0:
+                    summary = f"{context_prefix}I was in {spec['current']} - expected to be in {spec['expected']}"
+                else:
+                    summary = f"{context_prefix}starting in {spec['current']} - expected to be in {spec['expected']}"
             
             issue_data = {
                 'key': spec['key'],

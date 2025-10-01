@@ -16,5 +16,6 @@ class TestJiraUtilsCommand:
         sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
         from JiraUtil import run_cli
         with patch('sys.argv', ['JiraUtil.py'] + list(args)):
-            with patch('builtins.print'):
+            with patch('builtins.print') as mock_print:
                 run_cli()
+                return mock_print
