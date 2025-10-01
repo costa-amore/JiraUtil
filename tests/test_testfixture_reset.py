@@ -29,13 +29,11 @@ class TestTestFixtureReset:
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_reset_operation_with_force_update(self, mock_jira_class):
         # Given: Mock Jira manager with test issue that would normally be skipped
-        issue_data = {
+        mock_jira_instance = self._create_scenario_with_issue_in_starting_status(mock_jira_class, {
             'key': 'PROJ-1',
             'summary': 'I was in To Do - expected to be in To Do',
             'status': 'To Do'  # Would normally be skipped
-        }
-        mock_jira_instance = self._create_mock_jira_instance_with_issue(issue_data)
-        mock_jira_class.return_value = mock_jira_instance
+        })
         
         # When: CLI command is executed with --force-update-via parameter
         self._execute_cli_with_args('tf', 'r', '--tsl', 'test-label', '--force-update-via', 'Done')
@@ -59,17 +57,17 @@ class TestTestFixtureReset:
         # Connection failure means get_issues_by_label might not be called
         mock_jira_manager.connect.assert_called()
 
-    def test_reset_operation_handles_no_issues_found(self):
-        # Given: No issues found for the label
-        scenario_with_no_issues = create_empty_scenario_with_expectations()
-        mock_jira_manager = scenario_with_no_issues
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_reset_operation_handles_no_issues_found(self, mock_jira_class):
+        # Given: Mock Jira instance that returns no issues
+        mock_jira_instance = self._create_scenario_that_returns_no_issues(mock_jira_class)
         
-        # When: Reset operation is executed
-        self._execute_reset_operation(mock_jira_manager)
+        # When: CLI command is executed
+        self._execute_cli_with_args('tf', 'r', '--tsl', 'test-label')
         
         # Then: Should handle empty scenario gracefully
-        mock_jira_manager.get_issues_by_label.assert_called_once_with("rule-testing")
-        mock_jira_manager.update_issue_status.assert_not_called()
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("test-label")
+        mock_jira_instance.update_issue_status.assert_not_called()
 
     def test_reset_operation_prepares_issues_for_rule_testing(self):
         # Given: Issues that need to be reset for rule testing
@@ -116,6 +114,21 @@ class TestTestFixtureReset:
         mock_jira_instance.update_issue_status.return_value = True
         mock_jira_instance.connect.return_value = True
         
+        return mock_jira_instance
+
+    def _create_scenario_that_returns_no_issues(self, mock_jira_class):
+        """Create a mock Jira instance that returns no issues for testing empty scenarios."""
+        mock_jira_instance = Mock()
+        mock_jira_instance.get_issues_by_label.return_value = []  # No issues found
+        mock_jira_instance.update_issue_status.return_value = True
+        mock_jira_instance.connect.return_value = True
+        mock_jira_class.return_value = mock_jira_instance
+        return mock_jira_instance
+
+    def _create_scenario_with_issue_in_starting_status(self, mock_jira_class, issue_data):
+        """Create a mock Jira instance with an issue in starting status for force-update testing."""
+        mock_jira_instance = self._create_mock_jira_instance_with_issue(issue_data)
+        mock_jira_class.return_value = mock_jira_instance
         return mock_jira_instance
 
     def _execute_cli_with_args(self, *args):
