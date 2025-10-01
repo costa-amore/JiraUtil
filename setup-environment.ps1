@@ -30,6 +30,12 @@ if (-not (Test-Path .venv)) {
     Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
     .\.venv\Scripts\python.exe -m pip install -r requirements.txt
     
+    # Install Windows-specific dependencies
+    if (Test-Path "requirements-windows.txt") {
+        Write-Host "[PACKAGE] Installing Windows-specific dependencies..." -ForegroundColor Yellow
+        .\.venv\Scripts\python.exe -m pip install -r requirements-windows.txt
+    }
+    
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
         exit 1
@@ -76,6 +82,12 @@ if (-not (Test-Path .venv)) {
                 Write-Host "[PACKAGE] Installing/updating dependencies from requirements.txt..." -ForegroundColor Yellow
                 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
                 
+                # Install Windows-specific dependencies
+                if (Test-Path "requirements-windows.txt") {
+                    Write-Host "[PACKAGE] Installing Windows-specific dependencies..." -ForegroundColor Yellow
+                    .\.venv\Scripts\python.exe -m pip install -r requirements-windows.txt
+                }
+                
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
                     exit 1
@@ -95,6 +107,12 @@ if (-not (Test-Path .venv)) {
             # Install dependencies
             Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
             .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+            
+            # Install Windows-specific dependencies
+            if (Test-Path "requirements-windows.txt") {
+                Write-Host "[PACKAGE] Installing Windows-specific dependencies..." -ForegroundColor Yellow
+                .\.venv\Scripts\python.exe -m pip install -r requirements-windows.txt
+            }
             
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red
@@ -199,6 +217,12 @@ Write-Host "[PACKAGE] Upgrading pip to latest version..." -ForegroundColor Yello
 # Install all dependencies
 Write-Host "[PACKAGE] Installing dependencies from requirements.txt..." -ForegroundColor Yellow
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# Install Windows-specific dependencies
+if (Test-Path "requirements-windows.txt") {
+    Write-Host "[PACKAGE] Installing Windows-specific dependencies..." -ForegroundColor Yellow
+    .\.venv\Scripts\python.exe -m pip install -r requirements-windows.txt
+}
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[FAIL] Failed to install dependencies." -ForegroundColor Red

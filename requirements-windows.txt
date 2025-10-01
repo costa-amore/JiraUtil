@@ -1,0 +1,5 @@
+# Windows-specific requirements
+# This file contains dependencies that are only available on Windows
+
+# Windows-specific build dependencies
+pywin32>=306
