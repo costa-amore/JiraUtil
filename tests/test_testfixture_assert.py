@@ -214,7 +214,11 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
         # Then: Issues should appear in the expected order
-        self._assert_issues_appear_in_order(mock_print, ['EPIC-1', 'SUBT-111', 'STORY-11'])
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'EPIC-1'},
+            {'line_with_key': 'SUBT-111'},
+            {'line_with_key': 'STORY-11'}
+        ])
 
     def test_assert_failures_epics_should_be_sorted_by_rank_like_backlog(self):
         """Test that epics are sorted by rank like a backlog (highest priority first)."""
@@ -548,7 +552,9 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
         # Then: The orphaned evaluable item should appear in CLI output with proper tags
-        self._assert_issue_appears_with_tags_in_output(mock_print, 'PROJ-1', ['[FAIL]', '[Sub-task]'])
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'PROJ-1', 'contains': ['[FAIL]', '[Sub-task]']}
+        ])
 
     def test_assert_failures_skips_orphaned_non_evaluable_items(self):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
@@ -1187,64 +1193,96 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
 
-    def _assert_issue_appears_with_tags_in_output(self, mock_print, issue_key, expected_tags):
-        """Assert that the issue key appears in the summary section with all expected tags on the same line."""
-        # Get all output lines
-        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
+    def _assert_issues_in_summary_section(self, mock_print, issue_specs, in_order=True):
+        """
+        Assert that issues appear in the summary section with expected tags and order.
         
-        # Strip ANSI color codes for easier assertion
-        import re
-        clean_output = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
+        Args:
+            mock_print: Mock print object from CLI execution
+            issue_specs: List of dicts with 'line_with_key' and optional 'contains'
+                        If 'contains' is provided, verifies tags are on same line as key
+                        If multiple specs provided, 
+                            by default it verifies they appear in the given order
+                            unless 'in_order' is set to false, then just verify existence 
+            in_order: default: True
+        """
+
+        summary_lines = self._extract_summary_section(mock_print)
         
+        # Extract issue keys and their lines from summary section
+        issue_data = {}
+        for line in summary_lines:
+            for spec in issue_specs:
+                key = spec['line_with_key']
+                if key in line and key not in issue_data:
+                    issue_data[key] = line
+                    break
+        
+        # Verify all expected issues appear in summary section
+        expected_keys = [spec['line_with_key'] for spec in issue_specs]
+        missing_keys = [key for key in expected_keys if key not in issue_data]
+        assert not missing_keys, f"Issues missing from summary section: {missing_keys}"
+        
+        # Verify each issue appears exactly once
+        for key in expected_keys:
+            count = sum(1 for line in summary_lines if key in line)
+            assert count == 1, f"Issue {key} should appear exactly once in summary section, found {count} times"
+        
+        # Verify contains if provided
+        for spec in issue_specs:
+            key = spec['line_with_key']
+            contains = spec.get('contains', [])
+            if contains:
+                line = issue_data[key]
+                for tag in contains:
+                    assert tag in line, f"Line containing {key} should contain '{tag}'. Line: {line}"
+        
+        # Verify order if requested
+        if in_order:
+            issue_keys = []
+            seen_keys = set()
+            for line in summary_lines:
+                for spec in issue_specs:
+                    key = spec['line_with_key']
+                    if key in line and key not in seen_keys:
+                        issue_keys.append(key)
+                        seen_keys.add(key)
+                        break
+            
+            expected_order = [spec['line_with_key'] for spec in issue_specs]
+            assert issue_keys == expected_order, f"Issues appear in processing order. Expected: {expected_order}, Actual: {issue_keys}"
+
+
+    def _extract_summary_section(self, mock_print):
+        clean_lines = self._strip_ansi_codes(mock_print)
+
         # Find the summary section (after "Assertion process completed:")
-        lines = clean_output.split('\n')
-        summary_start = None
+        summary_start = self._find_summary_section_start(clean_lines)
+
+        assert summary_start is not None, "Summary section not found in output"
+        return clean_lines[summary_start:]
+ 
+
+    def _find_summary_section_start(self, lines):
+        # Find the line index where the summary section begins after "Assertion process completed:"
         for i, line in enumerate(lines):
             if "Assertion process completed:" in line:
-                summary_start = i
-                break
-        
-        assert summary_start is not None, "Summary section not found in output"
-        
-        # Look only in the summary section
-        summary_lines = lines[summary_start:]
-        
-        # Find the line containing the issue key in the summary section
-        issue_line = None
-        for line in summary_lines:
-            if issue_key in line:
-                issue_line = line
-                break
-        
-        assert issue_line is not None, f"Issue {issue_key} should appear in summary section"
-        
-        # Verify all expected tags appear on the same line as the issue key
-        for tag in expected_tags:
-            assert tag in issue_line, f"Line containing {issue_key} should contain '{tag}'. Line: {issue_line}"
-        
-        # Verify the issue key appears only once in the summary section
-        issue_count = sum(1 for line in summary_lines if issue_key in line)
-        assert issue_count == 1, f"Issue {issue_key} should appear exactly once in summary section, found {issue_count} times"
+                return i
+        return None
 
-    def _assert_issues_appear_in_order(self, mock_print, expected_order):
-        issue_keys = []
-        seen_keys = set()
-        for call in mock_print.call_args_list:
-            if call[0]:  # Check if there are arguments
-                line = call[0][0]  # Get the first argument (the printed text)
-                if 'EPIC-1' in line and 'EPIC-1' not in seen_keys:
-                    issue_keys.append('EPIC-1')
-                    seen_keys.add('EPIC-1')
-                elif 'STORY-11' in line and 'STORY-11' not in seen_keys:
-                    issue_keys.append('STORY-11')
-                    seen_keys.add('STORY-11')
-                elif 'SUBT-111' in line and 'SUBT-111' not in seen_keys:
-                    issue_keys.append('SUBT-111')
-                    seen_keys.add('SUBT-111')
-        
-        # Current behavior: Issues appear in processing order, not sorted by type
-        # TODO: The sorting by type category may not be working as expected
-        assert issue_keys == expected_order, f"Issues appear in processing order. Expected: {expected_order}, Actual: {issue_keys}"
+
+    def _strip_ansi_codes(self, mock_print):
+        # Join all printed lines 
+        # to remove ANSI escape sequences in one go
+        # which makes assertions easier
+
+        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
+
+        import re
+        lines = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
+
+        return lines.split('\n')
+
 
 
 
