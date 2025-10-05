@@ -38,15 +38,8 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_failure_message_extracts_context_and_states(self, mock_jira_class, scenario, summary, current_state, expected_context, expected_start_state, expected_end_state):
         # Given: Mock Jira manager with issue that has assertion failure (current != expected)
-        mock_jira_instance = self._create_scenario_with_assert_issues_from_spec(mock_jira_class, [
-            {
-                'key': 'PROJ-TEST',
-                'current': current_state,  # This is the actual current state
-                'expected': expected_end_state,  # This is what the summary expects
-                'issue_type': 'Bug',
-                'context': expected_context,
-                'summary': summary  # Use the actual summary from test data
-            }
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-TEST', 'current': current_state, 'expected': expected_end_state, 'issue_type': 'Bug', 'context': expected_context, 'summary': summary}
         ])
         
         # When: Assert CLI command is executed with print capture
@@ -68,22 +61,16 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         assert expected_end_state in printed_output, f"Expected state should appear in output for scenario: {scenario}"
         
 
-    @pytest.mark.parametrize("scenario,issue_type,key,summary,expected_tag", [
-        ("evaluated epic", "Epic", "TAPS-215", "I was in To Do - expected to be in Done", "[FAIL]"),
-        ("evaluated story", "Story", "TAPS-210", "I was in To Do - expected to be in Done", "[FAIL]"),
-        ("evaluated subtask", "Sub-task", "TAPS-211", "I was in To Do - expected to be in Done", "[FAIL]"),
+    @pytest.mark.parametrize("scenario,issue_type,key,expected_tag", [
+        ("evaluated epic", "Epic", "TAPS-215", "[FAIL]"),
+        ("evaluated story", "Story", "TAPS-210", "[FAIL]"),
+        ("evaluated subtask", "Sub-task", "TAPS-211", "[FAIL]"),
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assertion_report_should_include_color_tags_for_issues(self, mock_jira_class, scenario, issue_type, key, summary, expected_tag):
+    def test_assertion_report_should_include_color_tags_for_issues(self, mock_jira_class, scenario, issue_type, key, expected_tag):
         # Given: Mock Jira manager with issue that will generate the report
-        mock_jira_instance = self._create_scenario_with_assert_issues_from_spec(mock_jira_class, [
-            {
-                'key': key,
-                'current': 'In Progress',  # Mismatched state to trigger assertion failure
-                'expected': 'Done',
-                'issue_type': issue_type,
-                'summary': summary  # Use the summary from parametrize data
-            }
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': key, 'issue_type': issue_type}
         ])
         
         # When: Assert CLI command is executed
@@ -104,9 +91,9 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_cli_command_executes_successfully(self, mock_jira_class):
         # Given: Mock Jira manager with test issues for assertion testing
-        mock_jira_instance = self._create_scenario_with_assert_issues_from_spec(mock_jira_class, [
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
             {'key': 'PROJ-1', 'current': 'In Progress', 'expected': 'Done'},
-            {'key': 'PROJ-2', 'current': 'Done', 'expected': 'Done'}
+            {'key': 'PROJ-2', 'current': 'Done',        'expected': 'Done'}
         ])
         
         # When: Assert CLI command is executed
@@ -119,35 +106,7 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
 
-    def _create_scenario_with_assert_issues_from_spec(self, mock_jira_class, issue_specs):
-        issue_data_list = []
-        
-        for i, spec in enumerate(issue_specs):
-            # Use provided summary or generate one
-            if 'summary' in spec:
-                summary = spec['summary']
-            else:
-                context_prefix = f"{spec.get('context', '')} - " if spec.get('context') else ""
-                if i == 0:
-                    summary = f"{context_prefix}I was in {spec['current']} - expected to be in {spec['expected']}"
-                else:
-                    summary = f"{context_prefix}starting in {spec['current']} - expected to be in {spec['expected']}"
-            
-            issue_data = {
-                'key': spec['key'],
-                'summary': summary,
-                'status': spec['current'],
-                'issue_type': spec.get('issue_type', 'Story'),
-                'parent_key': spec.get('parent_key'),
-                'rank': spec.get('rank', '0|i0000:')
-            }
-            issue_data_list.append(issue_data)
-        
-        mock_jira_instance = Mock()
-        mock_jira_instance.get_issues_by_label.return_value = issue_data_list
-        mock_jira_instance.connect.return_value = True
-        mock_jira_class.return_value = mock_jira_instance
-        return mock_jira_instance
+
 
     def _execute_assert_operation_with_print_capture(self, mock_manager):
         from testfixture.workflow import run_assert_expectations
@@ -166,9 +125,71 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
             failure_message = failure_messages[0]
             assert failure_message == expected_format, f"Expected format '{expected_format}', got '{failure_message}'"
 
+    def _extract_context_prefix_from_spec(self, spec):
+        context = spec.get('context')
+        if context is None and spec.get('issue_type') is not None:
+            context = f"{spec.get('issue_type')}"
+        return f"{context} - " if context else ""
+
+    def _create_issue_data(self, spec, summary, current_state):
+        return {
+            'key': spec['key'],
+            'summary': summary,
+            'status': current_state,
+            'issue_type': spec.get('issue_type', 'Story'),
+            'parent_key': spec.get('parent_key'),
+            'rank': spec.get('rank', '0|i0000:')
+        }
+
+    def _create_skipped_issue_from_spec(self, spec):
+        summary = "Skipped issue"
+        current_state = spec.get('current', 'New')
+        return self._create_issue_data(spec, summary, current_state)
+
+    def _create_passed_issue_from_spec(self, spec, i):
+        context_prefix = self._extract_context_prefix_from_spec(spec)
+        current_state = spec.get('current', 'New')
+        expected_state = current_state
+        summary = self._generate_summary(context_prefix, current_state, expected_state, i)
+        return self._create_issue_data(spec, summary, current_state)
+
+    def _create_failed_issue_from_spec(self, spec, i):
+        context_prefix = self._extract_context_prefix_from_spec(spec)
+        current_state = spec.get('current', 'New')
+        expected_state = spec.get('expected', 'Done')
+        if current_state == expected_state:  # Ensure they're different to trigger assertion failure
+            expected_state = 'Ready' if current_state == 'New' else 'Done'
+        summary = self._generate_summary(context_prefix, current_state, expected_state, i)
+        return self._create_issue_data(spec, summary, current_state)
+
+    def _create_scenario_with_issues_from_assertion_specs(self, mock_jira_class, issue_specs):
+        issue_data_list = []
+        
+        for i, spec in enumerate(issue_specs):
+            # Handle assert_result logic
+            assert_result = spec.get('assert_result')
+            if assert_result == 'Skip':
+                issue_data_list.append(self._create_skipped_issue_from_spec(spec))
+            elif assert_result == 'Pass':
+                issue_data_list.append(self._create_passed_issue_from_spec(spec, i))
+            else:  # assume 'Failed' or None
+                issue_data_list.append(self._create_failed_issue_from_spec(spec, i))
+        
+        mock_jira_instance = Mock()
+        mock_jira_instance.get_issues_by_label.return_value = issue_data_list
+        mock_jira_instance.connect.return_value = True
+        mock_jira_class.return_value = mock_jira_instance
+        return mock_jira_instance
+
+    def _generate_summary(self, context_prefix, current_state, expected_state, index):
+        """Randomize the summary to use all possible valid evaluatable summary structures."""
+        if index % 2 == 1:
+            return f"{context_prefix}I was in {current_state} - expected to be in {expected_state}"
+        else:
+            return f"{context_prefix}starting in {current_state} - expected to be in {expected_state}"
 
 
-class TestHierarchicalFailureOrganization:
+class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
     HIGHEST_RANK = "0|f0000:"
     HIGHER_RANK = "0|h0000:"
     HIGH_RANK = "0|i0000:"
@@ -180,49 +201,20 @@ class TestHierarchicalFailureOrganization:
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
-    def test_assert_failures_are_sorted_by_issue_type_category(self):
-        """Test that issues are sorted by type category (Sub-task, Story, Epic)."""
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_are_sorted_by_issue_type_category_cli(self, mock_jira_class):
         # Given: Issues of different types with different ranks
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=self.HIGH_RANK
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                rank=self.LOW_RANK
-            ),
-            create_mock_issue(
-                key='PROJ-3',
-                summary='Sub-task starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Sub-task',
-                rank=self.MID_RANK
-            )
-        ]
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'EPIC-1',   'issue_type': 'Epic',     'rank': self.HIGH_RANK},
+            {'key': 'STORY-11', 'issue_type': 'Story',    'rank': self.LOW_RANK},
+            {'key': 'SUBT-111', 'issue_type': 'Sub-task', 'rank': self.MID_RANK}
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: Issues should be sorted by type category (Sub-task, Story, Epic)
-        issues_to_report = results['issues_to_report']
-        issue_keys = extract_issue_keys_from_report(issues_to_report)
-        
-        # Verify all issues appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-3', "Sub-task should appear in issues_to_report")
-        
-        # Current behavior: Issues appear in processing order, not sorted by type
-        # TODO: The sorting by type category may not be working as expected
-        assert issue_keys == ['PROJ-1', 'PROJ-3', 'PROJ-2'], f"Issues appear in processing order. Actual: {issue_keys}"
+        # Then: Issues should appear in the expected order
+        self._assert_issues_appear_in_order(mock_print, ['EPIC-1', 'SUBT-111', 'STORY-11'])
 
     def test_assert_failures_epics_should_be_sorted_by_rank_like_backlog(self):
         """Test that epics are sorted by rank like a backlog (highest priority first)."""
@@ -1205,6 +1197,31 @@ class TestHierarchicalFailureOrganization:
         # BUG: TAPS-211 should be in issues_to_report but currently isn't
         issue_keys = extract_issue_keys_from_report(issues_to_report)
         assert 'TAPS-211' not in issue_keys, f"BUG: TAPS-211 should be in issues_to_report but currently isn't. Actual: {issue_keys}"
+
+    # =============================================================================
+    # PRIVATE HELPER METHODS (sorted alphabetically)
+    # =============================================================================
+
+    def _assert_issues_appear_in_order(self, mock_print, expected_order):
+        issue_keys = []
+        seen_keys = set()
+        for call in mock_print.call_args_list:
+            if call[0]:  # Check if there are arguments
+                line = call[0][0]  # Get the first argument (the printed text)
+                if 'EPIC-1' in line and 'EPIC-1' not in seen_keys:
+                    issue_keys.append('EPIC-1')
+                    seen_keys.add('EPIC-1')
+                elif 'STORY-11' in line and 'STORY-11' not in seen_keys:
+                    issue_keys.append('STORY-11')
+                    seen_keys.add('STORY-11')
+                elif 'SUBT-111' in line and 'SUBT-111' not in seen_keys:
+                    issue_keys.append('SUBT-111')
+                    seen_keys.add('SUBT-111')
+        
+        # Current behavior: Issues appear in processing order, not sorted by type
+        # TODO: The sorting by type category may not be working as expected
+        assert issue_keys == expected_order, f"Issues appear in processing order. Expected: {expected_order}, Actual: {issue_keys}"
+
 
 
 if __name__ == "__main__":
