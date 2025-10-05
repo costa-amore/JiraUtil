@@ -537,33 +537,18 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic 1 should appear before Story 1")
         verify_issue_order(issues_to_report, 'PROJ-3', 'PROJ-4', "Epic 2 should appear before Story 2")
 
-    def test_assert_failures_displays_orphaned_evaluable_items(self):
-        """Test that orphaned evaluable items appear in issues_to_report."""
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_displays_orphaned_evaluable_items(self, mock_jira_class):
         # Given: An orphaned Sub-task with failing assertion
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Orphaned Sub-task starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Sub-task',
-                parent_key=None,  # Orphaned (no parent)
-                rank=self.HIGH_RANK
-            )
-        ]
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'rank': self.HIGH_RANK}
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: The orphaned evaluable item should appear in issues_to_report
-        issues_to_report = results['issues_to_report']
-        
-        # Verify the orphaned item appears in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Orphaned evaluable item should appear in issues_to_report")
-        
-        # Verify counts
-        assert results['failed'] == 1, f"Should have 1 failed assertion (PROJ-1). Actual: {results['failed']}"
-        assert results['not_evaluated'] == 0, f"Should have 0 not evaluated. Actual: {results['not_evaluated']}"
+        # Then: The orphaned evaluable item should appear in CLI output with proper tags
+        self._assert_issue_appears_with_tags_in_output(mock_print, 'PROJ-1', ['[FAIL]', '[Sub-task]'])
 
     def test_assert_failures_skips_orphaned_non_evaluable_items(self):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
@@ -1201,6 +1186,45 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
+
+    def _assert_issue_appears_with_tags_in_output(self, mock_print, issue_key, expected_tags):
+        """Assert that the issue key appears in the summary section with all expected tags on the same line."""
+        # Get all output lines
+        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
+        
+        # Strip ANSI color codes for easier assertion
+        import re
+        clean_output = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
+        
+        # Find the summary section (after "Assertion process completed:")
+        lines = clean_output.split('\n')
+        summary_start = None
+        for i, line in enumerate(lines):
+            if "Assertion process completed:" in line:
+                summary_start = i
+                break
+        
+        assert summary_start is not None, "Summary section not found in output"
+        
+        # Look only in the summary section
+        summary_lines = lines[summary_start:]
+        
+        # Find the line containing the issue key in the summary section
+        issue_line = None
+        for line in summary_lines:
+            if issue_key in line:
+                issue_line = line
+                break
+        
+        assert issue_line is not None, f"Issue {issue_key} should appear in summary section"
+        
+        # Verify all expected tags appear on the same line as the issue key
+        for tag in expected_tags:
+            assert tag in issue_line, f"Line containing {issue_key} should contain '{tag}'. Line: {issue_line}"
+        
+        # Verify the issue key appears only once in the summary section
+        issue_count = sum(1 for line in summary_lines if issue_key in line)
+        assert issue_count == 1, f"Issue {issue_key} should appear exactly once in summary section, found {issue_count} times"
 
     def _assert_issues_appear_in_order(self, mock_print, expected_order):
         issue_keys = []
