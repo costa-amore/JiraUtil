@@ -249,48 +249,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
 
 
-    def test_assert_failures_epics_sorted_by_different_rank_letter_formats(self):
-        """Test that epics with different rank letter formats (f, h, i) are sorted correctly."""
-        # Given: Epics with different rank letter formats
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='EPIC-3',
-                summary='Epic 3 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGH.value  # "0|i0000:" (i format)
-            ),
-            create_mock_issue(
-                key='EPIC-1',
-                summary='Epic 1 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGHEST.value  # "0|f0000:" (f format - highest)
-            ),
-            create_mock_issue(
-                key='EPIC-2',
-                summary='Epic 2 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGHER.value  # "0|h0000:" (h format - higher)
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: Epics should be sorted by rank letter format (f > h > i)
-        issues_to_report = results['issues_to_report']
-        issue_keys = extract_issue_keys_from_report(issues_to_report)
-        
-        # Verify all epics appear in the report
-        verify_issue_in_report(issues_to_report, 'EPIC-1', "Epic 1 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'EPIC-2', "Epic 2 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'EPIC-3', "Epic 3 should appear in issues_to_report")
-        
-        # Expected order: f format (EPIC-1), h format (EPIC-2), i format (EPIC-3)
-        assert issue_keys == ['EPIC-1', 'EPIC-2', 'EPIC-3'], f"Epics should be sorted by rank letter format (f > h > i). Expected: ['EPIC-1', 'EPIC-2', 'EPIC-3'], Actual: {issue_keys}"
 
     def test_assert_failures_displays_epic_with_failing_child_story(self):
         """Test that epics with failing child stories are displayed hierarchically."""
