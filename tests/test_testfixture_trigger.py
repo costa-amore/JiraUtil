@@ -10,30 +10,29 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import pytest
 from unittest.mock import Mock, patch
-from testfixture.workflow import run_trigger_operation
 from testfixture.trigger_processor import _parse_labels_string
 
 
 class TestTestFixtureTrigger:
 
-    # Public test methods (sorted alphabetically)
+    # Public test methods 
     @pytest.mark.parametrize("scenario,trigger_labels,expected_error_contains,mock_manager_factory", [
         ("shows error for empty labels", "", ["fatal", "error"], "normal"),
         ("shows error for whitespace-only labels", "   ", ["fatal", "error"], "normal"),
         ("logs fatal error when issue not found", "TransitionSprintItems", ["fatal", "error"], "fails"),
     ])
-    def test_trigger_error_scenarios(self, scenario, trigger_labels, expected_error_contains, mock_manager_factory):
-        # Given: Mock manager based on scenario
-        mock_manager = self._create_mock_jira_manager_for_scenario(mock_manager_factory)
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_trigger_error_scenarios(self, mock_jira_class, scenario, trigger_labels, expected_error_contains, mock_manager_factory):
+        # Given: Mock Jira manager based on scenario
+        mock_jira_instance = self._create_mock_jira_instance_for_scenario(mock_manager_factory)
+        mock_jira_class.return_value = mock_jira_instance
         
-        # When: Trigger operation is executed
-        mock_print = self._execute_trigger_operation_with_print_capture(mock_manager, trigger_labels)
+        # When: CLI trigger command is executed
+        mock_print = self._execute_cli_command_with_trigger(['tf', 't', '--tl', trigger_labels], 'PROJ-1')
         
         # Then: Should show appropriate error message
         error_found = self._extract_error_message(mock_print, expected_error_contains)
         assert error_found, f"Expected error message containing {expected_error_contains} for scenario: {scenario}"
-
-
 
     @pytest.mark.parametrize("scenario,existing_labels,trigger_labels,expected_final_labels,expected_update_calls", [
         ("adds all labels when none present", [],
@@ -57,7 +56,8 @@ class TestTestFixtureTrigger:
          ["OldLabel", "AnotherLabel", "TransitionSprintItems"], 1),
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_trigger_operation_cli_scenarios(self, mock_jira_class, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
+    @patch('time.sleep')  # Mock sleep to avoid 5-second delay when trigger labels overlap with existing labels
+    def test_trigger_operation_cli_scenarios(self, mock_sleep, mock_jira_class, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
         # Given: Mock Jira manager with test issue
         issue_data = {
             'key': 'PROJ-1',
@@ -109,22 +109,29 @@ class TestTestFixtureTrigger:
          "TransitionSprintItems,CloseEpic,UpdateStatus",
          ["OldLabel"], ["TransitionSprintItems", "OldLabel", "CloseEpic", "UpdateStatus"]),
     ])
-    def test_trigger_scenarios_remove_and_add(self, scenario, existing_labels, trigger_labels, expected_after_removal, expected_final_labels):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    @patch('time.sleep')  # Mock sleep to avoid 5-second delay when trigger labels overlap with existing labels
+    def test_trigger_scenarios_remove_and_add(self, mock_sleep, mock_jira_class, scenario, existing_labels, trigger_labels, expected_after_removal, expected_final_labels):
         """Test trigger scenarios where labels need removing first, then adding."""
-        # Given: Issue with specific existing labels
-        issue = self._create_mock_issue_with_labels(existing_labels)
-        mock_manager = self._create_mock_jira_manager(issue)
+        # Given: Mock Jira instance with issue having specific existing labels
+        issue_data = {
+            'key': 'TAPS-211',
+            'summary': 'Test issue for trigger operation',
+            'status': 'To Do',
+            'labels': existing_labels
+        }
+        mock_jira_instance = self._create_mock_jira_instance_with_issue(issue_data)
+        mock_jira_class.return_value = mock_jira_instance
         
-        # When: Trigger operation is executed
-        with patch('builtins.print') as mock_print:
-            run_trigger_operation(mock_manager, "TAPS-211", trigger_labels)
+        # When: CLI trigger command is executed
+        mock_print = self._execute_cli_command_with_trigger(['tf', 't', '--tl', trigger_labels], 'TAPS-211')
         
         # Then: Should call update twice when labels need removing (remove + add), once when just adding
         expected_calls = 2 if any(label in existing_labels for label in _parse_labels_string(trigger_labels)) else 1
-        assert issue.update.call_count == expected_calls, f"Expected {expected_calls} update calls for scenario: {scenario}"
+        assert mock_jira_instance.jira.issue.return_value.update.call_count == expected_calls, f"Expected {expected_calls} update calls for scenario: {scenario}"
         
         # Verify the final labels match expectations (check the last call)
-        final_call = issue.update.call_args_list[-1]
+        final_call = mock_jira_instance.jira.issue.return_value.update.call_args_list[-1]
         actual_final_labels = final_call[1]["fields"]["labels"]
         assert set(actual_final_labels) == set(expected_final_labels), f"Expected {expected_final_labels}, got {actual_final_labels} for scenario: {scenario}"
         
@@ -134,7 +141,7 @@ class TestTestFixtureTrigger:
         assert add_message, f"Expected INFO message about label addition for scenario: {scenario}"
 
 
-    # Private helper methods (sorted alphabetically)
+    # Private helper methods 
     def _create_mock_issue_with_labels(self, labels):
         mock_issue = Mock()
         mock_issue.key = "TAPS-212"
@@ -147,12 +154,21 @@ class TestTestFixtureTrigger:
         mock_jira_manager.jira.issue.return_value = mock_issue
         return mock_jira_manager
 
-    def _create_mock_jira_manager_for_scenario(self, mock_manager_factory):
+    def _create_mock_jira_instance_for_scenario(self, mock_manager_factory):
+        """Create a mock Jira instance for CLI testing based on scenario."""
         if mock_manager_factory == "fails":
-            return self._create_mock_jira_manager_that_fails()
+            mock_jira_instance = Mock()
+            mock_jira_instance.jira.issue.side_effect = Exception("Issue not found")
+            return mock_jira_instance
         else:
-            issue = self._create_mock_issue_with_labels([])
-            return self._create_mock_jira_manager(issue)
+            issue_data = {
+                'key': 'PROJ-1',
+                'summary': 'Test issue for trigger operation',
+                'status': 'To Do',
+                'labels': []
+            }
+            return self._create_mock_jira_instance_with_issue(issue_data)
+
 
     def _create_mock_jira_instance_with_issue(self, issue_data):
         """Create a mock Jira instance with a specific issue for CLI testing."""
@@ -175,22 +191,27 @@ class TestTestFixtureTrigger:
         """Execute a CLI trigger command for testing."""
         from cli.parser import build_parser
         from testfixture_cli.handlers import handle_test_fixture_commands
+        import sys
+        from io import StringIO
         
         parser = build_parser()
         full_args = command_args + ['-k', issue_key]
         args = parser.parse_args(full_args)
         
-        with patch('builtins.print'):
-            handle_test_fixture_commands(args, {})
-
-    def _execute_trigger_operation_with_print_capture(self, mock_manager, labels_string):
         with patch('builtins.print') as mock_print:
-            try:
-                run_trigger_operation(mock_manager, "TAPS-212", labels_string)
-            except Exception:
-                # Exception is expected, but we still want to capture the print output
-                pass
+            with patch('sys.stderr', new_callable=StringIO) as mock_stderr:
+                with patch('sys.exit') as mock_exit:
+                    try:
+                        handle_test_fixture_commands(args, {})
+                    except SystemExit:
+                        # SystemExit is expected for error scenarios, but we still want to capture the print output
+                        pass
+                    # Capture stderr content as print calls for error extraction
+                    stderr_content = mock_stderr.getvalue()
+                    if stderr_content:
+                        mock_print(stderr_content)
         return mock_print
+
 
     def _extract_error_message(self, mock_print, expected_error_contains):
         calls = mock_print.call_args_list
