@@ -11,12 +11,14 @@ from unittest.mock import patch, mock_open
 from io import StringIO
 
 # Add src directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
+# Add tests directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from jira_cleaner import run_remove_newlines
 from csv_utils import run_extract_field_values
 from jira_dates_eu import run as run_jira_dates_eu
-from .fixtures.csv_scenarios import (
+from tests.fixtures.csv_scenarios import (
     create_csv_with_embedded_newlines,
     create_csv_for_field_extraction, 
     create_csv_with_iso_dates,
@@ -24,7 +26,7 @@ from .fixtures.csv_scenarios import (
     create_field_extraction_scenario,
     create_date_conversion_scenario
 )
-from .fixtures.base_fixtures import create_temp_csv_file, CSV_EMPTY
+from tests.fixtures.base_fixtures import create_temp_csv_file, CSV_EMPTY
 
 
 class TestCSVRemoveNewlinesCommand:

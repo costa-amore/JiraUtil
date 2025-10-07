@@ -12,10 +12,12 @@ from pathlib import Path
 import sys
 
 # Add tools directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
+# Add tests directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from version_manager import VersionManager
-from .fixtures import create_temp_version_file, create_version_manager_with_version
+from tests.fixtures.base_fixtures import create_temp_version_file, create_version_manager_with_version
 
 
 class TestVersionManager(unittest.TestCase):
@@ -217,7 +219,7 @@ class TestVersionManagerCLI(unittest.TestCase):
         result = subprocess.run([
             "python", "tools/version_manager.py", "get",
             "--version-file", str(self.version_file)
-        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent.parent)
         
         # Then: Should return correct version
         self.assertEqual(result.returncode, 0)
@@ -237,7 +239,7 @@ class TestVersionManagerCLI(unittest.TestCase):
         result = subprocess.run([
             "python", "tools/version_manager.py", "set", "2", "1",
             "--version-file", str(self.version_file)
-        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent.parent)
         
         # Then: Should reset build and local to 0
         self.assertEqual(result.returncode, 0)
@@ -256,7 +258,7 @@ class TestVersionManagerCLI(unittest.TestCase):
         result = subprocess.run([
             "python", "tools/version_manager.py", "increment-local",
             "--version-file", str(self.version_file)
-        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent)
+        ], capture_output=True, text=True, cwd=Path(__file__).parent.parent.parent)
         
         # Then: Should increment local build
         self.assertEqual(result.returncode, 0)

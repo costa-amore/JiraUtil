@@ -15,7 +15,7 @@ from unittest.mock import Mock, patch
 from enum import Enum
 
 from src.jira_manager import DEFAULT_RANK_VALUE
-from tests.base_test_jira_utils_command import TestJiraUtilsCommand
+from tests.production.base_test_jira_utils_command import TestJiraUtilsCommand
 
 
 class RankValues(Enum):

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import pytest
 from unittest.mock import Mock, patch
 
-from tests.base_test_jira_utils_command import TestJiraUtilsCommand
+from tests.production.base_test_jira_utils_command import TestJiraUtilsCommand
 
 
 class TestTestFixtureReset(TestJiraUtilsCommand):
