@@ -13,6 +13,9 @@ import pytest
 from unittest.mock import Mock, patch
 from enum import Enum
 
+from src.jira_manager import DEFAULT_RANK_VALUE
+from tests.base_test_jira_utils_command import TestJiraUtilsCommand
+
 
 class RankValues(Enum):
     """Jira rank values used in test fixtures."""
@@ -23,20 +26,14 @@ class RankValues(Enum):
     MID = "0|i0001:"
     LOW = "0|i0002:"
     LOWER = "0|i0003:"
-    NO_RANK = "0|z0000:"  # Default rank value
+    NO_RANK = DEFAULT_RANK_VALUE  # JIRA's actual default rank value
 
 
 # Convenience access to rank values
 RANKS = RankValues
 
-from tests.base_test_jira_utils_command import TestJiraUtilsCommand
-from tests.fixtures.base_fixtures import (
-    DEFAULT_RANK_VALUE
-)
-
 
 class TestTestFixtureAssert(TestJiraUtilsCommand):
-
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
@@ -154,7 +151,6 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
 
 
 class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
-
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
@@ -181,6 +177,34 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
         assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
 
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_displays_three_level_hierarchy_with_indentation(self, mock_jira_class):
+        """Test 3-level hierarchy: Epic (non-evaluated) -> Story (non-evaluated) -> Subtask (failing)."""
+        # Given: Epic with non-evaluated story and failing subtask (3-level hierarchy)
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-1', 'issue_type': 'Epic',     'rank': RANKS.HIGH.value, 'parent_key': None,       'assert_result': 'Skip'},
+            {'key': 'PROJ-2', 'issue_type': 'Story',    'rank': RANKS.MID.value,  'parent_key': 'PROJ-1',   'assert_result': 'Skip'},
+            {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'rank': RANKS.LOW.value,  'parent_key': 'PROJ-2',   'current': 'New',        'expected': 'Ready'}
+        ])
+        
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+        
+        # Then: All three levels should appear in summary section
+        # Note: PROJ-1 and PROJ-2 appear in both the hierarchical structure and "Not evaluated" section
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'PROJ-1', 'contains': ['[INFO]', '[Epic]'],   'skipped_parent': True},
+            {'line_with_key': 'PROJ-2', 'contains': ['[INFO]', '[Story]'],  'skipped_parent': True},
+            {'line_with_key': 'PROJ-3', 'contains': ['[FAIL]', '[Sub-task]']}
+        ])
+        
+        # Verify the hierarchical indentation structure in the main output
+        clean_output = self._strip_ansi_codes(mock_print)
+        clean_output_str = '\n'.join(clean_output)
+        assert '- [INFO] [Epic] PROJ-1:' in clean_output_str, "Epic should appear with proper indentation"
+        assert '  - [INFO] [Story] PROJ-2:' in clean_output_str, "Story should appear indented under Epic"
+        assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
+
     @pytest.mark.skip(reason="TODO: Fix production code - failing subtasks of non-evaluated parents should appear in summary section")
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_failures_displays_two_level_hierarchy(self, mock_jira_class):
@@ -188,7 +212,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         # Given: 2-level hierarchy with non-evaluable parent and failing child
         mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
             {'key': 'TAPS-210', 'issue_type': 'Story',    'rank': RANKS.HIGHER.value, 'parent_key': None,      'assert_result': 'Skip'},
-            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'rank': DEFAULT_RANK_VALUE, 'parent_key': 'TAPS-210'}
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'rank': RANKS.NO_RANK.value, 'parent_key': 'TAPS-210'}
         ])
         
         # When: Assert CLI command is executed
@@ -291,35 +315,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         self._assert_issues_in_summary_section(mock_print, expected_specs)
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_three_level_hierarchy_with_indentation(self, mock_jira_class):
-        """Test 3-level hierarchy: Epic (non-evaluated) -> Story (non-evaluated) -> Subtask (failing)."""
-        # Given: Epic with non-evaluated story and failing subtask (3-level hierarchy)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'PROJ-1', 'issue_type': 'Epic',     'rank': RANKS.HIGH.value, 'parent_key': None,       'assert_result': 'Skip'},
-            {'key': 'PROJ-2', 'issue_type': 'Story',    'rank': RANKS.MID.value,  'parent_key': 'PROJ-1',   'assert_result': 'Skip'},
-            {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'rank': RANKS.LOW.value,  'parent_key': 'PROJ-2',   'current': 'New',        'expected': 'Ready'}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Then: All three levels should appear in summary section
-        # Note: PROJ-1 and PROJ-2 appear in both the hierarchical structure and "Not evaluated" section
-        self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'PROJ-1', 'contains': ['[INFO]', '[Epic]'],   'skipped_parent': True},
-            {'line_with_key': 'PROJ-2', 'contains': ['[INFO]', '[Story]'],  'skipped_parent': True},
-            {'line_with_key': 'PROJ-3', 'contains': ['[FAIL]', '[Sub-task]']}
-        ])
-        
-        # Verify the hierarchical indentation structure in the main output
-        clean_output = self._strip_ansi_codes(mock_print)
-        clean_output_str = '\n'.join(clean_output)
-        assert '- [INFO] [Epic] PROJ-1:' in clean_output_str, "Epic should appear with proper indentation"
-        assert '  - [INFO] [Story] PROJ-2:' in clean_output_str, "Story should appear indented under Epic"
-        assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
-
-
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_failures_skips_orphaned_non_evaluable_items(self, mock_jira_class):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
         # Given: An orphaned Sub-task without assertion pattern (non-evaluable)
@@ -419,6 +414,34 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             'expected_keys': expected_keys
         }
 
+    def _extract_summary_section(self, mock_print):
+        clean_lines = self._strip_ansi_codes(mock_print)
+
+        # Find the summary section (after "Assertion process completed:")
+        summary_start = self._find_summary_section_start(clean_lines)
+
+        assert summary_start is not None, "Summary section not found in output"
+        return clean_lines[summary_start:]
+ 
+    def _find_summary_section_start(self, lines):
+        # Find the line index where the summary section begins after "Assertion process completed:"
+        for i, line in enumerate(lines):
+            if "Assertion process completed:" in line:
+                return i
+        return None
+
+    def _strip_ansi_codes(self, mock_print):
+        # Join all printed lines 
+        # to remove ANSI escape sequences in one go
+        # which makes assertions easier
+
+        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
+
+        import re
+        lines = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
+
+        return lines.split('\n')
+
     def _verify_issue_properties(self, collection_result, issue_specs, in_order):
         """
         Verify all issue properties including presence, contains, count, and order.
@@ -453,34 +476,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         # Verify order if requested
         if in_order:
             assert issue_keys == expected_keys, f"Issues appear in processing order. Expected: {expected_keys}, Actual: {issue_keys}"
-
-    def _extract_summary_section(self, mock_print):
-        clean_lines = self._strip_ansi_codes(mock_print)
-
-        # Find the summary section (after "Assertion process completed:")
-        summary_start = self._find_summary_section_start(clean_lines)
-
-        assert summary_start is not None, "Summary section not found in output"
-        return clean_lines[summary_start:]
- 
-    def _find_summary_section_start(self, lines):
-        # Find the line index where the summary section begins after "Assertion process completed:"
-        for i, line in enumerate(lines):
-            if "Assertion process completed:" in line:
-                return i
-        return None
-
-    def _strip_ansi_codes(self, mock_print):
-        # Join all printed lines 
-        # to remove ANSI escape sequences in one go
-        # which makes assertions easier
-
-        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
-
-        import re
-        lines = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
-
-        return lines.split('\n')
 
 
 if __name__ == "__main__":
