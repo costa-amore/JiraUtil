@@ -41,6 +41,20 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_cli_command_executes_successfully(self, mock_jira_class):
+        # Given: Mock Jira manager with test issues for assertion testing
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-1', 'current': 'In Progress', 'expected': 'Done'},
+            {'key': 'PROJ-2', 'current': 'Done',        'expected': 'Done'}
+        ])
+        
+        # When: Assert CLI command is executed
+        self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
+        
+        # Then: Jira API should be called correctly
+        mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
+
     @pytest.mark.parametrize("scenario,summary,current_state,expected_context,expected_start_state,expected_end_state", [
         ("extracts context from summary", "When in this context, starting in To Do - expected to be in Done", "In Progress", "When in this context,", "To Do", "Done"),
         ("handles summary without context", "I was in SIT/LAB VALIDATED - expected to be in CLOSED", "In Progress", None, "SIT/LAB VALIDATED", "CLOSED"),
@@ -70,31 +84,19 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         # Verify state information appears in output
         assert current_state in printed_output, f"Current state should appear in output for scenario: {scenario}"
         assert expected_end_state in printed_output, f"Expected state should appear in output for scenario: {scenario}"
-        
-
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_cli_command_executes_successfully(self, mock_jira_class):
-        # Given: Mock Jira manager with test issues for assertion testing
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'PROJ-1', 'current': 'In Progress', 'expected': 'Done'},
-            {'key': 'PROJ-2', 'current': 'Done',        'expected': 'Done'}
-        ])
-        
-        # When: Assert CLI command is executed
-        self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
-        
-        # Then: Jira API should be called correctly
-        mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
 
-    def _extract_context_prefix_from_spec(self, spec):
-        context = spec.get('context')
-        if context is None and spec.get('issue_type') is not None:
-            context = f"{spec.get('issue_type')}"
-        return f"{context} - " if context else ""
+    def _create_failed_issue_from_spec(self, spec, i):
+        context_prefix = self._extract_context_prefix_from_spec(spec)
+        current_state = spec.get('current', 'New')
+        expected_state = spec.get('expected', 'Done')
+        if current_state == expected_state:  # Ensure they're different to trigger assertion failure
+            expected_state = 'Ready' if current_state == 'New' else 'Done'
+        summary = self._generate_summary(context_prefix, current_state, expected_state, i)
+        return self._create_issue_data(spec, summary, current_state)
 
     def _create_issue_data(self, spec, summary, current_state):
         return {
@@ -106,24 +108,10 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
             'rank': spec.get('rank', '0|i0000:')
         }
 
-    def _create_skipped_issue_from_spec(self, spec):
-        summary = "Skipped issue"
-        current_state = spec.get('current', 'New')
-        return self._create_issue_data(spec, summary, current_state)
-
     def _create_passed_issue_from_spec(self, spec, i):
         context_prefix = self._extract_context_prefix_from_spec(spec)
         current_state = spec.get('current', 'New')
         expected_state = current_state
-        summary = self._generate_summary(context_prefix, current_state, expected_state, i)
-        return self._create_issue_data(spec, summary, current_state)
-
-    def _create_failed_issue_from_spec(self, spec, i):
-        context_prefix = self._extract_context_prefix_from_spec(spec)
-        current_state = spec.get('current', 'New')
-        expected_state = spec.get('expected', 'Done')
-        if current_state == expected_state:  # Ensure they're different to trigger assertion failure
-            expected_state = 'Ready' if current_state == 'New' else 'Done'
         summary = self._generate_summary(context_prefix, current_state, expected_state, i)
         return self._create_issue_data(spec, summary, current_state)
 
@@ -146,6 +134,17 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         mock_jira_class.return_value = mock_jira_instance
         return mock_jira_instance
 
+    def _create_skipped_issue_from_spec(self, spec):
+        summary = "Skipped issue"
+        current_state = spec.get('current', 'New')
+        return self._create_issue_data(spec, summary, current_state)
+
+    def _extract_context_prefix_from_spec(self, spec):
+        context = spec.get('context')
+        if context is None and spec.get('issue_type') is not None:
+            context = f"{spec.get('issue_type')}"
+        return f"{context} - " if context else ""
+
     def _generate_summary(self, context_prefix, current_state, expected_state, index):
         """Randomize the summary to use all possible valid evaluatable summary structures."""
         if index % 2 == 1:
@@ -159,6 +158,47 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
+
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_displays_orphans(self, mock_jira_class):
+        """Test that orphaned item with real Jira format appears in issues_to_report."""
+        # Given: An orphaned Sub-task with real Jira summary format (like TAPS-211)
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task'}
+        ])
+        
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+        
+        # Then: The orphaned item with real Jira format should appear in failures
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
+        ])
+        
+        # Verify counts
+        clean_output = self._strip_ansi_codes(mock_print)
+        clean_output_str = '\n'.join(clean_output)
+        assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
+        assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
+
+    @pytest.mark.skip(reason="TODO: Fix production code - failing subtasks of non-evaluated parents should appear in summary section")
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_displays_two_level_hierarchy(self, mock_jira_class):
+        """Test that traces how issues are processed through the entire assertion pipeline using CLI."""
+        # Given: 2-level hierarchy with non-evaluable parent and failing child
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'TAPS-210', 'issue_type': 'Story',    'rank': RANKS.HIGHER.value, 'parent_key': None,      'assert_result': 'Skip'},
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'rank': DEFAULT_RANK_VALUE, 'parent_key': 'TAPS-210'}
+        ])
+        
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+        
+        # Verify issues appear in summary
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'TAPS-210', 'contains': ['[INFO]', '[Story]'], 'skipped_parent': True},
+            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
+        ])
 
     @pytest.mark.parametrize("test_name,issue_specs,expected_specs", [
         ("issue_type_category_sorting", [
@@ -278,24 +318,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert '  - [INFO] [Story] PROJ-2:' in clean_output_str, "Story should appear indented under Epic"
         assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
 
-    @pytest.mark.skip(reason="TODO: Fix production code - failing subtasks of non-evaluated parents should appear in summary section")
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_two_level_hierarchy(self, mock_jira_class):
-        """Test that traces how issues are processed through the entire assertion pipeline using CLI."""
-        # Given: 2-level hierarchy with non-evaluable parent and failing child
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'TAPS-210', 'issue_type': 'Story',    'rank': RANKS.HIGHER.value, 'parent_key': None,      'assert_result': 'Skip'},
-            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'rank': DEFAULT_RANK_VALUE, 'parent_key': 'TAPS-210'}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Verify issues appear in summary
-        self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'TAPS-210', 'contains': ['[INFO]', '[Story]'], 'skipped_parent': True},
-            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
-        ])
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_failures_skips_orphaned_non_evaluable_items(self, mock_jira_class):
@@ -324,27 +346,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Assertions failed: 0' in clean_output_str, "Should have 0 failed assertions"
         assert 'Not evaluated: 1' in clean_output_str, "Should have 1 not evaluated"
 
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_orphans(self, mock_jira_class):
-        """Test that orphaned item with real Jira format appears in issues_to_report."""
-        # Given: An orphaned Sub-task with real Jira summary format (like TAPS-211)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'TAPS-211', 'issue_type': 'Sub-task'}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Then: The orphaned item with real Jira format should appear in failures
-        self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
-        ])
-        
-        # Verify counts
-        clean_output = self._strip_ansi_codes(mock_print)
-        clean_output_str = '\n'.join(clean_output)
-        assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
-        assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
