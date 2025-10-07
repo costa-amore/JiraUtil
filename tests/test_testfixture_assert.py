@@ -305,34 +305,32 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
 
 
-    def test_assert_failures_skips_orphaned_non_evaluable_items(self):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_skips_orphaned_non_evaluable_items(self, mock_jira_class):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
         # Given: An orphaned Sub-task without assertion pattern (non-evaluable)
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Sub-task without assertion pattern',
-                status='SIT/LAB Validated',
-                issue_type='Sub-task',
-                parent_key=None,  # Orphaned (no parent)
-                rank=RANKS.HIGH.value
-            )
-        ]
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'assert_result': 'Skip'}
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: The orphaned non-evaluable item should be skipped and not appear in issues_to_report
-        issues_to_report = results['issues_to_report']
+        # Then: The orphaned non-evaluable item should be skipped and not appear in failure report
+        clean_output = self._strip_ansi_codes(mock_print)
+        clean_output_str = '\n'.join(clean_output)
         
-        # Current behavior: Non-evaluable items are skipped and don't appear in issues_to_report
-        # TODO: Consider whether non-evaluable items should appear in the failure report
-        assert len(issues_to_report) == 0, f"Non-evaluable items should be skipped. Actual issues_to_report: {issues_to_report}"
+        # Verify the item is processed but skipped
+        assert 'Asserting PROJ-1:' in clean_output_str, "Item should be processed"
+        assert "Skipping - summary doesn't match expected pattern" in clean_output_str, "Item should be skipped due to non-evaluable pattern"
         
-        # Verify counts - non-evaluable items are counted as not_evaluated but not included in report
-        assert results['not_evaluated'] == 1, f"Should have 1 not evaluated (PROJ-1). Actual: {results['not_evaluated']}"
-        assert results['failed'] == 0, f"Should have 0 failed assertions. Actual: {results['failed']}"
+        # Verify it appears in "Not evaluated" section but not in failures
+        assert 'Not evaluated: PROJ-1' in clean_output_str, "Item should appear in not evaluated list"
+        assert 'Failures:' not in clean_output_str or 'PROJ-1' not in clean_output_str.split('Failures:')[1], "Item should not appear in failures section"
+        
+        # Verify counts
+        assert 'Assertions failed: 0' in clean_output_str, "Should have 0 failed assertions"
+        assert 'Not evaluated: 1' in clean_output_str, "Should have 1 not evaluated"
 
     def test_assert_failures_displays_orphaned_with_real_jira_format(self):
         """Test that orphaned item with real Jira format appears in issues_to_report."""
