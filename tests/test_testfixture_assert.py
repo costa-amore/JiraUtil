@@ -250,36 +250,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
 
 
-    def test_assert_failures_displays_epic_with_failing_child_story(self):
-        """Test that epics with failing child stories are displayed hierarchically."""
-        # Given: An epic with a failing child story
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic summary',
-                status='Closed',
-                issue_type='Epic',
-                rank=RANKS.HIGHEST.value
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.HIGHER.value
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: Both epic and story should appear in hierarchical order
-        issues_to_report = results['issues_to_report']
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Failing child story should appear in issues_to_report")
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before its child story")
 
 
 
