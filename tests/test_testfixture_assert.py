@@ -332,33 +332,27 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Assertions failed: 0' in clean_output_str, "Should have 0 failed assertions"
         assert 'Not evaluated: 1' in clean_output_str, "Should have 1 not evaluated"
 
-    def test_assert_failures_displays_orphaned_with_real_jira_format(self):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_displays_orphaned_with_real_jira_format(self, mock_jira_class):
         """Test that orphaned item with real Jira format appears in issues_to_report."""
         # Given: An orphaned Sub-task with real Jira summary format (like TAPS-211)
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='TAPS-211',
-                summary='I was in SIT/LAB VALIDATED - expected to be in CLOSED',
-                status='SIT/LAB Validated',
-                issue_type='Sub-task',
-                parent_key=None,  # Orphaned (no parent)
-                rank=RANKS.HIGH.value
-            )
-        ]
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'parent_key': None, 'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED', 'current': 'SIT/LAB Validated', 'expected': 'CLOSED'}
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: The orphaned item with real Jira format should appear in issues_to_report
-        issues_to_report = results['issues_to_report']
-        
-        # Verify the orphaned item appears in the report
-        verify_issue_in_report(issues_to_report, 'TAPS-211', "Orphaned item with real Jira format should appear in issues_to_report")
+        # Then: The orphaned item with real Jira format should appear in failures
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
+        ])
         
         # Verify counts
-        assert results['failed'] == 1, f"Should have 1 failed assertion (TAPS-211). Actual: {results['failed']}"
-        assert results['not_evaluated'] == 0, f"Should have 0 not evaluated. Actual: {results['not_evaluated']}"
+        clean_output = self._strip_ansi_codes(mock_print)
+        clean_output_str = '\n'.join(clean_output)
+        assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
+        assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
 
     def test_assert_failures_groups_children_under_epics_not_globally_sorted(self):
         """Test that children are grouped under their epic, not globally sorted."""
