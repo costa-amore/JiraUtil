@@ -22,6 +22,7 @@ class RankValues(Enum):
     HIGH = "0|i0000:"
     MID = "0|i0001:"
     LOW = "0|i0002:"
+    LOWER = "0|i0003:"
     NO_RANK = "0|z0000:"  # Default rank value
 
 
@@ -248,6 +249,17 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             {'line_with_key': 'PROJ-1'},
             {'line_with_key': 'PROJ-2'},
             {'line_with_key': 'PROJ-3'}
+        ]),
+        ("multiple_epics_with_children", [
+            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': RANKS.LOW.value, 'parent_key': None},
+            {'key': 'PROJ-2', 'issue_type': 'Story', 'rank': RANKS.MID.value, 'parent_key': 'PROJ-1'},
+            {'key': 'PROJ-3', 'issue_type': 'Epic', 'rank': RANKS.HIGH.value, 'parent_key': None},
+            {'key': 'PROJ-4', 'issue_type': 'Story', 'rank': RANKS.LOWER.value, 'parent_key': 'PROJ-3'}
+        ], [
+            {'line_with_key': 'PROJ-3'},
+            {'line_with_key': 'PROJ-4'},
+            {'line_with_key': 'PROJ-1'},
+            {'line_with_key': 'PROJ-2'}
         ])
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
@@ -311,60 +323,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         # Verify counts
         assert results['failed'] == 1, f"Should have 1 failed assertion (PROJ-3). Actual: {results['failed']}"
         assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (PROJ-1, PROJ-2). Actual: {results['not_evaluated']}"
-
-
-    def test_assert_failures_displays_multiple_epics_with_children_stories_first(self):
-        """Test multiple epics with children - stories should be displayed first."""
-        # Given: Multiple epics with children
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic 1 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGH.value
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story 1 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.MID.value
-            ),
-            create_mock_issue(
-                key='PROJ-3',
-                summary='Epic 2 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.LOW.value
-            ),
-            create_mock_issue(
-                key='PROJ-4',
-                summary='Story 2 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-3',
-                rank=RANKS.MID.value
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: All epics and stories should appear in issues_to_report
-        issues_to_report = results['issues_to_report']
-        
-        # Verify all items appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic 1 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story 1 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-3', "Epic 2 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-4', "Story 2 should appear in issues_to_report")
-        
-        # Verify hierarchical order: Epic -> Story for each pair
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic 1 should appear before Story 1")
-        verify_issue_order(issues_to_report, 'PROJ-3', 'PROJ-4', "Epic 2 should appear before Story 2")
 
 
     def test_assert_failures_skips_orphaned_non_evaluable_items(self):
