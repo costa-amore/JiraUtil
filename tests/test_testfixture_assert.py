@@ -239,6 +239,15 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             {'line_with_key': 'STORY-1'},
             {'line_with_key': 'STORY-2'},
             {'line_with_key': 'STORY-3'}
+        ]),
+        ("mixed_epics_and_orphaned_items", [
+            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': RANKS.HIGH.value, 'parent_key': None},
+            {'key': 'PROJ-2', 'issue_type': 'Story', 'rank': RANKS.MID.value, 'parent_key': 'PROJ-1'},
+            {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'rank': RANKS.LOW.value, 'parent_key': None}
+        ], [
+            {'line_with_key': 'PROJ-1'},
+            {'line_with_key': 'PROJ-2'},
+            {'line_with_key': 'PROJ-3'}
         ])
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
@@ -303,50 +312,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert results['failed'] == 1, f"Should have 1 failed assertion (PROJ-3). Actual: {results['failed']}"
         assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (PROJ-1, PROJ-2). Actual: {results['not_evaluated']}"
 
-    def test_assert_failures_displays_mixed_epics_and_orphaned_items(self):
-        """Test mixed scenario: Epic with child and orphaned item."""
-        # Given: Mix of epic with child and orphaned item
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGH.value
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.MID.value
-            ),
-            create_mock_issue(
-                key='PROJ-3',
-                summary='Orphaned Sub-task starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Sub-task',
-                parent_key=None,  # Orphaned
-                rank=RANKS.LOW.value
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: All items should appear in issues_to_report
-        issues_to_report = results['issues_to_report']
-        
-        # Verify all items appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-3', "Orphaned Sub-task should appear in issues_to_report")
-        
-        # Verify hierarchical order: Epic -> Story, then orphaned item
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before its child Story")
-        verify_issue_order(issues_to_report, 'PROJ-2', 'PROJ-3', "Story should appear before orphaned Sub-task")
 
     def test_assert_failures_displays_multiple_epics_with_children_stories_first(self):
         """Test multiple epics with children - stories should be displayed first."""
