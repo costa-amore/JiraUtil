@@ -11,6 +11,22 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import pytest
 from unittest.mock import Mock, patch
+from enum import Enum
+
+
+class RankValues(Enum):
+    """Jira rank values used in test fixtures."""
+    
+    HIGHEST = "0|f0000:"
+    HIGHER = "0|h0000:"
+    HIGH = "0|i0000:"
+    MID = "0|i0001:"
+    LOW = "0|i0002:"
+    NO_RANK = "0|z0000:"  # Default rank value
+
+
+# Convenience access to rank values
+RANKS = RankValues
 
 from tests.base_test_jira_utils_command import TestJiraUtilsCommand
 from tests.fixtures import (
@@ -190,54 +206,37 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
 
 
 class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
-    HIGHEST_RANK = "0|f0000:"
-    HIGHER_RANK = "0|h0000:"
-    HIGH_RANK = "0|i0000:"
-    LOW_RANK = "0|i0002:"
-    MID_RANK = "0|i0001:"
-    NO_RANK = DEFAULT_RANK_VALUE
 
     # =============================================================================
     # PUBLIC TEST METHODS (sorted alphabetically)
     # =============================================================================
 
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_are_sorted_by_issue_type_category_cli(self, mock_jira_class):
-        # Given: Issues of different types with different ranks
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'EPIC-1',   'issue_type': 'Epic',     'rank': self.HIGH_RANK},
-            {'key': 'STORY-11', 'issue_type': 'Story',    'rank': self.LOW_RANK},
-            {'key': 'SUBT-111', 'issue_type': 'Sub-task', 'rank': self.MID_RANK}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Then: Issues should appear in the expected order
-        self._assert_issues_in_summary_section(mock_print, [
+    @pytest.mark.parametrize("test_name,issue_specs,expected_specs", [
+        ("issue_type_category_sorting", [
+            {'key': 'EPIC-1',   'issue_type': 'Epic',     'rank': RANKS.HIGH.value},
+            {'key': 'STORY-11', 'issue_type': 'Story',    'rank': RANKS.LOW.value},
+            {'key': 'SUBT-111', 'issue_type': 'Sub-task', 'rank': RANKS.MID.value}
+        ], [
             {'line_with_key': 'EPIC-1'},
             {'line_with_key': 'SUBT-111'},
             {'line_with_key': 'STORY-11'}
+        ]),
+        ("epics_rank_sorting", [
+            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': RANKS.LOW.value},
+            {'key': 'PROJ-2', 'issue_type': 'Epic', 'rank': RANKS.HIGH.value},
+            {'key': 'PROJ-3', 'issue_type': 'Epic', 'rank': RANKS.MID.value}
+        ], [
+            {'line_with_key': 'PROJ-2'},
+            {'line_with_key': 'PROJ-3'},
+            {'line_with_key': 'PROJ-1'}
         ])
-
+    ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_epics_should_be_sorted_by_rank_like_backlog(self, mock_jira_class):
-        # Given: Multiple epics with different ranks (like backlog priority)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': self.LOW_RANK},
-            {'key': 'PROJ-2', 'issue_type': 'Epic', 'rank': self.HIGH_RANK},
-            {'key': 'PROJ-3', 'issue_type': 'Epic', 'rank': self.MID_RANK}
-        ])
-        
-        # When: The assert operation is executed via CLI
+    def test_assert_failures_sorting_behavior(self, mock_jira_class, test_name, issue_specs, expected_specs):
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, issue_specs)
         mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Then: Epics should be sorted by rank (highest priority first)
-        self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'PROJ-2'},  # HIGH_RANK (highest priority)
-            {'line_with_key': 'PROJ-3'},  # MID_RANK (middle priority)
-            {'line_with_key': 'PROJ-1'}   # LOW_RANK (lowest priority)
-        ])
+        self._assert_issues_in_summary_section(mock_print, expected_specs)
+
 
     def test_assert_failures_stories_within_epic_should_be_sorted_by_rank(self):
         """Test that stories within the same epic are sorted by rank."""
@@ -249,7 +248,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             ),
             create_mock_issue(
                 key='STORY-3',
@@ -257,7 +256,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='EPIC-1',
-                rank=self.LOW_RANK  # Lowest priority
+                rank=RANKS.LOW.value  # Lowest priority
             ),
             create_mock_issue(
                 key='STORY-1',
@@ -265,7 +264,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='EPIC-1',
-                rank=self.HIGH_RANK  # Highest priority
+                rank=RANKS.HIGH.value  # Highest priority
             ),
             create_mock_issue(
                 key='STORY-2',
@@ -273,7 +272,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='EPIC-1',
-                rank=self.MID_RANK  # Middle priority
+                rank=RANKS.MID.value  # Middle priority
             )
         ]
         
@@ -303,21 +302,21 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic 3 starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGH_RANK  # "0|i0000:" (i format)
+                rank=RANKS.HIGH.value  # "0|i0000:" (i format)
             ),
             create_mock_issue(
                 key='EPIC-1',
                 summary='Epic 1 starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGHEST_RANK  # "0|f0000:" (f format - highest)
+                rank=RANKS.HIGHEST.value  # "0|f0000:" (f format - highest)
             ),
             create_mock_issue(
                 key='EPIC-2',
                 summary='Epic 2 starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGHER_RANK  # "0|h0000:" (h format - higher)
+                rank=RANKS.HIGHER.value  # "0|h0000:" (h format - higher)
             )
         ]
         
@@ -346,7 +345,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic summary',
                 status='Closed',
                 issue_type='Epic',
-                rank=self.HIGHEST_RANK
+                rank=RANKS.HIGHEST.value
             ),
             create_mock_issue(
                 key='PROJ-2',
@@ -354,7 +353,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.HIGHER_RANK
+                rank=RANKS.HIGHER.value
             )
         ]
         
@@ -380,7 +379,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic without assertion pattern',
                 status='Closed',
                 issue_type='Epic',
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             ),
             create_mock_issue(
                 key='PROJ-2',
@@ -388,7 +387,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='Closed',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.MID_RANK
+                rank=RANKS.MID.value
             ),
             create_mock_issue(
                 key='PROJ-3',
@@ -396,7 +395,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Sub-task',
                 parent_key='PROJ-2',
-                rank=self.LOW_RANK
+                rank=RANKS.LOW.value
             )
         ]
         
@@ -429,7 +428,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             ),
             create_mock_issue(
                 key='PROJ-2',
@@ -437,7 +436,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.MID_RANK
+                rank=RANKS.MID.value
             ),
             create_mock_issue(
                 key='PROJ-3',
@@ -445,7 +444,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Sub-task',
                 parent_key=None,  # Orphaned
-                rank=self.LOW_RANK
+                rank=RANKS.LOW.value
             )
         ]
         
@@ -474,7 +473,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic 1 starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             ),
             create_mock_issue(
                 key='PROJ-2',
@@ -482,14 +481,14 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.MID_RANK
+                rank=RANKS.MID.value
             ),
             create_mock_issue(
                 key='PROJ-3',
                 summary='Epic 2 starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.LOW_RANK
+                rank=RANKS.LOW.value
             ),
             create_mock_issue(
                 key='PROJ-4',
@@ -497,7 +496,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-3',
-                rank=self.MID_RANK
+                rank=RANKS.MID.value
             )
         ]
         
@@ -521,7 +520,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
     def test_assert_failures_displays_orphaned_evaluable_items(self, mock_jira_class):
         # Given: An orphaned Sub-task with failing assertion
         mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'rank': self.HIGH_RANK}
+            {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'rank': RANKS.HIGH.value}
         ])
         
         # When: Assert CLI command is executed
@@ -543,7 +542,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='SIT/LAB Validated',
                 issue_type='Sub-task',
                 parent_key=None,  # Orphaned (no parent)
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             )
         ]
         
@@ -572,7 +571,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='SIT/LAB Validated',
                 issue_type='Sub-task',
                 parent_key=None,  # Orphaned (no parent)
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             )
         ]
         
@@ -599,7 +598,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='Epic starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             ),
             create_mock_issue(
                 key='PROJ-2',
@@ -607,7 +606,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.LOW_RANK
+                rank=RANKS.LOW.value
             ),
             create_mock_issue(
                 key='PROJ-3',
@@ -615,7 +614,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.MID_RANK
+                rank=RANKS.MID.value
             )
         ]
         
@@ -645,14 +644,14 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='New',
                 issue_type='Story',
                 parent_key='PROJ-1',
-                rank=self.MID_RANK
+                rank=RANKS.MID.value
             ),
             create_mock_issue(
                 key='PROJ-1',
                 summary='Epic starting in NEW - expected to be in READY',
                 status='New',
                 issue_type='Epic',
-                rank=self.HIGH_RANK
+                rank=RANKS.HIGH.value
             )
         ]
         
@@ -679,7 +678,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 summary='When parent is CLOSED -> also close the children',
                 status='Closed',
                 issue_type='Story',
-                rank=self.HIGHER_RANK
+                rank=RANKS.HIGHER.value
             ),
             create_mock_issue(
                 key='TAPS-211',
@@ -766,7 +765,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='Closed',
                 issue_type='Story',
                 parent_key=None,
-                rank=self.HIGHER_RANK
+                rank=RANKS.HIGHER.value
             ),
             create_mock_issue(
                 key='TAPS-211',
@@ -802,8 +801,8 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
 
     def _create_children_before_parents_scenario(self):
-        story = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
+        story = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
+        epic = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
         return create_mock_manager([story, epic])
 
     def _create_epic_failing_assertion(self, key, rank):
@@ -813,37 +812,37 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         return self._create_issue_assertion("Epic", key, rank, evaluable=False)
 
     def _create_epic_with_child_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
-        story = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
+        epic = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
+        story = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
         return create_mock_manager([epic, story])
 
     def _create_epic_with_children_grouping_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
-        story1 = self._create_story_failing_assertion("PROJ-2", self.LOW_RANK, "PROJ-1")
-        story2 = self._create_story_failing_assertion("PROJ-3", self.MID_RANK, "PROJ-1")
+        epic = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
+        story1 = self._create_story_failing_assertion("PROJ-2", RANKS.LOW.value, "PROJ-1")
+        story2 = self._create_story_failing_assertion("PROJ-3", RANKS.MID.value, "PROJ-1")
         return create_mock_manager([epic, story1, story2])
 
     def _create_epic_with_multiple_children_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
-        story1 = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
-        story2 = self._create_story_failing_assertion("PROJ-3", self.LOW_RANK, "PROJ-1")
+        epic = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
+        story1 = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
+        story2 = self._create_story_failing_assertion("PROJ-3", RANKS.LOW.value, "PROJ-1")
         return create_mock_manager([epic, story1, story2])
 
     def _create_epic_with_non_evaluated_parent_scenario(self):
-        epic = self._create_epic_non_evaluated("PROJ-1", self.HIGH_RANK)
-        story = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
+        epic = self._create_epic_non_evaluated("PROJ-1", RANKS.HIGH.value)
+        story = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
         return create_mock_manager([epic, story])
 
     def _create_epic_with_non_evaluated_story_and_subtask_scenario(self):
-        epic = self._create_epic_non_evaluated("PROJ-1", self.HIGH_RANK)
-        story = self._create_story_non_evaluated("PROJ-2", self.MID_RANK, "PROJ-1")
-        subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOW_RANK, "PROJ-2")
+        epic = self._create_epic_non_evaluated("PROJ-1", RANKS.HIGH.value)
+        story = self._create_story_non_evaluated("PROJ-2", RANKS.MID.value, "PROJ-1")
+        subtask = self._create_subtask_failing_assertion("PROJ-3", RANKS.LOW.value, "PROJ-2")
         return create_mock_manager([epic, story, subtask])
 
     def _create_epic_with_story_and_subtask_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
-        story = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
-        subtask = self._create_subtask_failing_assertion("PROJ-3", self.LOW_RANK, "PROJ-2")
+        epic = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
+        story = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
+        subtask = self._create_subtask_failing_assertion("PROJ-3", RANKS.LOW.value, "PROJ-2")
         return create_mock_manager([epic, story, subtask])
 
     def _create_issue_assertion(self, issue_type, key, rank, parent_key=None, evaluable=True, status_override=None):
@@ -863,21 +862,21 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         return issue
 
     def _create_mixed_epics_and_orphaned_scenario(self):
-        epic = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
-        story = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
-        orphaned = self._create_orphaned_failing_assertion("PROJ-3", self.LOW_RANK)
+        epic = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
+        story = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
+        orphaned = self._create_orphaned_failing_assertion("PROJ-3", RANKS.LOW.value)
         return create_mock_manager([epic, story, orphaned])
 
     def _create_multiple_epics_with_children_scenario(self):
-        epic1 = self._create_epic_failing_assertion("PROJ-1", self.HIGH_RANK)
-        story1 = self._create_story_failing_assertion("PROJ-2", self.MID_RANK, "PROJ-1")
-        epic2 = self._create_epic_failing_assertion("PROJ-3", self.LOW_RANK)
-        story2 = self._create_story_failing_assertion("PROJ-4", self.NO_RANK, "PROJ-3")
+        epic1 = self._create_epic_failing_assertion("PROJ-1", RANKS.HIGH.value)
+        story1 = self._create_story_failing_assertion("PROJ-2", RANKS.MID.value, "PROJ-1")
+        epic2 = self._create_epic_failing_assertion("PROJ-3", RANKS.LOW.value)
+        story2 = self._create_story_failing_assertion("PROJ-4", RANKS.NO_RANK.value, "PROJ-3")
         return create_mock_manager([epic1, story1, epic2, story2])
 
     def _create_orphaned_evaluable_scenario(self):
         # Orphaned item with failing assertion (like TAPS-211 Sub-task)
-        orphaned = self._create_orphaned_failing_assertion("PROJ-1", self.HIGH_RANK)
+        orphaned = self._create_orphaned_failing_assertion("PROJ-1", RANKS.HIGH.value)
         return create_mock_manager([orphaned])
 
     def _create_orphaned_failing_assertion(self, key, rank):
@@ -888,7 +887,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
     def _create_orphaned_non_evaluable_scenario(self):
         # Orphaned item without assertion pattern (like TAPS-211 Sub-task)
-        orphaned = self._create_orphaned_non_evaluable("PROJ-1", self.HIGH_RANK)
+        orphaned = self._create_orphaned_non_evaluable("PROJ-1", RANKS.HIGH.value)
         return create_mock_manager([orphaned])
 
     def _create_orphaned_real_jira_format(self, key, rank):
@@ -901,7 +900,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
     def _create_orphaned_real_jira_format_scenario(self):
         # Orphaned item with real Jira summary format (like TAPS-211)
-        orphaned = self._create_orphaned_real_jira_format("TAPS-211", self.HIGH_RANK)
+        orphaned = self._create_orphaned_real_jira_format("TAPS-211", RANKS.HIGH.value)
         return create_mock_manager([orphaned])
 
     def _create_story_failing_assertion(self, key, rank, parent_key):
@@ -1050,7 +1049,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='Closed',
                 issue_type='Story',
                 parent_key=None,
-                rank=self.HIGHER_RANK
+                rank=RANKS.HIGHER.value
             ),
             create_mock_issue(
                 key='TAPS-211',
@@ -1135,7 +1134,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 status='Closed',
                 issue_type='Story',
                 parent_key=None,
-                rank=self.HIGHER_RANK
+                rank=RANKS.HIGHER.value
             ),
             create_mock_issue(
                 key='TAPS-211',
