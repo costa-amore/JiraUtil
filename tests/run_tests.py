@@ -14,24 +14,34 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-# Fix Unicode encoding issues on Windows
+# Fix Unicode encoding issues on Windows (without detaching buffers for pytest compatibility)
 if sys.platform == "win32":
-    import codecs
-    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
-    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
+    import io
+    # Set UTF-8 encoding without detaching buffers to avoid pytest issues
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    else:
+        # Fallback for older Python versions - wrap without detaching
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 from utils.colors import colored_print, TextTag
 
 
 
 def find_test_files():
-	"""Find all test files in the tests directory."""
+	"""Find all test files in the tests directory and subdirectories."""
 	tests_dir = Path(__file__).parent
+	project_root = tests_dir.parent
 	test_files = []
 	
-	for file_path in tests_dir.glob("test_*.py"):
+	# Search recursively for test files in all subdirectories
+	for file_path in tests_dir.rglob("test_*.py"):
 		if file_path.name != __file__:
-			test_files.append(str(file_path))
+			# Convert to relative path from project root for pytest
+			relative_path = file_path.relative_to(project_root)
+			test_files.append(str(relative_path))
 	
 	return sorted(test_files)
 

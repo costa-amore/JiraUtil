@@ -22,8 +22,8 @@ if (-not (Test-Path $ScriptPath)) {
     throw "Script not found: $ScriptPath"
 }
 
-# Check if this is a test file
-if ($ScriptPath -match "test.*\.py$") {
+# Check if this is a test file (but not the test runner script)
+if ($ScriptPath -match "test.*\.py$" -and $ScriptPath -notmatch "run_tests\.py$") {
     # If no traceback option specified, default to --tb=line for cleaner output
     if (-not ($Args -contains "--tb=short" -or $Args -contains "--tb=line" -or $Args -contains "--tb=no" -or $Args -contains "--tb=auto" -or $Args -contains "--tb=long")) {
         $Args += "--tb=line"

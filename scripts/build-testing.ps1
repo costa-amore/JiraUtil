@@ -32,7 +32,7 @@ function Invoke-BuildTests {
         
         # Use the documented test runner for consistent behavior
         # This ensures the same test environment as local development
-        $process = Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "run.ps1", "tests/run_tests.py" -Wait -PassThru -NoNewWindow
+        $process = Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "run.ps1", "tests/run_tests.py", "all" -Wait -PassThru -NoNewWindow
         if ($process.ExitCode -ne 0) {
             Write-Host "[FAIL] Unit tests failed! Build aborted." -ForegroundColor Red
             Write-Host "Please fix all test failures before building executables." -ForegroundColor Red
