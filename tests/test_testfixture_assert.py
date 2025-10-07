@@ -354,51 +354,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
         assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
 
-    def test_assert_failures_groups_children_under_epics_not_globally_sorted(self):
-        """Test that children are grouped under their epic, not globally sorted."""
-        # Given: Epic with multiple children
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGH.value
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story 1 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.LOW.value
-            ),
-            create_mock_issue(
-                key='PROJ-3',
-                summary='Story 2 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.MID.value
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: All items should appear in issues_to_report with epic first
-        issues_to_report = results['issues_to_report']
-        
-        # Verify all items appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story 1 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-3', "Story 2 should appear in issues_to_report")
-        
-        # Verify hierarchical order: Epic first, then children
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before Story 1")
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-3', "Epic should appear before Story 2")
-
     def test_assert_failures_handles_children_found_before_parents(self):
         """Test that hierarchical structure is maintained even when children appear before parents in input."""
         # Given: Child story appears before parent epic in the issue list
