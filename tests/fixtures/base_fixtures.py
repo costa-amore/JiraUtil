@@ -180,7 +180,11 @@ def create_version_manager_with_version(major, minor, build=0, local=0):
     
     # Add tools directory to path for imports
     sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
-    from version_manager import VersionManager
+    try:
+        from version_manager import VersionManager  # type: ignore
+    except ImportError:
+        # Fallback for when version_manager is not available
+        raise ImportError("version_manager module not found. Ensure tools directory is accessible.")
     
     version_file, temp_dir = create_temp_version_file()
     manager = VersionManager(str(version_file))
@@ -246,8 +250,8 @@ def run_version_command(command, version_file, cwd=None):
 TEMPLATE_CONFIG_CONTENT = create_template_config_content()
 CONFIGURED_CONFIG_CONTENT = create_configured_config_content()
 
-# Default rank value for test issues
-DEFAULT_RANK_VALUE = "0|i0000:"
+# Default rank value for test issues (imported from jira_manager)
+from src.jira_manager import DEFAULT_RANK_VALUE
 
 
 def create_mock_issue(key, summary, status, issue_type, parent_key=None, rank=DEFAULT_RANK_VALUE):
