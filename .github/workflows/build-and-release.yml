@@ -87,6 +87,26 @@ jobs:
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
         echo "Current version: $VERSION"
         
+        # Find the latest tag that isn't the current one
+        CURRENT_TAG="v$VERSION"
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "^$CURRENT_TAG$" | head -n 1)
+        echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+        
+        # Extract improvements from commit messages since last release
+        echo "improvements<<EOF" >> $GITHUB_OUTPUT
+        echo "| Type | Improvement |" >> $GITHUB_OUTPUT
+        echo "|----------|----------|" >> $GITHUB_OUTPUT
+        
+        if [ -n "$PREVIOUS_TAG" ]; then
+          echo "Extracting improvements from commits since $PREVIOUS_TAG..."
+          git log --pretty=format:"%s" $PREVIOUS_TAG..HEAD | grep -E "^(fix|feat|doc):" | sed 's/^fix:/🐛 Bug Fix:/' | sed 's/^feat:/✨ Feature:/' | sed 's/^doc:/📚 Documentation:/' | sed 's/^/| /' | sed 's/$/ |/' >> $GITHUB_OUTPUT
+        else
+          echo "No previous tag found, no improvements to show"
+          echo "| ℹ️ Info | No previous release found for comparison |" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "EOF" >> $GITHUB_OUTPUT
+        
     - name: Check if tag exists
       id: check-tag
       run: |
@@ -110,6 +130,10 @@ jobs:
         gh release create ${{ steps.version.outputs.tag }} \
           --title "Release ${{ steps.version.outputs.tag }}" \
           --notes "## 🎉 JiraUtil ${{ steps.version.outputs.version }} Release
+          
+          ### ✨ Improvements
+          
+          ${{ steps.version.outputs.improvements }}
           
           ### 📦 Downloads
           
@@ -145,7 +169,7 @@ jobs:
           
           ---
           
-          **Full Changelog**: https://github.com/costa-amore/JiraUtil/compare/v1.0.36.0...${{ steps.version.outputs.tag }}" \
+          **Full Changelog**: https://github.com/costa-amore/JiraUtil/compare/${{ steps.version.outputs.previous_tag }}...${{ steps.version.outputs.tag }}" \
           ./build-executables/JiraUtil-Windows-v${{ steps.version.outputs.version }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
