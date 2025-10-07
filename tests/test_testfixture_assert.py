@@ -260,6 +260,13 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             {'line_with_key': 'PROJ-4'},
             {'line_with_key': 'PROJ-1'},
             {'line_with_key': 'PROJ-2'}
+        ]),
+        ("children_found_before_parents", [
+            {'key': 'PROJ-2', 'issue_type': 'Story', 'rank': RANKS.MID.value, 'parent_key': 'PROJ-1'},
+            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': RANKS.HIGH.value, 'parent_key': None}
+        ], [
+            {'line_with_key': 'PROJ-1'},
+            {'line_with_key': 'PROJ-2'}
         ])
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
@@ -353,41 +360,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         clean_output_str = '\n'.join(clean_output)
         assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
         assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
-
-    def test_assert_failures_handles_children_found_before_parents(self):
-        """Test that hierarchical structure is maintained even when children appear before parents in input."""
-        # Given: Child story appears before parent epic in the issue list
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.MID.value
-            ),
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=RANKS.HIGH.value
-            )
-        ]
-        
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
-        
-        # Then: Should still display hierarchical structure correctly
-        issues_to_report = results['issues_to_report']
-        
-        # Verify all items appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
-        
-        # Verify hierarchical order: Epic should appear before its child Story
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before its child Story")
 
     def test_evaluated_subtask_with_non_evaluated_parent_story_missing_from_failures(self):
         """Test 2-level hierarchy: Story TAPS-210 -> Subtask TAPS-211 using real production code."""
