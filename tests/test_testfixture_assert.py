@@ -275,54 +275,34 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
 
 
-    def test_assert_failures_displays_epic_with_non_evaluated_story_and_subtask(self):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_displays_epic_with_non_evaluated_story_and_subtask(self, mock_jira_class):
         """Test 3-level hierarchy: Epic (non-evaluated) -> Story (non-evaluated) -> Subtask (failing)."""
         # Given: Epic with non-evaluated story and failing subtask (3-level hierarchy)
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic without assertion pattern',
-                status='Closed',
-                issue_type='Epic',
-                rank=RANKS.HIGH.value
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Story without assertion pattern',
-                status='Closed',
-                issue_type='Story',
-                parent_key='PROJ-1',
-                rank=RANKS.MID.value
-            ),
-            create_mock_issue(
-                key='PROJ-3',
-                summary='Sub-task starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Sub-task',
-                parent_key='PROJ-2',
-                rank=RANKS.LOW.value
-            )
-        ]
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': RANKS.HIGH.value, 'parent_key': None, 'summary': 'Epic without assertion pattern', 'current': 'Closed', 'assert_result': 'Skip'},
+            {'key': 'PROJ-2', 'issue_type': 'Story', 'rank': RANKS.MID.value, 'parent_key': 'PROJ-1', 'summary': 'Story without assertion pattern', 'current': 'Closed', 'assert_result': 'Skip'},
+            {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'rank': RANKS.LOW.value, 'parent_key': 'PROJ-2', 'current': 'New', 'expected': 'Ready'}
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: Assert CLI command is executed
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: All three levels should appear in issues_to_report
-        issues_to_report = results['issues_to_report']
+        # Then: All three levels should appear in CLI output in hierarchical order
+        # Note: PROJ-1 and PROJ-2 appear in both the hierarchical structure and "Not evaluated" section
+        # We only verify the hierarchical structure part
+        clean_output = self._strip_ansi_codes(mock_print)
+        clean_output_str = '\n'.join(clean_output)
         
-        # Verify all issues appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Story should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-3', "Sub-task should appear in issues_to_report")
+        # Verify hierarchical structure: Epic -> Story -> Subtask
+        assert 'PROJ-1' in clean_output_str, "Epic PROJ-1 should appear in output"
+        assert 'PROJ-2' in clean_output_str, "Story PROJ-2 should appear in output" 
+        assert 'PROJ-3' in clean_output_str, "Sub-task PROJ-3 should appear in output"
         
-        # Verify hierarchical order: Epic -> Story -> Subtask
-        verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic should appear before Story")
-        verify_issue_order(issues_to_report, 'PROJ-2', 'PROJ-3', "Story should appear before Subtask")
-        
-        # Verify counts
-        assert results['failed'] == 1, f"Should have 1 failed assertion (PROJ-3). Actual: {results['failed']}"
-        assert results['not_evaluated'] == 2, f"Should have 2 not evaluated (PROJ-1, PROJ-2). Actual: {results['not_evaluated']}"
+        # Verify the hierarchical indentation structure
+        assert '- [INFO] [Epic] PROJ-1:' in clean_output_str, "Epic should appear with proper indentation"
+        assert '  - [INFO] [Story] PROJ-2:' in clean_output_str, "Story should appear indented under Epic"
+        assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
 
 
     def test_assert_failures_skips_orphaned_non_evaluable_items(self):
