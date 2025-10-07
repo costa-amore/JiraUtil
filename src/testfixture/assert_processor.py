@@ -82,6 +82,8 @@ def assert_testfixture_issues(jira_instance: JiraInstanceManager, test_set_label
     
     for orphan_to_report in orphans:
         results['issues_to_report'].append(orphan_to_report)
+        for subtask_to_report in _childrenOf(orphan_to_report, subtasks):
+            results['issues_to_report'].append(subtask_to_report)
 
     # Aggregate results from individual assertions
     assertion_results = skipped_issues + issues_to_list + succeeded_issues

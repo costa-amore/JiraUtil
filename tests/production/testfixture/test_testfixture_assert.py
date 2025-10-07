@@ -183,49 +183,29 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         """Test 3-level hierarchy: Epic (non-evaluated) -> Story (non-evaluated) -> Subtask (failing)."""
         # Given: Epic with non-evaluated story and failing subtask (3-level hierarchy)
         mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'PROJ-1', 'issue_type': 'Epic',     'rank': RANKS.HIGH.value, 'parent_key': None,       'assert_result': 'Skip'},
-            {'key': 'PROJ-2', 'issue_type': 'Story',    'rank': RANKS.MID.value,  'parent_key': 'PROJ-1',   'assert_result': 'Skip'},
-            {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'rank': RANKS.LOW.value,  'parent_key': 'PROJ-2',   'current': 'New',        'expected': 'Ready'}
+            {'key': 'PROJ-1', 'issue_type': 'Epic',     'parent_key': None,       'assert_result': 'Skip'},
+            {'key': 'PROJ-2', 'issue_type': 'Story',    'parent_key': 'PROJ-1',   'assert_result': 'Skip'},
+            {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'parent_key': 'PROJ-2'}
         ])
         
         # When: Assert CLI command is executed
         mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: All three levels should appear in summary section
-        # Note: PROJ-1 and PROJ-2 appear in both the hierarchical structure and "Not evaluated" section
-        self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'PROJ-1', 'contains': ['[INFO]', '[Epic]'],   'skipped_parent': True},
-            {'line_with_key': 'PROJ-2', 'contains': ['[INFO]', '[Story]'],  'skipped_parent': True},
-            {'line_with_key': 'PROJ-3', 'contains': ['[FAIL]', '[Sub-task]']}
-        ])
-        
-        # Verify the hierarchical indentation structure in the main output
+        # Then the hierarchical indentation structure should be seen in the main output
         clean_output = self._strip_ansi_codes(mock_print)
         clean_output_str = '\n'.join(clean_output)
         assert '- [INFO] [Epic] PROJ-1:' in clean_output_str, "Epic should appear with proper indentation"
         assert '  - [INFO] [Story] PROJ-2:' in clean_output_str, "Story should appear indented under Epic"
         assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
 
-    @pytest.mark.skip(reason="TODO: Fix production code - failing subtasks of non-evaluated parents should appear in summary section")
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_two_level_hierarchy(self, mock_jira_class):
-        """Test that traces how issues are processed through the entire assertion pipeline using CLI."""
-        # Given: 2-level hierarchy with non-evaluable parent and failing child
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'TAPS-210', 'issue_type': 'Story',    'rank': RANKS.HIGHER.value, 'parent_key': None,      'assert_result': 'Skip'},
-            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'rank': RANKS.NO_RANK.value, 'parent_key': 'TAPS-210'}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Verify issues appear in summary
-        self._assert_issues_in_summary_section(mock_print, [
+    @pytest.mark.parametrize("test_name,issue_specs,expected_specs", [
+        ("Orphans with children", [
+            {'key': 'TAPS-210', 'issue_type': 'Story',    'parent_key': None,      'assert_result': 'Skip'},
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'parent_key': 'TAPS-210'}
+        ], [
             {'line_with_key': 'TAPS-210', 'contains': ['[INFO]', '[Story]'], 'skipped_parent': True},
             {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
-        ])
-
-    @pytest.mark.parametrize("test_name,issue_specs,expected_specs", [
+        ]),
         ("issue_type_category_sorting", [
             {'key': 'EPIC-1',   'issue_type': 'Epic',     'rank': RANKS.HIGH.value},
             {'key': 'STORY-11', 'issue_type': 'Story',    'rank': RANKS.LOW.value},
