@@ -8,8 +8,8 @@ A powerful command-line tool for Jira administrators and power users.
 2. **Extract** the ZIP file to a folder
 3. **Edit** `jira_config.env` with your Jira credentials
 4. **Run** the tool:
-   - Windows: Double-click `JiraUtil.exe` or run `run.bat`
-   - macOS/Linux: Run `./JiraUtil` or `./run.sh`
+   - Windows: Run `JiraUtil.exe -h` or double-click `run.bat`
+   - macOS/Linux: Run `./JiraUtil -h` or `./run.sh`
 
 ## 📋 Available Commands
 
