@@ -229,6 +229,11 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             {'line_with_key': 'PROJ-2'},
             {'line_with_key': 'PROJ-3'},
             {'line_with_key': 'PROJ-1'}
+        ]),
+        ("orphaned_evaluable_items", [
+            {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'rank': RANKS.HIGH.value}
+        ], [
+            {'line_with_key': 'PROJ-1', 'contains': ['[FAIL]', '[Sub-task]']}
         ])
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
@@ -516,20 +521,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         verify_issue_order(issues_to_report, 'PROJ-1', 'PROJ-2', "Epic 1 should appear before Story 1")
         verify_issue_order(issues_to_report, 'PROJ-3', 'PROJ-4', "Epic 2 should appear before Story 2")
 
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_orphaned_evaluable_items(self, mock_jira_class):
-        # Given: An orphaned Sub-task with failing assertion
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'rank': RANKS.HIGH.value}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
-        
-        # Then: The orphaned evaluable item should appear in CLI output with proper tags
-        self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'PROJ-1', 'contains': ['[FAIL]', '[Sub-task]']}
-        ])
 
     def test_assert_failures_skips_orphaned_non_evaluable_items(self):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
