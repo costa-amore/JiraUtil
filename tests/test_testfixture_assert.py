@@ -220,48 +220,24 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             {'line_with_key': 'STORY-11'}
         ])
 
-    def test_assert_failures_epics_should_be_sorted_by_rank_like_backlog(self):
-        """Test that epics are sorted by rank like a backlog (highest priority first)."""
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    def test_assert_failures_epics_should_be_sorted_by_rank_like_backlog(self, mock_jira_class):
         # Given: Multiple epics with different ranks (like backlog priority)
-        mock_jira_manager = create_mock_manager()
-        mock_issues = [
-            create_mock_issue(
-                key='PROJ-1',
-                summary='Epic 1 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=self.LOW_RANK  # 0|i0002: (lowest priority)
-            ),
-            create_mock_issue(
-                key='PROJ-2',
-                summary='Epic 2 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=self.HIGH_RANK  # 0|i0000: (highest priority)
-            ),
-            create_mock_issue(
-                key='PROJ-3',
-                summary='Epic 3 starting in NEW - expected to be in READY',
-                status='New',
-                issue_type='Epic',
-                rank=self.MID_RANK  # 0|i0001: (middle priority)
-            )
-        ]
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+            {'key': 'PROJ-1', 'issue_type': 'Epic', 'rank': self.LOW_RANK},
+            {'key': 'PROJ-2', 'issue_type': 'Epic', 'rank': self.HIGH_RANK},
+            {'key': 'PROJ-3', 'issue_type': 'Epic', 'rank': self.MID_RANK}
+        ])
         
-        # When: The assert operation is executed
-        results = execute_assert_testfixture_issues(mock_jira_manager, mock_issues)
+        # When: The assert operation is executed via CLI
+        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
         # Then: Epics should be sorted by rank (highest priority first)
-        issues_to_report = results['issues_to_report']
-        issue_keys = extract_issue_keys_from_report(issues_to_report)
-        
-        # Verify all epics appear in the report
-        verify_issue_in_report(issues_to_report, 'PROJ-1', "Epic 1 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-2', "Epic 2 should appear in issues_to_report")
-        verify_issue_in_report(issues_to_report, 'PROJ-3', "Epic 3 should appear in issues_to_report")
-        
-        # Epics should be sorted by rank: HIGH_RANK (PROJ-2), MID_RANK (PROJ-3), LOW_RANK (PROJ-1)
-        assert issue_keys == ['PROJ-2', 'PROJ-3', 'PROJ-1'], f"Epics should be sorted by rank (highest priority first). Expected: ['PROJ-2', 'PROJ-3', 'PROJ-1'], Actual: {issue_keys}"
+        self._assert_issues_in_summary_section(mock_print, [
+            {'line_with_key': 'PROJ-2'},  # HIGH_RANK (highest priority)
+            {'line_with_key': 'PROJ-3'},  # MID_RANK (middle priority)
+            {'line_with_key': 'PROJ-1'}   # LOW_RANK (lowest priority)
+        ])
 
     def test_assert_failures_stories_within_epic_should_be_sorted_by_rank(self):
         """Test that stories within the same epic are sorted by rank."""
