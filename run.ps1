@@ -22,6 +22,16 @@ if (-not (Test-Path $ScriptPath)) {
     throw "Script not found: $ScriptPath"
 }
 
-# Run the target script with any extra args
-& $venvPython $ScriptPath @Args
+# Check if this is a test file
+if ($ScriptPath -match "test.*\.py$") {
+    # If no traceback option specified, default to --tb=line for cleaner output
+    if (-not ($Args -contains "--tb=short" -or $Args -contains "--tb=line" -or $Args -contains "--tb=no" -or $Args -contains "--tb=auto" -or $Args -contains "--tb=long")) {
+        $Args += "--tb=line"
+    }
+    # Run with pytest for test files
+    & $venvPython -m pytest $ScriptPath @Args
+} else {
+    # Run the target script with any extra args
+    & $venvPython $ScriptPath @Args
+}
 
