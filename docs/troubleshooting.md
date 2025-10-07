@@ -4,6 +4,39 @@
 
 Common issues and solutions for JiraUtil.
 
+## Display Issues
+
+### Icons Not Displaying Properly on Windows
+
+**Symptoms:**
+- README.md shows garbled characters instead of emoji icons (🚀, 📋, etc.)
+- Terminal displays question marks or boxes instead of Unicode characters
+- VS Code shows broken character symbols
+
+**Solutions:**
+
+**Quick Fix (PowerShell/Command Prompt):**
+1. Open Windows Terminal or PowerShell as Administrator
+2. Run: `Set-ItemProperty -Path "HKCU:\Console" -Name "CodePage" -Value 65001`
+3. Restart your terminal
+
+**System-wide Fix:**
+1. Open Windows Settings → Time & Language → Language
+2. Click "Administrative language settings"
+3. Click "Change system locale"
+4. Check "Beta: Use Unicode UTF-8 for worldwide language support"
+5. Restart your computer
+
+**VS Code Specific:**
+1. Open VS Code
+2. Press `Ctrl+Shift+P`
+3. Type "Terminal: Select Default Profile"
+4. Choose "Windows PowerShell" or "Command Prompt"
+5. In terminal settings, set `"terminal.integrated.encoding": "utf8"`
+
+**Alternative:**
+Use `README-Windows.md` which contains ASCII alternatives to emoji icons.
+
 ## Command Syntax Issues
 
 ### Multiple Labels Not Working
