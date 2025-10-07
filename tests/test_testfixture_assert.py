@@ -93,8 +93,6 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
 
-
-
     def _execute_assert_operation_with_print_capture(self, mock_manager):
         from testfixture.workflow import run_assert_expectations
         with patch('builtins.print') as mock_print:
@@ -300,8 +298,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert '  - [INFO] [Story] PROJ-2:' in clean_output_str, "Story should appear indented under Epic"
         assert '    - [FAIL] [Sub-task] PROJ-3:' in clean_output_str, "Sub-task should appear indented under Story"
 
-
-
     @pytest.mark.skip(reason="TODO: Fix production code - failing subtasks of non-evaluated parents should appear in summary section")
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_failures_traces_issue_processing_pipeline(self, mock_jira_class):
@@ -384,16 +380,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
 
 
-
-
-    # =============================================================================
-    # PRIVATE HELPER METHODS (sorted alphabetically)
-    # =============================================================================
-
-
-
-
-
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
@@ -404,33 +390,84 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         
         Args:
             mock_print: Mock print object from CLI execution
-            issue_specs: List of dicts with 'line_with_key' and optional 'contains'
-                        If 'contains' is provided, verifies tags are on same line as key
-                        If multiple specs provided, 
-                            by default it verifies they appear in the given order
-                            unless 'in_order' is set to false, then just verify existence 
+            
+            issue_specs: List of dicts 
+                'line_with_key' 
+                
+                'contains' [optional]
+                    - if provided, verifies tags are on same line as key
+                
+                'skipped_parent' [optional] 
+                    - if True: verifies issue appears as parent in overview and as not evaluated in summary section
+                
+                - if multiple specs provided, 
+                    by default it verifies they appear in the given order
+                    unless 'in_order' is set to false, then just verify existence 
+
             in_order: default: True
         """
-
         summary_lines = self._extract_summary_section(mock_print)
         
-        # Extract issue keys and their lines from summary section
-        issue_data = {}
+        # Collect all needed data from summary lines
+        collection_result = self._collect_issue_data_from_summary(summary_lines, issue_specs, in_order)
+        
+        # Verify all expected issues and their properties
+        self._verify_issue_properties(collection_result, issue_specs, in_order)
+
+
+    def _collect_issue_data_from_summary(self, summary_lines, issue_specs, in_order):
+        """
+        Collect issue data from summary lines in a single pass.
+        
+        Returns:
+            dict: Collection result with 'issue_data', 'issue_counts', 'issue_keys', 'expected_keys'
+        """
+        issue_data = {}  # For contains verification
+        issue_keys = []  # For order verification
+        seen_keys = set()  # For order verification
+        issue_counts = {}  # For count verification
+        expected_keys = [spec['line_with_key'] for spec in issue_specs]  # For order verification
+        
+        # Single pass through summary lines to collect all needed data
         for line in summary_lines:
             for spec in issue_specs:
                 key = spec['line_with_key']
-                if key in line and key not in issue_data:
-                    issue_data[key] = line
-                    break
+                
+                if key in line:
+                    # Collect line data (first occurrence only)
+                    if key not in issue_data:
+                        issue_data[key] = line
+                    
+                    # Track count for count verification (all occurrences)
+                    issue_counts[key] = issue_counts.get(key, 0) + 1
+                    
+                    # Collect order information if requested (first occurrence only)
+                    if in_order and key not in seen_keys:
+                        issue_keys.append(key)
+                        seen_keys.add(key)
         
-        # Verify all expected issues appear in summary section
-        expected_keys = [spec['line_with_key'] for spec in issue_specs]
-        missing_keys = [key for key in expected_keys if key not in issue_data]
-        assert not missing_keys, f"Issues missing from summary section: {missing_keys}"
+        return {
+            'issue_data': issue_data,
+            'issue_counts': issue_counts,
+            'issue_keys': issue_keys,
+            'expected_keys': expected_keys
+        }
+
+    def _verify_issue_properties(self, collection_result, issue_specs, in_order):
+        """
+        Verify all issue properties including presence, contains, count, and order.
+        """
+        issue_data = collection_result['issue_data']
+        issue_counts = collection_result['issue_counts']
+        issue_keys = collection_result['issue_keys']
+        expected_keys = collection_result['expected_keys']
         
-        # Verify contains and count for each issue
+        # Verify all expected issues appear in summary section and their properties
         for spec in issue_specs:
             key = spec['line_with_key']
+            
+            # Verify issue appears in summary section
+            assert key in issue_data, f"Issue {key} missing from summary section"
             
             # Verify contains if provided
             contains = spec.get('contains', [])
@@ -438,9 +475,9 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
                 line = issue_data[key]
                 for tag in contains:
                     assert tag in line, f"Line containing {key} should contain '{tag}'. Line: {line}"
-
+            
             # Verify count
-            count = sum(1 for line in summary_lines if key in line)
+            count = issue_counts.get(key, 0)
             skipped_parent = spec.get('skipped_parent', False)
             if skipped_parent:
                 assert count == 2, f"Issue {key} should appear as parent in overview and as not evaluated in summary section, found {count} times"
@@ -449,19 +486,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         
         # Verify order if requested
         if in_order:
-            issue_keys = []
-            seen_keys = set()
-            for line in summary_lines:
-                for spec in issue_specs:
-                    key = spec['line_with_key']
-                    if key in line and key not in seen_keys:
-                        issue_keys.append(key)
-                        seen_keys.add(key)
-                        break
-            
-            expected_order = [spec['line_with_key'] for spec in issue_specs]
-            assert issue_keys == expected_order, f"Issues appear in processing order. Expected: {expected_order}, Actual: {issue_keys}"
-
+            assert issue_keys == expected_keys, f"Issues appear in processing order. Expected: {expected_keys}, Actual: {issue_keys}"
 
     def _extract_summary_section(self, mock_print):
         clean_lines = self._strip_ansi_codes(mock_print)
