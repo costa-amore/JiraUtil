@@ -77,32 +77,6 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         assert expected_end_state in printed_output, f"Expected state should appear in output for scenario: {scenario}"
         
 
-    @pytest.mark.parametrize("scenario,issue_type,key,expected_tag", [
-        ("evaluated epic", "Epic", "TAPS-215", "[FAIL]"),
-        ("evaluated story", "Story", "TAPS-210", "[FAIL]"),
-        ("evaluated subtask", "Sub-task", "TAPS-211", "[FAIL]"),
-    ])
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assertion_report_should_include_color_tags_for_issues(self, mock_jira_class, scenario, issue_type, key, expected_tag):
-        # Given: Mock Jira manager with issue that will generate the report
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': key, 'issue_type': issue_type}
-        ])
-        
-        # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
-        
-        # Then: Jira API should be called correctly
-        mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
-        
-        # And: The report should include the expected color tag
-        printed_output = '\n'.join([call[0][0] for call in mock_print.call_args_list if call[0]])
-        # Remove ANSI color codes for easier matching
-        import re
-        clean_output = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
-        
-        assert expected_tag in clean_output, f"Report should include {expected_tag} tag for {scenario}"
-        assert f'{expected_tag} [{issue_type}] {key}:' in clean_output, f"Report should show {expected_tag} [{issue_type}] {key}:"
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_cli_command_executes_successfully(self, mock_jira_class):
@@ -234,6 +208,21 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
             {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'rank': RANKS.HIGH.value}
         ], [
             {'line_with_key': 'PROJ-1', 'contains': ['[FAIL]', '[Sub-task]']}
+        ]),
+        ("color_tags_epic", [
+            {'key': 'TAPS-215', 'issue_type': 'Epic'}
+        ], [
+            {'line_with_key': 'TAPS-215', 'contains': ['[FAIL]', '[Epic]']}
+        ]),
+        ("color_tags_story", [
+            {'key': 'TAPS-210', 'issue_type': 'Story'}
+        ], [
+            {'line_with_key': 'TAPS-210', 'contains': ['[FAIL]', '[Story]']}
+        ]),
+        ("color_tags_subtask", [
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task'}
+        ], [
+            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
         ])
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
