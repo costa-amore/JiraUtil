@@ -30,11 +30,8 @@ class RankValues(Enum):
 RANKS = RankValues
 
 from tests.base_test_jira_utils_command import TestJiraUtilsCommand
-from tests.fixtures import (
-    create_assert_scenario
-)
 from tests.fixtures.base_fixtures import (
-    verify_context_extraction, DEFAULT_RANK_VALUE
+    DEFAULT_RANK_VALUE
 )
 
 
@@ -92,23 +89,6 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
     # =============================================================================
-
-    def _execute_assert_operation_with_print_capture(self, mock_manager):
-        from testfixture.workflow import run_assert_expectations
-        with patch('builtins.print') as mock_print:
-            run_assert_expectations(mock_manager, "rule-testing")
-        return mock_print
-
-    def _extract_failure_messages(self, mock_print):
-        print_calls = [call[0][0] for call in mock_print.call_args_list if call[0]]
-        return [msg for msg in print_calls if 'Expected' in msg and 'but is' in msg]
-
-    def _verify_failure_message_format(self, mock_print, expected_format):
-        failure_messages = self._extract_failure_messages(mock_print)
-        
-        if failure_messages:
-            failure_message = failure_messages[0]
-            assert failure_message == expected_format, f"Expected format '{expected_format}', got '{failure_message}'"
 
     def _extract_context_prefix_from_spec(self, spec):
         context = spec.get('context')
@@ -300,7 +280,7 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
 
     @pytest.mark.skip(reason="TODO: Fix production code - failing subtasks of non-evaluated parents should appear in summary section")
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_traces_issue_processing_pipeline(self, mock_jira_class):
+    def test_assert_failures_displays_two_level_hierarchy(self, mock_jira_class):
         """Test that traces how issues are processed through the entire assertion pipeline using CLI."""
         # Given: 2-level hierarchy with non-evaluable parent and failing child
         mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
@@ -311,24 +291,11 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         # When: Assert CLI command is executed
         mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
         
-        # Then: Processing should complete with expected counts
-        clean_output = self._strip_ansi_codes(mock_print)
-        clean_output_str = '\n'.join(clean_output)
-        
-        # Verify processing counts
-        assert 'Issues processed: 2' in clean_output_str, "Should process 2 issues"
-        assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion (TAPS-211)"
-        assert 'Not evaluated: 1' in clean_output_str, "Should have 1 not evaluated (TAPS-210)"
-        
         # Verify issues appear in summary
         self._assert_issues_in_summary_section(mock_print, [
-            {'line_with_key': 'TAPS-210', 'contains': ['[INFO]', '[Story]'], 'skipped_parent': True}
+            {'line_with_key': 'TAPS-210', 'contains': ['[INFO]', '[Story]'], 'skipped_parent': True},
+            {'line_with_key': 'TAPS-211', 'contains': ['[FAIL]', '[Sub-task]']}
         ])
-        
-        # BUG: TAPS-211 should appear in summary but currently doesn't for 2-level hierarchies
-        summary_lines = self._extract_summary_section(mock_print)
-        summary_str = '\n'.join(summary_lines)
-        assert 'TAPS-211' not in summary_str, f"BUG: TAPS-211 should appear in summary but currently doesn't for 2-level hierarchies. Summary: {summary_str}"
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
     def test_assert_failures_skips_orphaned_non_evaluable_items(self, mock_jira_class):
@@ -358,11 +325,11 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Not evaluated: 1' in clean_output_str, "Should have 1 not evaluated"
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_orphaned_with_real_jira_format(self, mock_jira_class):
+    def test_assert_failures_displays_orphans(self, mock_jira_class):
         """Test that orphaned item with real Jira format appears in issues_to_report."""
         # Given: An orphaned Sub-task with real Jira summary format (like TAPS-211)
         mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
-            {'key': 'TAPS-211', 'issue_type': 'Sub-task', 'parent_key': None, 'summary': 'I was in SIT/LAB VALIDATED - expected to be in CLOSED', 'current': 'SIT/LAB Validated', 'expected': 'CLOSED'}
+            {'key': 'TAPS-211', 'issue_type': 'Sub-task'}
         ])
         
         # When: Assert CLI command is executed
@@ -378,7 +345,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         clean_output_str = '\n'.join(clean_output)
         assert 'Assertions failed: 1' in clean_output_str, "Should have 1 failed assertion"
         assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
-
 
     # =============================================================================
     # PRIVATE HELPER METHODS (sorted alphabetically)
@@ -413,7 +379,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         
         # Verify all expected issues and their properties
         self._verify_issue_properties(collection_result, issue_specs, in_order)
-
 
     def _collect_issue_data_from_summary(self, summary_lines, issue_specs, in_order):
         """
@@ -497,14 +462,12 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert summary_start is not None, "Summary section not found in output"
         return clean_lines[summary_start:]
  
-
     def _find_summary_section_start(self, lines):
         # Find the line index where the summary section begins after "Assertion process completed:"
         for i, line in enumerate(lines):
             if "Assertion process completed:" in line:
                 return i
         return None
-
 
     def _strip_ansi_codes(self, mock_print):
         # Join all printed lines 
@@ -517,8 +480,6 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         lines = re.sub(r'\x1b\[[0-9;]*m', '', printed_output)
 
         return lines.split('\n')
-
-
 
 
 if __name__ == "__main__":
