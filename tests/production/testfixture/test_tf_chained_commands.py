@@ -182,21 +182,21 @@ class TestTFChainedCommands(unittest.TestCase):
     @patch('testfixture_cli.handlers.execute_with_jira_manager')
     @patch('testfixture_cli.handlers.get_jira_credentials')
     def test_handle_chained_commands_trigger_without_label_fails(self, mock_get_creds, mock_execute):
-        """Test that trigger command without label fails."""
         mock_get_creds.return_value = ('http://test.com', 'user', 'pass')
         mock_execute.return_value = None
         
         args = MagicMock()
         args.commands = ['r', 't']
         args.tsl = None
-        args.tl = None  # No label provided
+        args.tl = None
         args.key = 'TEST-123'
         args.jira_url = None
         args.username = None
         args.password = None
         
-        with self.assertRaises(SystemExit):
+        with patch('builtins.print') as mock_print:
             handle_test_fixture_commands(args, {})
+            mock_print.assert_called_with("[FATAL] ERROR: Trigger command requires --tl/--trigger-label argument")
 
     def test_parse_chained_commands_same_command_multiple_times(self):
         """Test parsing chained commands with same command repeated multiple times."""
