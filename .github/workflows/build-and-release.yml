@@ -99,7 +99,7 @@ jobs:
         
         if [ -n "$PREVIOUS_TAG" ]; then
           echo "Extracting improvements from commits since $PREVIOUS_TAG..."
-          git log --pretty=format:"%s" $PREVIOUS_TAG..HEAD | grep -E "^(fix|feat|doc):" | sed 's/^fix:/🐛 Bug Fix:/' | sed 's/^feat:/✨ Feature:/' | sed 's/^doc:/📚 Documentation:/' | sed 's/^/| /' | sed 's/$/ |/' >> $GITHUB_OUTPUT
+          git log --pretty=format:"%s" $PREVIOUS_TAG..HEAD | grep -E "^(fix|feat|doc):" | sed 's/^fix:/🐛 Bug Fix|/' | sed 's/^feat:/✨ Feature|/' | sed 's/^doc:/📚 Documentation|/' | sed 's/^/| /' | sed 's/$/ |/' >> $GITHUB_OUTPUT
         else
           echo "No previous tag found, no improvements to show"
           echo "| ℹ️ Info | No previous release found for comparison |" >> $GITHUB_OUTPUT
