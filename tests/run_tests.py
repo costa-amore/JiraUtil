@@ -94,7 +94,6 @@ def run_tests():
 		sys.executable, "-m", "pytest"
 	] + test_files + [
 		"-v",                    # Verbose output
-		"-s",                    # Don't capture stdin/stdout
 		"--tb=short",           # Short traceback format
 		"--strict-markers",     # Strict marker handling
 		"--disable-warnings",   # Disable warnings for cleaner output
@@ -138,7 +137,7 @@ def run_specific_test_category(category):
 	"""Run tests for a specific category, file, or pattern."""
 	category_mapping = {
 		"csv": "test_csv_export_commands.py",
-		"testfixture": ["test_testfixture_trigger.py", "test_testfixture_assert.py", "test_testfixture_reset.py"],
+		"testfixture": ["tests/production/testfixture/test_testfixture_trigger.py", "tests/production/testfixture/test_testfixture_assert.py", "tests/production/testfixture/test_testfixture_reset.py"],
 		"cli": "test_cli_commands.py",
 		"overview": "test_functional_overview.py",
 		"color": "test_color_system.py",

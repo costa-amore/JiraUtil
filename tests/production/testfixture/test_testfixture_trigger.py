@@ -12,8 +12,10 @@ import pytest
 from unittest.mock import Mock, patch
 from testfixture.trigger_processor import _parse_labels_string
 
+from tests.production.base_test_jira_utils_command import TestJiraUtilsCommand
 
-class TestTestFixtureTrigger:
+
+class TestTestFixtureTrigger(TestJiraUtilsCommand):
 
     # Public test methods 
     @pytest.mark.parametrize("scenario,trigger_labels,expected_error_contains,mock_manager_factory", [
@@ -22,13 +24,16 @@ class TestTestFixtureTrigger:
         ("logs fatal error when issue not found", "TransitionSprintItems", ["fatal", "error"], "fails"),
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_trigger_error_scenarios(self, mock_jira_class, scenario, trigger_labels, expected_error_contains, mock_manager_factory):
-        # Given: Mock Jira manager based on scenario
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_trigger_error_scenarios(self, mock_get_credentials, mock_jira_class, scenario, trigger_labels, expected_error_contains, mock_manager_factory):
+        # Given: Jira manager based on scenario
+        self._setup_mock_credentials(mock_get_credentials)
         mock_jira_instance = self._create_mock_jira_instance_for_scenario(mock_manager_factory)
         mock_jira_class.return_value = mock_jira_instance
         
         # When: CLI trigger command is executed
-        mock_print = self._execute_cli_command_with_trigger(['tf', 't', '--tl', trigger_labels], 'PROJ-1')
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                   'tf', 't', '--tl', trigger_labels, '-k', 'PROJ-1')
         
         # Then: Should show appropriate error message
         error_found = self._extract_error_message(mock_print, expected_error_contains)
@@ -55,10 +60,12 @@ class TestTestFixtureTrigger:
          "TransitionSprintItems",
          ["OldLabel", "AnotherLabel", "TransitionSprintItems"], 1),
     ])
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
     @patch('time.sleep')  # Mock sleep to avoid 5-second delay when trigger labels overlap with existing labels
-    def test_trigger_operation_cli_scenarios(self, mock_sleep, mock_jira_class, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
-        # Given: Mock Jira manager with test issue
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_trigger_operation_cli_scenarios(self, mock_sleep, mock_get_credentials, mock_jira_class, scenario, existing_labels, trigger_labels, expected_final_labels, expected_update_calls):
+        # Given: Jira manager with test issue
+        self._setup_mock_credentials(mock_get_credentials)
         issue_data = {
             'key': 'PROJ-1',
             'summary': 'Test issue for trigger operation',
@@ -69,7 +76,8 @@ class TestTestFixtureTrigger:
         mock_jira_class.return_value = mock_jira_instance
         
         # When: CLI command is executed with trigger-labels
-        self._execute_cli_command_with_trigger(['tf', 't', '--tl', trigger_labels], 'PROJ-1')
+        self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                       'tf', 't', '--tl', trigger_labels, '-k', 'PROJ-1')
         
         # Then: Verify the actual Jira API calls with properly parsed labels
         mock_jira_instance.jira.issue.assert_called_once_with('PROJ-1')
@@ -109,11 +117,13 @@ class TestTestFixtureTrigger:
          "TransitionSprintItems,CloseEpic,UpdateStatus",
          ["OldLabel"], ["TransitionSprintItems", "OldLabel", "CloseEpic", "UpdateStatus"]),
     ])
-    @patch('testfixture_cli.handlers.JiraInstanceManager')
     @patch('time.sleep')  # Mock sleep to avoid 5-second delay when trigger labels overlap with existing labels
-    def test_trigger_scenarios_remove_and_add(self, mock_sleep, mock_jira_class, scenario, existing_labels, trigger_labels, expected_after_removal, expected_final_labels):
+    @patch('testfixture_cli.handlers.JiraInstanceManager')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_trigger_scenarios_remove_and_add(self, mock_sleep, mock_get_credentials, mock_jira_class, scenario, existing_labels, trigger_labels, expected_after_removal, expected_final_labels):
         """Test trigger scenarios where labels need removing first, then adding."""
-        # Given: Mock Jira instance with issue having specific existing labels
+        # Given: Jira instance with issue having specific existing labels
+        self._setup_mock_credentials(mock_get_credentials)
         issue_data = {
             'key': 'TAPS-211',
             'summary': 'Test issue for trigger operation',
@@ -124,7 +134,8 @@ class TestTestFixtureTrigger:
         mock_jira_class.return_value = mock_jira_instance
         
         # When: CLI trigger command is executed
-        mock_print = self._execute_cli_command_with_trigger(['tf', 't', '--tl', trigger_labels], 'TAPS-211')
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                    'tf', 't', '--tl', trigger_labels, '-k', 'TAPS-211')
         
         # Then: Should call update twice when labels need removing (remove + add), once when just adding
         expected_calls = 2 if any(label in existing_labels for label in _parse_labels_string(trigger_labels)) else 1
@@ -186,31 +197,6 @@ class TestTestFixtureTrigger:
         mock_jira_manager.connect.return_value = True
         mock_jira_manager.jira.issue.side_effect = Exception("Issue not found")
         return mock_jira_manager
-
-    def _execute_cli_command_with_trigger(self, command_args, issue_key):
-        """Execute a CLI trigger command for testing."""
-        from cli.parser import build_parser
-        from testfixture_cli.handlers import handle_test_fixture_commands
-        import sys
-        from io import StringIO
-        
-        parser = build_parser()
-        full_args = command_args + ['-k', issue_key]
-        args = parser.parse_args(full_args)
-        
-        with patch('builtins.print') as mock_print:
-            with patch('sys.stderr', new_callable=StringIO) as mock_stderr:
-                with patch('sys.exit') as mock_exit:
-                    try:
-                        handle_test_fixture_commands(args, {})
-                    except SystemExit:
-                        # SystemExit is expected for error scenarios, but we still want to capture the print output
-                        pass
-                    # Capture stderr content as print calls for error extraction
-                    stderr_content = mock_stderr.getvalue()
-                    if stderr_content:
-                        mock_print(stderr_content)
-        return mock_print
 
 
     def _extract_error_message(self, mock_print, expected_error_contains):

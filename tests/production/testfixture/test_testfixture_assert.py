@@ -40,15 +40,17 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
     # =============================================================================
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_cli_command_executes_successfully(self, mock_jira_class):
-        # Given: Mock Jira manager with test issues for assertion testing
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_assert_cli_command_executes_successfully(self, mock_get_credentials, mock_jira_class):
+        # Given: Jira manager with test issues for assertion testing
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_get_credentials, mock_jira_class, [
             {'key': 'PROJ-1', 'current': 'In Progress', 'expected': 'Done'},
             {'key': 'PROJ-2', 'current': 'Done',        'expected': 'Done'}
         ])
         
         # When: Assert CLI command is executed
-        self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
+        self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                       'tf', 'a', '--tsl', 'rule-testing')
         
         # Then: Jira API should be called correctly
         mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
@@ -59,14 +61,16 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         ("handles whitespace around states", "I was in    To Do    - expected to be in    CLOSED   ", "In Progress", None, "To Do", "CLOSED"),
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failure_message_extracts_context_and_states(self, mock_jira_class, scenario, summary, current_state, expected_context, expected_start_state, expected_end_state):
-        # Given: Mock Jira manager with issue that has assertion failure (current != expected)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_assert_failure_message_extracts_context_and_states(self, mock_get_credentials, mock_jira_class, scenario, summary, current_state, expected_context, expected_start_state, expected_end_state):
+        # Given: Jira manager with issue that has assertion failure (current != expected)
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_get_credentials, mock_jira_class, [
             {'key': 'PROJ-TEST', 'current': current_state, 'expected': expected_end_state, 'issue_type': 'Bug', 'context': expected_context, 'summary': summary}
         ])
         
         # When: Assert CLI command is executed with print capture
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'rule-testing')
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                   'tf', 'a', '--tsl', 'rule-testing')
         
         # Then: Jira API should be called correctly
         mock_jira_instance.get_issues_by_label.assert_called_once_with("rule-testing")
@@ -113,7 +117,10 @@ class TestTestFixtureAssert(TestJiraUtilsCommand):
         summary = self._generate_summary(context_prefix, current_state, expected_state, i)
         return self._create_issue_data(spec, summary, current_state)
 
-    def _create_scenario_with_issues_from_assertion_specs(self, mock_jira_class, issue_specs):
+    def _create_scenario_with_issues_from_assertion_specs(self, mock_get_credentials, mock_jira_class, issue_specs):
+        # Setup mock credentials
+        self._setup_mock_credentials(mock_get_credentials)
+        
         issue_data_list = []
         
         for i, spec in enumerate(issue_specs):
@@ -157,15 +164,17 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
     # =============================================================================
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_orphans(self, mock_jira_class):
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_assert_failures_displays_orphans(self, mock_get_credentials, mock_jira_class):
         """Test that orphaned item with real Jira format appears in issues_to_report."""
         # Given: An orphaned Sub-task with real Jira summary format (like TAPS-211)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_get_credentials, mock_jira_class, [
             {'key': 'TAPS-211', 'issue_type': 'Sub-task'}
         ])
         
         # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                   'tf', 'a', '--tsl', 'test-label')
         
         # Then: The orphaned item with real Jira format should appear in failures
         self._assert_issues_in_summary_section(mock_print, [
@@ -179,17 +188,19 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         assert 'Not evaluated: 0' in clean_output_str, "Should have 0 not evaluated"
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_displays_three_level_hierarchy_with_indentation(self, mock_jira_class):
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_assert_failures_displays_three_level_hierarchy_with_indentation(self, mock_get_credentials, mock_jira_class):
         """Test 3-level hierarchy: Epic (non-evaluated) -> Story (non-evaluated) -> Subtask (failing)."""
         # Given: Epic with non-evaluated story and failing subtask (3-level hierarchy)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_get_credentials, mock_jira_class, [
             {'key': 'PROJ-1', 'issue_type': 'Epic',     'parent_key': None,       'assert_result': 'Skip'},
             {'key': 'PROJ-2', 'issue_type': 'Story',    'parent_key': 'PROJ-1',   'assert_result': 'Skip'},
             {'key': 'PROJ-3', 'issue_type': 'Sub-task', 'parent_key': 'PROJ-2'}
         ])
         
         # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                   'tf', 'a', '--tsl', 'test-label')
         
         # Then the hierarchical indentation structure should be seen in the main output
         clean_output = self._strip_ansi_codes(mock_print)
@@ -290,21 +301,25 @@ class TestHierarchicalFailureOrganization(TestTestFixtureAssert):
         ])
     ])
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_sorting_behavior(self, mock_jira_class, test_name, issue_specs, expected_specs):
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, issue_specs)
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_assert_failures_sorting_behavior(self, mock_get_credentials, mock_jira_class, test_name, issue_specs, expected_specs):
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_get_credentials, mock_jira_class, issue_specs)
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                   'tf', 'a', '--tsl', 'test-label')
         self._assert_issues_in_summary_section(mock_print, expected_specs)
 
     @patch('testfixture_cli.handlers.JiraInstanceManager')
-    def test_assert_failures_skips_orphaned_non_evaluable_items(self, mock_jira_class):
+    @patch('testfixture_cli.handlers.get_jira_credentials')
+    def test_assert_failures_skips_orphaned_non_evaluable_items(self, mock_get_credentials, mock_jira_class):
         """Test that orphaned non-evaluable items are currently skipped and not included in issues_to_report."""
         # Given: An orphaned Sub-task without assertion pattern (non-evaluable)
-        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_jira_class, [
+        mock_jira_instance = self._create_scenario_with_issues_from_assertion_specs(mock_get_credentials, mock_jira_class, [
             {'key': 'PROJ-1', 'issue_type': 'Sub-task', 'parent_key': None, 'assert_result': 'Skip'}
         ])
         
         # When: Assert CLI command is executed
-        mock_print = self._execute_JiraUtil_with_args('tf', 'a', '--tsl', 'test-label')
+        mock_print = self._execute_JiraUtil_with_args(mock_get_credentials, mock_jira_class,
+                                                   'tf', 'a', '--tsl', 'test-label')
         
         # Then: The orphaned non-evaluable item should be skipped and not appear in failure report
         clean_output = self._strip_ansi_codes(mock_print)

@@ -25,10 +25,9 @@ def handle_test_fixture_commands(args, result: dict) -> dict:
             execute_with_jira_manager(jira_url, username, password, run_assert_expectations, test_set_label)
         elif command in ["trigger", "t"]:
             trigger_label = getattr(args, 'tl', None)
-            if not trigger_label:
-                from cli.parser import build_parser
-                parser = build_parser()
-                parser.error("Trigger command requires --tl/--trigger-label argument")
+            if not trigger_label or not trigger_label.strip():
+                print("[FATAL] ERROR: Trigger command requires --tl/--trigger-label argument")
+                return result
             
             print(f"[CHAIN] Executing trigger with trigger-label: {trigger_label}, key: {args.key}")
             execute_with_jira_manager(jira_url, username, password, run_trigger_operation, args.key, trigger_label)
