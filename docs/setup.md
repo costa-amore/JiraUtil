@@ -65,7 +65,7 @@ python .\JiraUtil.py --help
 .\run.ps1 tests\run_tests.py
 
 # 3. Build executables (includes testing and versioning)
-.\build-windows.ps1
+.\scripts\build-windows.ps1
 ```
 
 **Note**: The run script automatically uses the virtual environment and works consistently across all terminal sessions. The setup script activates the venv in the current session, so you can also use `python` commands directly.

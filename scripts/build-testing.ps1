@@ -21,24 +21,23 @@ function Invoke-BuildTests {
     Write-Host "All tests must pass before building executables" -ForegroundColor Cyan
 
     try {
-        # Detect Python executable path (same logic as main build script)
-        $PythonExe = "python"
-        if (Test-Path ".\.venv\Scripts\python.exe") {
-            $PythonExe = ".\.venv\Scripts\python.exe"
-            Write-Host "[INFO] Using virtual environment Python for tests" -ForegroundColor Blue
-        } else {
-            Write-Host "[INFO] Using system Python for tests" -ForegroundColor Blue
-        }
-        
         # Use the documented test runner for consistent behavior
         # This ensures the same test environment as local development
-        $process = Start-Process -FilePath "powershell" -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "run.ps1", "tests/run_tests.py", "all" -Wait -PassThru -NoNewWindow
-        if ($process.ExitCode -ne 0) {
+        # run.ps1 handles Python detection and virtual environment setup
+        Write-Host "Running tests (output will stream in real-time):" -ForegroundColor Yellow
+        
+        # Run tests using run.ps1 to ensure proper virtual environment
+        Write-Host ""
+        $process = Start-Process -FilePath "cmd" -ArgumentList "/c", "powershell -ExecutionPolicy Bypass -File run.ps1 tests/run_tests.py all" -Wait -PassThru -NoNewWindow
+        $testExitCode = $process.ExitCode
+        
+        if ($testExitCode -ne 0) {
             Write-Host "[FAIL] Unit tests failed! Build aborted." -ForegroundColor Red
             Write-Host "Please fix all test failures before building executables." -ForegroundColor Red
+            Write-Host "Test exit code: $testExitCode" -ForegroundColor Red
             return $false
         }
-        Write-Host "[OK] All unit tests passed! Proceeding with markdown linting..." -ForegroundColor Green
+        Write-Host "[OK] All unit tests passed!" -ForegroundColor Green
         return $true
     } catch {
         Write-Host "[FAIL] Failed to run unit tests: $($_.Exception.Message)" -ForegroundColor Red
@@ -47,34 +46,7 @@ function Invoke-BuildTests {
     }
 }
 
-function Invoke-MarkdownLinting {
-    <#
-    .SYNOPSIS
-    Runs markdown linting on source documentation.
-    
-    .DESCRIPTION
-    Executes markdown linting to ensure documentation quality and consistency.
-    
-    .PARAMETER SourcePath
-    Path to the source documentation directory.
-    
-    .PARAMETER ReadmePath
-    Path to the main README file.
-    
-    .PARAMETER Fix
-    Whether to automatically fix linting issues.
-    
-    .EXAMPLE
-    Invoke-MarkdownLinting -SourcePath "docs/" -ReadmePath "README.md" -Fix
-    #>
-    
-    param(
-        [string]$SourcePath,
-        [string]$ReadmePath,
-        [switch]$Fix
-    )
-    
-    Write-Host "[LINT] Running markdown linting on source documentation..." -ForegroundColor Yellow
-    & "$PSScriptRoot\lint-markdown.ps1" -SourcePath $SourcePath -ReadmePath $ReadmePath -Fix
-    return $LASTEXITCODE -eq 0
+# Run tests when script is executed directly
+if ($MyInvocation.InvocationName -ne '.') {
+    Invoke-BuildTests
 }

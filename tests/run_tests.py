@@ -14,6 +14,13 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+# Exit code constants
+RETURNCODE_OK = 0
+RETURNCODE_TESTS_FAILED = 1
+RETURNCODE_IMPORT_ERROR = 2
+RETURNCODE_FILE_NOT_FOUND = 3
+RETURNCODE_UNKNOWN_CATEGORY = 4
+
 # Fix Unicode encoding issues on Windows (without detaching buffers for pytest compatibility)
 if sys.platform == "win32":
     import io
@@ -87,6 +94,7 @@ def run_tests():
 		sys.executable, "-m", "pytest"
 	] + test_files + [
 		"-v",                    # Verbose output
+		"-s",                    # Don't capture stdin/stdout
 		"--tb=short",           # Short traceback format
 		"--strict-markers",     # Strict marker handling
 		"--disable-warnings",   # Disable warnings for cleaner output
@@ -111,7 +119,7 @@ def run_tests():
 		print(f"  {TextTag.OK} Color System Validation     - Working correctly")
 		print(f"  {TextTag.OK} Version Management          - Working correctly")
 		print(f"\n{TextTag.PERF} JiraUtil is ready for production use!")
-		return True
+		return RETURNCODE_OK
 	except subprocess.CalledProcessError as e:
 		print(f"\n\033[91m" + "="*60)
 		print("❌ TESTS FAILED! ❌")
@@ -123,7 +131,7 @@ def run_tests():
 		print("  - Virtual environment not activated (run: .\\.venv\\Scripts\\Activate.ps1)")
 		print("  - Import path issues (check src/ directory structure)")
 		print("  - Test data issues (check test file paths)")
-		return False
+		return RETURNCODE_TESTS_FAILED
 
 
 def run_specific_test_category(category):
@@ -147,7 +155,7 @@ def run_specific_test_category(category):
 		test_file = f"tests/{category}" if not category.startswith('tests/') else category
 		if not Path(test_file).exists():
 			colored_print(f"[ERROR] Test file not found: {test_file}")
-			return False
+			return RETURNCODE_FILE_NOT_FOUND
 		return run_test_file(test_file, category)
 	
 	# Check if it's a test method pattern (e.g., "test_trigger_operation_with_multiple_labels")
@@ -166,7 +174,7 @@ def run_specific_test_category(category):
 		print("Or provide:")
 		print("  - A test file name (e.g., 'test_testfixture_trigger.py')")
 		print("  - A test method pattern (e.g., 'test_trigger_operation')")
-		return False
+		return RETURNCODE_UNKNOWN_CATEGORY
 	
 	test_files = category_mapping[category]
 	
@@ -212,10 +220,10 @@ def run_pytest_command(cmd, description):
 		# Use real-time output with unbuffered stdout
 		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0)
 		print(f"SUCCESS: {description.title()} tests passed!")
-		return True
+		return RETURNCODE_OK
 	except subprocess.CalledProcessError as e:
 		print(f"FAILED: {description.title()} tests failed!")
-		return False
+		return RETURNCODE_TESTS_FAILED
 
 
 def run_pytest_command_with_env(cmd, description, env):
@@ -224,10 +232,10 @@ def run_pytest_command_with_env(cmd, description, env):
 		# Use real-time output with unbuffered stdout
 		result = subprocess.run(cmd, check=True, capture_output=False, text=True, bufsize=0, env=env)
 		print(f"SUCCESS: {description.title()} tests passed!")
-		return True
+		return RETURNCODE_OK
 	except subprocess.CalledProcessError as e:
 		print(f"FAILED: {description.title()} tests failed!")
-		return False
+		return RETURNCODE_TESTS_FAILED
 
 
 def check_python_environment():
@@ -259,11 +267,11 @@ def main():
 	
 	if len(sys.argv) > 1:
 		category = sys.argv[1].lower()
-		success = run_specific_test_category(category)
+		exit_code = run_specific_test_category(category)
+		return exit_code
 	else:
-		success = run_tests()
-	
-	return 0 if success else 1
+		exit_code = run_tests()
+		return exit_code
 
 
 if __name__ == "__main__":
